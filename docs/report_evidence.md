@@ -225,6 +225,7 @@ docker run --rm --user "$(id -u):$(id -g)" -e HOME=/tmp -e MPLCONFIGDIR=/tmp/mpl
 | Files are real, on disk | a fresh container process decoded all six with Pillow: `PNG 750×610` ×5, `PNG 940×820` ×1, mode RGBA | `evidence/s3/eda_render_after_restart.txt` |
 | Legible at 375 px | 750 px wide is 2× the 375 px viewport the app must support (S7/S10); heatmap 940 px | same |
 | Seed untouched | `data/UCI_Credit_Card.csv` still `a0f0ab49…176ca1`; `git status data/` empty | `evidence/s3/eda_files.txt` |
+| Clean checkout | `git archive HEAD` extracted to an empty directory (no `.git`, no untracked files) and regenerated → all 7 files identical to the committed blobs (7/7) | `evidence/s3/clean_checkout.txt` |
 | No model trained | the script imports matplotlib and pandas only — no estimator is constructed | `ml/generate_eda.py` |
 
 ### 6.2 Class counts and descriptive statistics

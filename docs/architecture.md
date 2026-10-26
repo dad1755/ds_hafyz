@@ -398,6 +398,7 @@ anywhere in the sprint; `models/` holds plots and statistics, not a model.
 | Charts survive a restart | a fresh container process decoded all six from disk with Pillow | `eda_render_after_restart.txt` |
 | Numbers behind the captions | class counts 23,364 / 6,636; per-feature min/Q1/median/mean/Q3/max; per-code n and default rate; correlation matrix | `eda_run.txt`, `models/eda/summary.json` |
 | Seed unchanged | SHA-256 `a0f0ab49…176ca1`; `git status data/` empty | `eda_files.txt` |
+| Clean checkout | `git archive HEAD` into an empty directory regenerates all 7 files identical to the committed blobs | `clean_checkout.txt` |
 
 **Not done in S3, by design.** No train/test split executed, no model, no metrics, no
 `joblib`, no SQLite, no UI wiring of the charts (S10), no tunnel, no deployment. Nothing in
