@@ -486,9 +486,52 @@ docker run --rm -e PYTHONPATH=/app -v "$PWD:/app:z" -w /app aihubcampus-web:s10 
   `browser_check.txt` with `evaluation_375px_top.png`, `_confusion.png`, `_metadata.png`, the
   desktop trio and `evaluation_user_nav.png`, and `build.txt`.
 
+## Sprint 11 — automated testing and adversarial verification (T01–T12)
+
+`docs/test_matrix.md` is the deliverable: one row per T01–T12 with the requirement, the real
+command and test id, the **observed** result, and the evidence path. It is generated against a
+raw transcript rather than written from memory — `evidence/s11/extract_matrix.py` reads
+`pytest_all_verbose.txt` and fails if any cited node id is missing or did not report `PASSED`.
+
+```bash
+docker run --rm -v "$PWD:/app:z" -w /app aihubcampus-web:local \
+    python -m pytest tests -v -p no:cacheprovider        # 285 passed in 598.66s
+python3 evidence/s11/extract_matrix.py                   # T01–T12 -> their node ids -> PASSED
+python3 evidence/s11/probe_http.py https://www.aihubcampus.online   # live, through the tunnel
+python3 evidence/s11/probe_logs.py aihubcampus-web-1     # no secret in the container log
+bash evidence/s11/restart.sh                             # T11 at deployment level
+python3 scripts/check_no_secrets.py                      # 0 hits
+```
+
+- **22 new cases.** `tests/test_integration.py` proves the three journeys that only exist end to
+  end (T01, T11, T12); `tests/test_adversarial.py` attacks boundaries the happy path never
+  touches — a 14-function RBAC sweep that must audit every refusal, the 10 MiB upload limit at
+  exactly `max_bytes` and `max_bytes + 1`, quarantine containment against a traversal name, the
+  secret-pattern scan over every shipped file, the "database is not a static file" claim, the
+  "no credential in a log record" claim, and XSRF/CORS remaining enabled.
+- **The live checks inspect bodies, not status codes.** Streamlit's SPA catch-all answers `200`
+  with HTML for any unknown path, so `probe_http.py` reads each response looking for the
+  `SQLite format 3\0` header and for the artifact's first bytes. Six candidate paths
+  (`/storage/*.db`, `/app/storage/*.db`, `-wal`, the dataset, the model, `/.env`) all return the
+  HTML shell and none leaks the file.
+- **A foreign origin cannot upgrade.** A raw RFC 6455 handshake from the real origin is `101
+  Switching Protocols`; from `https://evil.example` it is `403`, and `Access-Control-Allow-Origin`
+  is never echoed. The same three results repeat on the apex hostname.
+- **T11 is proven twice.** As a unit-level restart (a second process resolves the pre-restart
+  session and re-verifies the artifact) and as a real `docker compose up -d --force-recreate`,
+  where the token issued before the restart still resolves afterwards, `ml.verify_artifact`
+  passes its 11 checks with the same `artifact_sha256 48ce02563b2aad9f…`, and `docker inspect`
+  still shows `{"2026/tcp":null}`.
+- Evidence: `evidence/s11/` — `test-results/pytest_all_verbose.txt` (285 tests, verbatim),
+  `test-results/t_matrix_extract.txt` (the machine check of the matrix), `compileall.txt`,
+  `check_no_secrets.txt`, `probe_http.txt`, `probe_logs.txt`, `restart.txt`, and
+  `test-results/demo_prediction.txt` (the demonstrator row scored directly by the shipped
+  artifact: class `1`, probability `0.7195348837209302`, band `High`).
+
 ## Next sprint
 
-**S11** — the documented test matrix: `docs/test_matrix.md` with expected, observed, timestamp
-and evidence path for the twelve core tests (T01–T12), plus the expanded security and
-integration cases (CSRF/websocket behaviour, role enforcement, file-size limit, password
-storage, no secrets in logs, artifact verification, upload quarantine).
+**S12** — production-like Docker hardening and recovery: non-root image, minimal runtime
+permissions, locked dependencies, Compose health checks, backup/restore scripts, a security
+checklist and an ops runbook; a clean rebuild and a tested backup restore in a disposable
+environment.
+
