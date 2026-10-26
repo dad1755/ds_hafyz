@@ -98,18 +98,32 @@ def _comparison_section(metrics: Mapping[str, Any]) -> None:
             st.dataframe(deltas, width="stretch", hide_index=True)
 
     _draw(
-        charts.comparison_figure(rows),
+        charts.comparison_figure(rows, metrics["evaluation"].get("test_rows")),
         alt=(
             "Grouped bar chart of test accuracy, precision, recall, F1 and ROC-AUC for the "
             "logistic regression, decision tree and random forest, each bar labelled with its "
             "value."
         ),
     )
+    # The leaders are read from the record, not asserted: the caption used to say which model
+    # was ahead on which metric, which is a conclusion the page would have owned.
+    leaders = evaluation.test_metric_leaders(metrics)
+    lead_text = (
+        "Highest held-out score per metric: "
+        + "; ".join(
+            f"{label} on {evaluation.METRIC_LABELS.get(key, key)} ({value:.3f})"
+            for label, key, value in leaders
+        )
+        + ". "
+        if leaders
+        else ""
+    )
     st.caption(
-        "Same numbers as the table, drawn so the gap between the models is visible: the "
-        "selected tree is ahead on F1, the random forest on ROC-AUC, and every model is far "
-        "ahead of the constant-answer baseline on accuracy only because accuracy is dominated "
-        "by the majority class."
+        "Same numbers as the table, drawn so the gap between the models is visible. "
+        + lead_text
+        + "A gap smaller than the CV spread above is not a real difference, and every model "
+        "is far ahead of the constant-answer baseline on accuracy only because accuracy is "
+        "dominated by the majority class."
     )
 
 

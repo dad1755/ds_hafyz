@@ -25,10 +25,11 @@ from __future__ import annotations
 import difflib
 import hashlib
 import json
+import re
 import sys
 from pathlib import Path
 
-from src import evaluation
+from src import charts, evaluation
 
 MODELS = Path("models")
 METRICS = json.loads((MODELS / "metrics.json").read_text(encoding="utf-8"))
@@ -230,6 +231,50 @@ def importance() -> None:
         FAILURES.append("importance features differ from the manifest's feature order")
 
 
+# --------------------------------------------------------------- 6. figure titles
+def titles() -> None:
+    """The numbers inside the chart titles, which are display strings too.
+
+    The S10 gate found a row count typed into the comparison chart's title at commit
+    ``65b457e`` — the one place this probe never looked, because a title is a string rather
+    than a table cell. Each title is now read back off the matplotlib axes and every number
+    in it is matched against the record that owns it.
+    """
+    print("\n--- chart titles: every number inside a display string " + "-" * 22)
+    test_rows = METRICS["evaluation"]["test_rows"]
+    comparison = charts.comparison_figure(
+        evaluation.comparison_rows(METRICS), test_rows
+    ).axes[0].get_title()
+    found = re.findall(r"\d[\d,]*", comparison)
+    ok = found == [f"{test_rows:,}"]
+    print(f"  comparison      | {comparison}")
+    print(f"    numbers {found} vs evaluation.test_rows {test_rows:,}: {'OK' if ok else 'MISMATCH'}")
+    moved = charts.comparison_figure(evaluation.comparison_rows(METRICS), 1234).axes[0].get_title()
+    print(f"    mutation — the same figure handed test_rows=1234: {moved!r}")
+    if "1,234" not in moved:
+        FAILURES.append("comparison chart title does not follow test_rows")
+    if not ok:
+        FAILURES.append("comparison chart title")
+
+    for panel in evaluation.confusion_matrices(METRICS):
+        title = charts.confusion_figure(panel).axes[0].get_title()
+        total = f"{int(panel['total']):,}"
+        ok = total in re.findall(r"\d[\d,]*", title)
+        print(f"  {panel['label']:15s} | {title}")
+        print(f"    n = {total} (record): {'OK' if ok else 'MISMATCH'}")
+        if not ok:
+            FAILURES.append(f"{panel['label']} confusion title")
+
+    rows, _note = evaluation.feature_importances(MODELS)
+    title = charts.importance_figure(rows, total_features=len(rows)).axes[0].get_title()
+    features = len(MANIFEST["features"]["order"])
+    ok = str(features) in re.findall(r"\d+", title)
+    print(f"  importance      | {title}")
+    print(f"    feature count {features} (manifest): {'OK' if ok else 'MISMATCH'}")
+    if not ok:
+        FAILURES.append("importance chart title")
+
+
 def main() -> int:
     print("S10 — trace every displayed number to models/metrics.json")
     print(f"  metrics.json        sha256 {_sha256(MODELS / 'metrics.json')}")
@@ -241,6 +286,7 @@ def main() -> int:
     metadata()
     eda()
     importance()
+    titles()
     print("\n" + "=" * 78)
     if FAILURES:
         print(f"RESULT: FAIL — {len(FAILURES)} section(s) disagree: {FAILURES}")

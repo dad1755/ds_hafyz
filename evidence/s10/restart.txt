@@ -2,7 +2,7 @@ $ docker compose config --quiet
 compose valid
 
 $ docker inspect aihubcampus-web-1 --format '{{.Id}} started={{.State.StartedAt}} image={{.Image}}'
-1996058a65730ccbad49a3e7361ccdbb398e908812e112d012bf70d60f2a7397 started=2026-10-26T19:49:44.112098506Z image=sha256:435cebc85c784af49a5e92a6e0f1ab05636126be25ad8b7e4d4297c808362ae5
+d5c9324eed6dc1082dc6208ce5e4fbdd0d8e3d77dba66278b7ca0d731827f34e started=2026-10-26T21:21:14.478518703Z image=sha256:713d7589257116dd71954d068f6a9215e011586cace7cbd28af5fb893481fbf3
 
 $ docker compose up -d --no-deps web
  Container aihubcampus-web-1 Recreate 
@@ -11,11 +11,11 @@ $ docker compose up -d --no-deps web
  Container aihubcampus-web-1 Started 
 
 $ # wait for the healthcheck
-after restart: id=d9ab4baa2e8fc3733aa9fa721d0349a4ac017ecacec23e2b52e67fbe691fa5b0 started=2026-10-26T20:08:10.465642366Z health=healthy image=sha256:9144745f24e5410fae810aae49ea61482a2a5b1cfaac203415f4b4cc7bbf230b
+after restart: id=ac00df6a7a6551627f74fd9a8da4eecd6e29e8219797d13e84ea85899c420320 started=2026-10-26T21:24:47.195978103Z health=healthy image=sha256:22dc5403b32c94cf3f6532a5555ab4117d833c009291ad4ec4c4b767b8e233a8
 
 $ docker compose ps
-NAME                IMAGE                   COMMAND                  SERVICE   CREATED          STATUS                   PORTS
-aihubcampus-web-1   aihubcampus-web:local   "streamlit run app.p…"   web       13 seconds ago   Up 7 seconds (healthy)   2026/tcp
+NAME                IMAGE                   COMMAND                  SERVICE   CREATED          STATUS                    PORTS
+aihubcampus-web-1   aihubcampus-web:local   "streamlit run app.p…"   web       21 seconds ago   Up 10 seconds (healthy)   2026/tcp
 
 $ docker exec aihubcampus-web-1 python -c '<health endpoint>'
 ok
@@ -69,12 +69,12 @@ S10 — deployed container: artifacts on disk and a real render
     figures/confusion_logistic_regression.png   56,644 B  sha256 bf1f805fa4a73c20…
     figures/confusion_random_forest.png         57,449 B  sha256 96ddafd8bac810c8…
     figures/feature_importance_selected.png     77,133 B  sha256 d1cda289a81b6200…
-2026-10-26 20:08:29.187 WARNING streamlit.runtime.scriptrunner_utils.script_run_context: Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2026-10-26 21:25:13.039 WARNING streamlit.runtime.scriptrunner_utils.script_run_context: Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
 
   admin render: 11 figures, 6 tables, 0 errors, 0 warnings
   rendered accuracy for Decision Tree: 0.817167; metrics.json: 0.817167; equal
   rendered TN/FP/FN/TP: (4431, 242, 855, 472); metrics.json: (4431, 242, 855, 472); equal
-2026-10-26 20:08:43.150 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2026-10-26 21:25:32.240 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
 
   user render: 0 figures, 0 tables, errors = ['You do not have permission to perform this action.']
   audited refusals in the throwaway database: 1

@@ -63,6 +63,10 @@ COMPARISON_METRICS = (
 )
 
 
+#: Number words, so the comparison title's candidate count comes from the plotted series.
+_COUNT_WORDS = {1: "One", 2: "Two", 3: "Three", 4: "Four", 5: "Five", 6: "Six"}
+
+
 def apply_style() -> None:
     """Match the EDA figures' typography so the admin page looks like one report."""
     plt.rcParams.update(
@@ -100,8 +104,16 @@ def _model_series(rows: Sequence[Mapping[str, Any]]) -> list[Mapping[str, Any]]:
     ]
 
 
-def comparison_figure(rows: Sequence[Mapping[str, Any]]) -> Figure:
-    """Grouped bars: the three candidates' held-out metrics, each bar labelled with its value."""
+def comparison_figure(
+    rows: Sequence[Mapping[str, Any]], test_rows: int | None = None
+) -> Figure:
+    """Grouped bars: the three candidates' held-out metrics, each bar labelled with its value.
+
+    ``test_rows`` is ``evaluation.test_rows`` from the record. The title quotes it rather than
+    repeating a count, so the figure cannot claim a row count the record does not hold — the
+    S10 gate caught exactly that, a ``6,000`` typed into this title. Both numbers in the title
+    come from data: the candidate count from ``series``, the row count from the record.
+    """
     apply_style()
     series = _model_series(rows)
     figure, axes = plt.subplots(figsize=FIGSIZE_WIDE, dpi=DPI)
@@ -145,7 +157,10 @@ def comparison_figure(rows: Sequence[Mapping[str, Any]]) -> Figure:
     axes.set_xticklabels([label for _, label in COMPARISON_METRICS], fontsize=7)
     axes.set_ylim(0, 1.0)
     axes.set_ylabel("Score on the held-out test rows")
-    axes.set_title("Three candidates on the same 6,000 test rows", pad=8)
+    title = f"{_COUNT_WORDS.get(len(series), str(len(series)))} candidates"
+    if test_rows:
+        title += f" on the same {int(test_rows):,} test rows"
+    axes.set_title(title, pad=8)
     axes.legend(loc="upper center", bbox_to_anchor=(0.5, -0.16), ncol=3)
     figure.tight_layout()
     return figure

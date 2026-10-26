@@ -1,113 +1,85 @@
-$ docker build -t aihubcampus-web:local -t aihubcampus-web:s10 .
 #0 building with "default" instance using docker driver
 
 #1 [internal] load build definition from Dockerfile
-#1 DONE 0.0s
-
-#1 [internal] load build definition from Dockerfile
 #1 transferring dockerfile:
-#1 transferring dockerfile: 2.96kB done
-#1 DONE 0.4s
+#1 transferring dockerfile: 2.96kB 0.0s done
+#1 DONE 0.7s
 
 #2 [internal] load metadata for docker.io/library/python:3.12-slim
-#2 DONE 0.7s
+#2 DONE 0.8s
 
 #3 [internal] load .dockerignore
 #3 transferring context:
 #3 transferring context: 1.09kB done
-#3 DONE 0.6s
+#3 DONE 0.3s
 
 #4 [internal] load build context
 #4 DONE 0.0s
 
 #5 [ 1/14] FROM docker.io/library/python:3.12-slim@sha256:2f17fc044b579bab302c2e8054d3a686e2cb9a83de48e70534b94cd8ebbe06a9
 #5 resolve docker.io/library/python:3.12-slim@sha256:2f17fc044b579bab302c2e8054d3a686e2cb9a83de48e70534b94cd8ebbe06a9
-#5 resolve docker.io/library/python:3.12-slim@sha256:2f17fc044b579bab302c2e8054d3a686e2cb9a83de48e70534b94cd8ebbe06a9 0.3s done
-#5 DONE 0.4s
+#5 resolve docker.io/library/python:3.12-slim@sha256:2f17fc044b579bab302c2e8054d3a686e2cb9a83de48e70534b94cd8ebbe06a9 0.5s done
+#5 DONE 0.6s
 
 #4 [internal] load build context
-#4 transferring context: 17.57kB 0.0s done
-#4 DONE 0.5s
+#4 transferring context: 7.09kB 0.0s done
+#4 DONE 0.4s
 
 #6 [ 5/14] RUN pip install --no-cache-dir --no-compile -r requirements.txt
 #6 CACHED
 
-#7 [ 6/14] COPY .streamlit/config.toml ./.streamlit/config.toml
+#7 [11/14] COPY models/best_pipeline.joblib models/model_manifest.json models/metrics.json ./models/
 #7 CACHED
 
 #8 [ 2/14] RUN groupadd --system --gid 1001 app     && useradd --system --uid 1001 --gid app --home-dir /home/app --create-home app
 #8 CACHED
 
-#9 [ 3/14] WORKDIR /app
+#9 [12/14] COPY models/eda/ ./models/eda/
 #9 CACHED
 
-#10 [ 4/14] COPY requirements.txt ./
+#10 [13/14] COPY models/figures/ ./models/figures/
 #10 CACHED
 
-#11 [ 7/14] COPY app.py ./
+#11 [ 3/14] WORKDIR /app
 #11 CACHED
 
-#12 [ 8/14] COPY src/ ./src/
-#12 DONE 1.7s
+#12 [ 9/14] COPY scripts/ ./scripts/
+#12 CACHED
 
-#13 [ 9/14] COPY scripts/ ./scripts/
-#13 DONE 1.6s
+#13 [10/14] COPY ml/ ./ml/
+#13 CACHED
 
-#14 [10/14] COPY ml/ ./ml/
-#14 DONE 5.2s
+#14 [ 4/14] COPY requirements.txt ./
+#14 CACHED
 
-#15 [11/14] COPY models/best_pipeline.joblib models/model_manifest.json models/metrics.json ./models/
-#15 DONE 1.6s
+#15 [ 6/14] COPY .streamlit/config.toml ./.streamlit/config.toml
+#15 CACHED
 
-#16 [12/14] COPY models/eda/ ./models/eda/
-#16 DONE 1.4s
+#16 [ 7/14] COPY app.py ./
+#16 CACHED
 
-#17 [13/14] COPY models/figures/ ./models/figures/
-#17 DONE 1.5s
+#17 [ 8/14] COPY src/ ./src/
+#17 CACHED
 
 #18 [14/14] RUN mkdir -p /app/storage && chown -R app:app /app/storage
-#18 DONE 2.7s
+#18 CACHED
 
 #19 exporting to image
-#19 exporting layers
-#19 exporting layers 11.1s done
-#19 exporting manifest sha256:31769f8e76f7b68e2d2b314996a019a9292e3bfe73524c2cf1b6a7c6b967058a
-#19 exporting manifest sha256:31769f8e76f7b68e2d2b314996a019a9292e3bfe73524c2cf1b6a7c6b967058a 0.3s done
-#19 exporting config sha256:f20193ef57e4263f995991df0075b66ae6b298f826afca1de000b9082f4703be
-#19 exporting config sha256:f20193ef57e4263f995991df0075b66ae6b298f826afca1de000b9082f4703be 0.3s done
-#19 exporting attestation manifest sha256:daea8e84b763e4faaeef267c9d8373c1219712d556a57a73dc6c57dea5beb640
-#19 exporting attestation manifest sha256:daea8e84b763e4faaeef267c9d8373c1219712d556a57a73dc6c57dea5beb640 0.4s done
-#19 exporting manifest list sha256:9144745f24e5410fae810aae49ea61482a2a5b1cfaac203415f4b4cc7bbf230b
-#19 exporting manifest list sha256:9144745f24e5410fae810aae49ea61482a2a5b1cfaac203415f4b4cc7bbf230b 0.3s done
+#19 exporting layers 0.0s done
+#19 exporting manifest sha256:0f0679a7f2053d43434f4e0261ed90d0ac7fbe995b1103862b2a99622b33d9b0
+#19 exporting manifest sha256:0f0679a7f2053d43434f4e0261ed90d0ac7fbe995b1103862b2a99622b33d9b0 0.5s done
+#19 exporting config sha256:7489f44a7a85d4176207fe3792e0eead14293751782c90f3dacdde288f562c58
+#19 exporting config sha256:7489f44a7a85d4176207fe3792e0eead14293751782c90f3dacdde288f562c58 2.6s done
+#19 exporting attestation manifest sha256:e3ff6b4b6f53db273d1fc767436665332d1f08bbfd41975e9cf30d1594a99e6d
+#19 exporting attestation manifest sha256:e3ff6b4b6f53db273d1fc767436665332d1f08bbfd41975e9cf30d1594a99e6d 4.9s done
+#19 exporting manifest list sha256:22dc5403b32c94cf3f6532a5555ab4117d833c009291ad4ec4c4b767b8e233a8
+#19 exporting manifest list sha256:22dc5403b32c94cf3f6532a5555ab4117d833c009291ad4ec4c4b767b8e233a8 4.1s done
 #19 naming to docker.io/library/aihubcampus-web:local
-#19 naming to docker.io/library/aihubcampus-web:local 0.0s done
+#19 naming to docker.io/library/aihubcampus-web:local 0.9s done
 #19 unpacking to docker.io/library/aihubcampus-web:local
-#19 unpacking to docker.io/library/aihubcampus-web:local 2.0s done
-#19 naming to docker.io/library/aihubcampus-web:s10 0.0s done
-#19 unpacking to docker.io/library/aihubcampus-web:s10 0.1s done
-#19 DONE 14.9s
-
-$ docker images aihubcampus-web --format '{{.Repository}}:{{.Tag}} {{.ID}} {{.CreatedSince}} {{.Size}}'
-aihubcampus-web:local 9144745f24e5 17 seconds ago 970MB
-aihubcampus-web:s10 9144745f24e5 17 seconds ago 970MB
-aihubcampus-web:s9 6908282833ac 3 hours ago 969MB
-aihubcampus-web:s8 477d237fd8f5 6 hours ago 969MB
-aihubcampus-web:s7 52f4a58879b9 8 hours ago 969MB
-
-$ docker run --rm aihubcampus-web:s10 ls -l /app/models/eda /app/models/figures
-/app/models/eda:
-total 300
--rw-r--r--. 1 root root 49050 Oct 26 08:13 01_target_class_distribution.png
--rw-r--r--. 1 root root 37386 Oct 26 08:13 02_age_by_class.png
--rw-r--r--. 1 root root 37584 Oct 26 08:13 03_limit_bal_by_class.png
--rw-r--r--. 1 root root 55088 Oct 26 08:13 04_default_rate_by_pay0.png
--rw-r--r--. 1 root root 43507 Oct 26 08:13 05_default_rate_by_education.png
--rw-r--r--. 1 root root 55133 Oct 26 08:48 06_correlation_heatmap.png
--rw-r--r--. 1 root root 14041 Oct 26 08:13 summary.json
-
-/app/models/figures:
-total 248
--rw-r--r--. 1 root root 56410 Oct 26 08:59 confusion_decision_tree.png
--rw-r--r--. 1 root root 56644 Oct 26 08:59 confusion_logistic_regression.png
--rw-r--r--. 1 root root 57449 Oct 26 08:59 confusion_random_forest.png
--rw-r--r--. 1 root root 77133 Oct 26 08:59 feature_importance_selected.png
+#19 unpacking to docker.io/library/aihubcampus-web:local 2.9s done
+#19 naming to docker.io/library/aihubcampus-web:s10
+#19 naming to docker.io/library/aihubcampus-web:s10 0.9s done
+#19 unpacking to docker.io/library/aihubcampus-web:s10
+#19 unpacking to docker.io/library/aihubcampus-web:s10 2.5s done
+#19 DONE 26.2s

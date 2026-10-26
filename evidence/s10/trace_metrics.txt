@@ -120,5 +120,18 @@ no differences — 15 lines identical
   PAY_5      | importance 0.033120 | share 3.3120%
   BILL_AMT1  | importance 0.031706 | share 3.1706%
 
+--- chart titles: every number inside a display string ----------------------
+  comparison      | Three candidates on the same 6,000 test rows
+    numbers ['6,000'] vs evaluation.test_rows 6,000: OK
+    mutation — the same figure handed test_rows=1234: 'Three candidates on the same 1,234 test rows'
+  Decision Tree   | Decision Tree — threshold 0.5 (n = 6,000)
+    n = 6,000 (record): OK
+  Logistic Regression | Logistic Regression — threshold 0.5 (n = 6,000)
+    n = 6,000 (record): OK
+  Random Forest   | Random Forest — threshold 0.5 (n = 6,000)
+    n = 6,000 (record): OK
+  importance      | Decision-tree feature importance (top 15 of 23)
+    feature count 23 (manifest): OK
+
 ==============================================================================
 RESULT: PASS — every compared value on the page equals its entry in metrics.json; 0 mismatches

@@ -324,30 +324,86 @@ def test_no_draft_v3_statistic_appears_in_the_page_source() -> None:
 def test_the_page_modules_hold_no_metric_literal_at_all() -> None:
     """Beyond the draft's numbers: no metric-shaped literal is stored in the S10 modules.
 
-    The page's own constants are layout (dpi, font sizes, bar widths, axis limits). A float
-    literal that is not one of those, and that looks like a score, would be a statistic the
-    page owns rather than reads.
+    The page's own constants are layout (dpi, font sizes, bar widths, axis limits, a read
+    chunk size). A number that is not one of those, and that looks like a count or a score,
+    would be a statistic the page owns rather than reads. Floats, ints and numbers typed
+    *inside strings* are all scanned: the S10 gate found ``6,000`` written into a chart title,
+    which a float-only scan cannot see — hence the three literal kinds below. Docstrings are
+    skipped, because they document the code rather than being shown to anyone.
     """
-    allowed = {
+    allowed_floats = {
         # charts.py layout constants
         0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 0.4, 0.55, 0.45, 0.8, 0.7, 0.5, 0.16, 1.22,
         2.0, 3.05, 3.75, 3.1, 6.6, 3.6, 4.6, 200.0, 0.005, 100.0, 2.0,
         # font sizes / paddings / widths / axis limits
         5.4, 6.4, 6.8, 7.0, 7.5, 8.0, 8.5, 9.5, 0.2, 1.5,
     }
+    allowed_ints = {
+        # zero and the small ordinals (axes, zorder, columns, ticks, 2×2 cells)
+        0, 1, 2, 3, 4, 5, 6, 7, 8,
+        # top-N importances, rotation degrees, dpi, sha256 chunk size
+        15, 16, 90, 200, 65536,
+    }
+    #: A count or a score typed into a string: thousands-grouped digits (``6,000``) or three
+    #: or more decimals (``0.817``). Format specs (``.3f``, ``.1%``) and hex colours do not match.
+    numeric_string = re.compile(r"\d{1,3}(?:,\d{3})+|\d\.\d{3,}")
+
+    def docstrings(tree: ast.AST) -> set[int]:
+        """Ids of the Constant nodes that are docstrings: documentation, not display text."""
+        found: set[int] = set()
+        for node in ast.walk(tree):
+            body = getattr(node, "body", None)
+            if not isinstance(node, (ast.Module, ast.ClassDef, ast.FunctionDef,
+                                     ast.AsyncFunctionDef)) or not body:
+                continue
+            first = body[0]
+            if (isinstance(first, ast.Expr) and isinstance(first.value, ast.Constant)
+                    and isinstance(first.value.value, str)):
+                found.add(id(first.value))
+        return found
+
     offenders: list[str] = []
     for path in (REPO / "src" / "charts.py", REPO / "src" / "evaluation.py",
                  REPO / "src" / "pages_evaluation.py"):
         tree = ast.parse(path.read_text(encoding="utf-8"))
+        skip = docstrings(tree)
         for node in ast.walk(tree):
-            if isinstance(node, ast.Constant) and isinstance(node.value, float):
-                if node.value in allowed:
-                    continue
-                offenders.append(f"{path.name}:{node.lineno} {node.value}")
+            if not isinstance(node, ast.Constant) or isinstance(node.value, bool):
+                continue
+            if id(node) in skip:
+                continue
+            value = node.value
+            if isinstance(value, float) and value not in allowed_floats:
+                offenders.append(f"{path.name}:{node.lineno} float {value}")
+            elif isinstance(value, int) and value not in allowed_ints:
+                offenders.append(f"{path.name}:{node.lineno} int {value}")
+            elif isinstance(value, str) and numeric_string.search(value):
+                offenders.append(f"{path.name}:{node.lineno} string {value!r}")
     assert not offenders, f"numeric literals that are not layout: {offenders}"
 
 
 # ------------------------------------------------------------------ 3. figures are real
+def test_the_comparison_chart_title_follows_the_record() -> None:
+    """The title's row count is the record's, and it moves when the record does.
+
+    The S10 gate found ``6,000`` typed into this title at commit ``65b457e``: the count matched
+    the record by luck, not by reading it. Handing the figure a different record must change
+    the title, and a figure with no count handed to it must not invent one.
+    """
+    rows = evaluation.comparison_rows(METRICS)
+    test_rows = METRICS["evaluation"]["test_rows"]
+    title = charts.comparison_figure(rows, test_rows).axes[0].get_title()
+    assert f"{test_rows:,} test rows" in title
+    assert f"{len(charts._model_series(rows))} candidate" not in title  # the count is a word
+
+    moved = charts.comparison_figure(rows, 1234).axes[0].get_title()
+    assert "1,234 test rows" in moved
+    assert f"{test_rows:,}" not in moved
+
+    bare = charts.comparison_figure(rows).axes[0].get_title()
+    assert "test rows" not in bare and not re.search(r"\d", bare)
+
+
 def test_the_comparison_chart_labels_every_bar_with_the_recorded_value() -> None:
     rows = evaluation.comparison_rows(METRICS)
     figure = charts.comparison_figure(rows)

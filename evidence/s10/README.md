@@ -6,10 +6,10 @@ probe exits non-zero when a check fails, so none of this can pass by printing a 
 
 | File | What it shows |
 |---|---|
-| `trace_metrics.txt` | The card's headline acceptance: **every displayed number traced to `metrics.json`**. The probe builds two independent renderings of the same facts — the rows `src.evaluation` returns (what the page draws) and the values read straight out of `metrics.json` with `json` (what the file says) — and diffs them with `difflib`. Result: `39 lines identical` for the comparison table, `15 lines identical` for the confusion matrices, every metadata field `equal`, `RESULT: PASS … 0 mismatches`. |
-| `pytest_s10.txt` | The 15 Sprint 10 tests, all `PASSED`. They include the mutation test (rewrite a copy of `metrics.json`, re-render, the page follows the file), the cell-position test (TN/FP must sit on the row labelled actual class 0), and the refusal tests. |
-| `pytest_all.txt` | The whole suite in the built image: `262 passed` (247 at S9 + 15). |
-| `restart.txt` | The restart the card asks for: the deployed container is recreated (`started=…20:08:10Z`, health `healthy`, image `9144745f24e5`), `/_stcore/health` → `ok`, no published host port, the ten figure artifacts listed **from inside the running container**, and then a full render in that container: `11 figures, 6 tables, 0 errors, 0 warnings`, rendered accuracy `0.817167` equal to `metrics.json`, rendered `TN/FP/FN/TP (4431, 242, 855, 472)` equal to `metrics.json`, and a user session refused (`0 figures`, `0 tables`, audited). |
+| `trace_metrics.txt` | The card's headline acceptance: **every displayed number traced to `metrics.json`**. The probe builds two independent renderings of the same facts — the rows `src.evaluation` returns (what the page draws) and the values read straight out of `metrics.json` with `json` (what the file says) — and diffs them with `difflib`. Result: `39 lines identical` for the comparison table, `15 lines identical` for the confusion matrices, every metadata field `equal`, and a **chart-titles** section that reads every number out of each title (comparison, three confusion matrices, importance) and matches it to the record, including a mutation line — the same figure handed `test_rows=1234` draws `… on the same 1,234 test rows`. `RESULT: PASS … 0 mismatches`. |
+| `pytest_s10.txt` | The 16 Sprint 10 tests, all `PASSED`. They include the mutation test (rewrite a copy of `metrics.json`, re-render, the page follows the file), the cell-position test (TN/FP must sit on the row labelled actual class 0), the title test (the comparison chart's row count follows `evaluation.test_rows` and is not typed in), and the refusal tests. |
+| `pytest_all.txt` | The whole suite in the built image: `263 passed` (247 at S9 + 16). |
+| `restart.txt` | The restart the card asks for: the deployed container is recreated (`started=2026-10-26T21:21:14Z`, health `healthy`, image `713d75892571`), `/_stcore/health` → `ok`, no published host port, the ten figure artifacts listed **from inside the running container**, and then a full render in that container: `11 figures, 6 tables, 0 errors, 0 warnings`, rendered accuracy `0.817167` equal to `metrics.json`, rendered `TN/FP/FN/TP (4431, 242, 855, 472)` equal to `metrics.json`, and a user session refused (`0 figures`, `0 tables`, audited). |
 | `draft_grep.txt` | **No v3 draft statistic is hard-coded.** All 20 draft figures searched across `app.py` and `src/`: `no match`. The same numbers are then shown where they legitimately live — `docs/report_evidence.md` (whose own words label both drafts *draft, not proof*) and `evidence/s0/draft_v3_extracted.txt` — beside the record's real counts, which differ (the draft asserts TN 4,432 / FP 241 / FN 856 / TP 471 for the decision tree; the record holds 4,431 / 242 / 855 / 472). |
 | `browser_check.txt` + `evaluation_*.png` | A real Chromium (`mcr.microsoft.com/playwright:v1.55.0-noble`) driving a throwaway container of `aihubcampus-web:s10` at 375×812 and 1280×800: sign in, open **Model evaluation**, every section present, `11` figures decoded (`naturalWidth > 0`), zero horizontal overflow at all three scroll positions, and the record's `metrics.json` SHA-256 on screen. Then a second sign-in as a **user**: nav is `Home / Predict default risk / My prediction history` — no evaluation entry — and no evaluation content renders. Screenshots: `evaluation_375px_top.png`, `_confusion.png`, `_metadata.png`, the desktop trio, and `evaluation_user_nav.png`. |
 | `build.txt` | The image build (`aihubcampus-web:local` = `aihubcampus-web:s10` = `9144745f24e5`) and the figure artifacts present in it — the six EDA PNGs plus `summary.json`, and the four `models/figures` PNGs. Before this sprint those directories were excluded by `.dockerignore`, so the page would have warned that six figures were absent from the build. |
@@ -25,6 +25,15 @@ probe exits non-zero when a check fails, so none of this can pass by printing a 
    baseline records its threshold as a sentence, so Streamlit fell back from Arrow to JSON on
    every render (`ArrowInvalid: Could not convert 'not applicable …'`). The column is now
    formatted as text for every row.
+3. **The comparison chart's title had `6,000` typed into it** — `axes.set_title("Three
+   candidates on the same 6,000 test rows")` at `src/charts.py:148`. The number matched
+   `evaluation.test_rows` by luck, not by reading it, so the page's own banner (*nothing on
+   this page is typed in*) was false at that line. `comparison_figure` now takes `test_rows`
+   and formats the title from it, and the guard test scans **ints and numbers inside strings**
+   as well as floats — the old line is reported as one offender, the fixed tree as none.
+   The same commit replaced the comparison caption's fixed ranking prose (*the selected tree is
+   ahead on F1, the random forest on ROC-AUC*) with `evaluation.test_metric_leaders`, which
+   reads the leaders and their scores from the record.
 
 ## Re-running the checks
 

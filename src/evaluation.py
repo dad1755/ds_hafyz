@@ -68,6 +68,15 @@ MODEL_LABELS = {
 
 CLASS_LABELS = {"0": "0 = no default next month", "1": "1 = default next month"}
 
+#: Display names for the held-out metrics, used when a sentence has to name one.
+METRIC_LABELS = {
+    "accuracy": "accuracy",
+    "precision": "precision",
+    "recall": "recall",
+    "f1": "F1",
+    "roc_auc": "ROC-AUC",
+}
+
 
 class EvaluationError(RuntimeError):
     """A generated artifact is missing or unreadable. The message names the file only."""
@@ -228,6 +237,30 @@ def comparison_rows(metrics: Mapping[str, Any]) -> list[dict[str, Any]]:
         }
     )
     return rows
+
+
+def test_metric_leaders(
+    metrics: Mapping[str, Any], keys: Sequence[str] = ("f1", "roc_auc")
+) -> list[tuple[str, str, float]]:
+    """For each held-out metric, which candidate scored highest — read, never asserted.
+
+    Returns ``(label, metric key, value)`` in the order of ``keys``, skipping a metric no
+    candidate recorded. The page's caption names these leaders instead of stating a ranking
+    in prose, so a re-run of ``ml/evaluate.py`` that changes the ranking changes the caption.
+    """
+    models = metrics["evaluation"].get("models") or {}
+    leaders: list[tuple[str, str, float]] = []
+    for key in keys:
+        scored = [
+            (str(name), float(entry["metrics"][key]))
+            for name, entry in models.items()
+            if (entry.get("metrics") or {}).get(key) is not None
+        ]
+        if not scored:
+            continue
+        name, value = max(scored, key=lambda item: item[1])
+        leaders.append((MODEL_LABELS.get(name, name), key, value))
+    return leaders
 
 
 def selection_statements(metrics: Mapping[str, Any]) -> list[str]:
