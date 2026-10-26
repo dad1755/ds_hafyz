@@ -1,0 +1,26 @@
+Input: the synthetic demonstrator row from src/pages_prediction.py DEMO_EXAMPLE
+{"AGE": 34, "BILL_AMT1": 35000, "BILL_AMT2": 33500, "BILL_AMT3": 30000, "BILL_AMT4": 28000, "BILL_AMT5": 26500, "BILL_AMT6": 25000, "EDUCATION": 2, "LIMIT_BAL": 120000, "MARRIAGE": 2, "PAY_0": 2, "PAY_2": 2, "PAY_3": 0, "PAY_4": 0, "PAY_5": -1, "PAY_6": -1, "PAY_AMT1": 2000, "PAY_AMT2": 2500, "PAY_AMT3": 3000, "PAY_AMT4": 3000, "PAY_AMT5": 3500, "PAY_AMT6": 4000, "SEX": 2}
+
+1) on screen (Streamlit AppTest, real page):
+   class       : Predicted default next month
+   probability : Estimated model probability of next-month default: **71.95%** *(estimated, uncalibrated)*
+   band        : Risk band: High
+
+2) CLI (python -m src.inference --input -):
+   class       : Predicted default next month
+   probability : 0.719535
+   band        : High
+   version     : aihubcampus-default-risk-1+48ce02563b2a
+
+3) loaded pipeline (load_service().predict):
+   class       : Predicted default next month
+   probability : 0.719535
+   band        : High
+   version     : aihubcampus-default-risk-1+48ce02563b2a
+
+PASS  screen class == pipeline class
+PASS  screen probability == pipeline probability (2 dp)
+PASS  screen band == pipeline band
+PASS  CLI class == pipeline class
+PASS  CLI probability == pipeline probability
+PASS  CLI band == pipeline band

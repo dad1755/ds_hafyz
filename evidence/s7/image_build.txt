@@ -1,0 +1,12 @@
+# S7 — the application image builds from this tree and serves healthy.
+# Produced at commit 73d9825 on branch s7/user-prediction-ui
+
+$ docker build -t aihubcampus-web:s7 .
+#17 exporting manifest list sha256:52f4a58879b9f0e38457777ff5b2746656eb4fb40a9a572e3d803583cc36fddf 0.5s done
+#17 naming to docker.io/library/aihubcampus-web:s7
+#17 naming to docker.io/library/aihubcampus-web:s7 0.0s done
+#17 unpacking to docker.io/library/aihubcampus-web:s7
+#17 unpacking to docker.io/library/aihubcampus-web:s7 2.7s done
+#17 DONE 11.0s
+
+image: aihubcampus-web:s7  id=52f4a58879b9  size=969MB

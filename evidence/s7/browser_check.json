@@ -1,0 +1,66 @@
+[
+  {
+    "label": "375px",
+    "width": 375,
+    "height": 812,
+    "steps": {
+      "sign_in": true,
+      "predict_page": true,
+      "result": true
+    },
+    "form_overflow": {
+      "viewport": 375,
+      "scrollWidth": 375,
+      "overflowPx": 0
+    },
+    "demo_overflow": {
+      "viewport": 375,
+      "scrollWidth": 375,
+      "overflowPx": 0
+    },
+    "result_overflow": {
+      "viewport": 375,
+      "scrollWidth": 375,
+      "overflowPx": 0
+    },
+    "result_text": "AI Hub Campus | Section | Home | Predict default risk | My prediction history | AI Hub Campus | Credit Card Default Risk Prediction | Predict default risk | Load synthetic demonstrator example | 1 · Credit profile — 5 inputs | Credit limit (NTD, including supplementary cards) | Sex code | Education code | Marital status code | Age (whole years) | 2 · Repayment history — 6 inputs | 3 · Billing amounts — 6 inputs | 4 · Previous paid amounts — 6 inputs | Predict default risk | Predicted default next month | Estimated model probability of next-month default: 71.95% (estimated, uncalibrated) | Risk band: High | What this suggests: Offer supportive contact and discuss potential payment arrangements. | Clear result | Build information",
+    "history_overflow": {
+      "viewport": 375,
+      "scrollWidth": 375,
+      "overflowPx": 0
+    },
+    "history_text": "AI Hub Campus | Section | Home | Predict default risk | My prediction history | AI Hub Campus | Credit Card Default Risk Prediction | My prediction history | Build information"
+  },
+  {
+    "label": "desktop",
+    "width": 1280,
+    "height": 800,
+    "steps": {
+      "sign_in": true,
+      "predict_page": true,
+      "result": true
+    },
+    "form_overflow": {
+      "viewport": 1280,
+      "scrollWidth": 1280,
+      "overflowPx": 0
+    },
+    "demo_overflow": {
+      "viewport": 1280,
+      "scrollWidth": 1280,
+      "overflowPx": 0
+    },
+    "result_overflow": {
+      "viewport": 1280,
+      "scrollWidth": 1280,
+      "overflowPx": 0
+    },
+    "result_text": "AI Hub Campus | Section | Home | Predict default risk | My prediction history | AI Hub Campus | Credit Card Default Risk Prediction | Predict default risk | Load synthetic demonstrator example | 1 · Credit profile — 5 inputs | Credit limit (NTD, including supplementary cards) | Sex code | Education code | Marital status code | Age (whole years) | 2 · Repayment history — 6 inputs | 3 · Billing amounts — 6 inputs | 4 · Previous paid amounts — 6 inputs | Predict default risk | Predicted default next month | Estimated model probability of next-month default: 71.95% (estimated, uncalibrated) | Risk band: High | What this suggests: Offer supportive contact and discuss potential payment arrangements. | Clear result | Build information",
+    "history_overflow": {
+      "viewport": 1280,
+      "scrollWidth": 1280,
+      "overflowPx": 0
+    },
+    "history_text": "AI Hub Campus | Section | Home | Predict default risk | My prediction history | AI Hub Campus | Credit Card Default Risk Prediction | My prediction history | Build information"
+  }
+]

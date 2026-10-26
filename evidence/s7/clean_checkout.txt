@@ -1,0 +1,20 @@
+# S7 — a clean clone of this branch reproduces the whole suite. No .env, no volume, no network.
+# Produced from commit 73d9825 on branch s7/user-prediction-ui
+# (the clone is mounted with :z — this host runs SELinux Enforcing, so a fresh directory
+#  carries user_home_t and the container is denied unless the mount is relabelled)
+
+$ git clone --branch s7/user-prediction-ui <repo> /home/ec-user/non_prod/_s7_clean_checkout
+$ git -C <clone> rev-parse HEAD
+73d9825e5486f5029b82f258bd377cbf5c5b24ee
+$ git -C <clone> status --porcelain
+(empty: a clean tree)
+$ ls <clone>/.env
+ls: cannot access '/home/ec-user/non_prod/_s7_clean_checkout/.env': No such file or directory
+
+$ docker run --rm --network none -v <clone>:/app:z -w /app -u 1001:1001 aihubcampus-web:s7 python -m pytest tests -q
+........................................................................ [ 35%]
+........................................................................ [ 70%]
+...........................................................              [100%]
+
+203 passed, 1 warning in 158.32s (0:02:38)
+exit=0

@@ -1,0 +1,25 @@
+# S7 — real Chromium at 375x812 and 1280x800, driving the running container.
+# Produced at commit 73d9825 against image aihubcampus-web:s7.
+# The script signs in with a disposable synthetic account, opens Predict default risk,
+# loads the synthetic example, submits, reads the result, then opens My prediction history.
+
+$ node ui_screenshots.js aihubcampus-s7-ui 2026   # mcr.microsoft.com/playwright:v1.55.0-noble
+
+--- 375px (375x812) ---
+  steps completed : sign_in=True, predict_page=True, result=True
+  form_overflow    : viewport=375 scrollWidth=375 horizontal overflow=0px
+  demo_overflow    : viewport=375 scrollWidth=375 horizontal overflow=0px
+  result_overflow  : viewport=375 scrollWidth=375 horizontal overflow=0px
+  history_overflow : viewport=375 scrollWidth=375 horizontal overflow=0px
+  result on screen: Predicted default next month | Estimated model probability of next-month default: 71.95% (estimated, uncalibrated) | Risk band: High | What this suggests: Offer supportive contact and discuss potential payment arrangements. | Clear result
+
+--- desktop (1280x800) ---
+  steps completed : sign_in=True, predict_page=True, result=True
+  form_overflow    : viewport=1280 scrollWidth=1280 horizontal overflow=0px
+  demo_overflow    : viewport=1280 scrollWidth=1280 horizontal overflow=0px
+  result_overflow  : viewport=1280 scrollWidth=1280 horizontal overflow=0px
+  history_overflow : viewport=1280 scrollWidth=1280 horizontal overflow=0px
+  result on screen: Predicted default next month | Estimated model probability of next-month default: 71.95% (estimated, uncalibrated) | Risk band: High | What this suggests: Offer supportive contact and discuss potential payment arrangements. | Clear result
+
+screenshots: form_375px.png, form_filled_375px.png, result_375px.png, history_375px.png,
+             form_desktop.png, form_filled_desktop.png, result_desktop.png, history_desktop.png

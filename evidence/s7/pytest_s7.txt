@@ -1,0 +1,26 @@
+# S7 gate tests only.
+# Produced at commit 73d9825
+
+$ python -m pytest tests/test_predictions.py tests/test_prediction_ui.py -v
+tests/test_predictions.py::test_an_anonymous_caller_gets_an_error_not_rows PASSED [  4%]
+tests/test_predictions.py::test_a_submission_is_recorded_against_the_signed_in_account PASSED [  9%]
+tests/test_predictions.py::test_the_same_request_twice_in_one_session_writes_one_row PASSED [ 14%]
+tests/test_predictions.py::test_one_account_never_sees_another_accounts_rows PASSED [ 19%]
+tests/test_predictions.py::test_invalid_input_blocks_the_model_and_writes_nothing[features0] PASSED [ 23%]
+tests/test_predictions.py::test_invalid_input_blocks_the_model_and_writes_nothing[features1] PASSED [ 28%]
+tests/test_predictions.py::test_invalid_input_blocks_the_model_and_writes_nothing[features2] PASSED [ 33%]
+tests/test_predictions.py::test_invalid_input_blocks_the_model_and_writes_nothing[features3] PASSED [ 38%]
+tests/test_predictions.py::test_invalid_input_blocks_the_model_and_writes_nothing[features4] PASSED [ 42%]
+tests/test_predictions.py::test_invalid_input_blocks_the_model_and_writes_nothing[features5] PASSED [ 47%]
+tests/test_predictions.py::test_invalid_input_blocks_the_model_and_writes_nothing[features6] PASSED [ 52%]
+tests/test_predictions.py::test_no_submitted_feature_value_is_stored_or_audited PASSED [ 57%]
+tests/test_predictions.py::test_the_history_survives_a_new_connection PASSED [ 61%]
+tests/test_prediction_ui.py::test_the_form_offers_exactly_the_23_contract_features PASSED [ 66%]
+tests/test_prediction_ui.py::test_the_on_screen_result_equals_the_direct_pipeline_output PASSED [ 71%]
+tests/test_prediction_ui.py::test_the_demonstrator_is_labelled_synthetic_and_every_field_stays_editable PASSED [ 76%]
+tests/test_prediction_ui.py::test_invalid_input_blocks_the_model_with_a_readable_message PASSED [ 80%]
+tests/test_prediction_ui.py::test_a_repeat_submit_does_not_write_a_second_row PASSED [ 85%]
+tests/test_prediction_ui.py::test_history_shows_only_the_signed_in_accounts_rows PASSED [ 90%]
+tests/test_prediction_ui.py::test_the_history_page_states_a_row_is_not_a_default PASSED [ 95%]
+tests/test_prediction_ui.py::test_an_anonymous_visitor_cannot_reach_the_prediction_pages PASSED [100%]
+======================== 21 passed, 1 warning in 43.58s ========================
