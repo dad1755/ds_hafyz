@@ -1,0 +1,15 @@
+$ git clone --branch s9/dataset-manager /home/ec-user/non_prod/hafyz_ds /tmp/s9-clean-3QlOcP/repo
+cloned at: 25c4ff0 S9: evidence — staging counts, two refusals, activation across a restart, and an unchanged artifact
+tracked files: 226
+untracked/modified after clone: 0
+seed present: yes
+artifact present: yes
+no .env in the clone: confirmed
+
+$ docker run --rm -v <clean clone>:/app:z -w /app aihubcampus-web:s9 python -m pytest tests -q -p no:cacheprovider
+........................................................................ [ 29%]
+........................................................................ [ 58%]
+........................................................................ [ 87%]
+...............................                                          [100%]
+247 passed in 227.02s (0:03:47)
+exit=0
