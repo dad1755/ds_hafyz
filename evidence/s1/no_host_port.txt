@@ -1,0 +1,17 @@
+$ docker compose ps
+NAME                IMAGE                   COMMAND                  SERVICE   CREATED         STATUS                   PORTS
+aihubcampus-web-1   aihubcampus-web:local   "streamlit run app.p…"   web       7 minutes ago   Up 7 minutes (healthy)   2026/tcp
+
+$ docker ps --filter label=com.docker.compose.project=aihubcampus
+NAMES               IMAGE                   STATUS                   PORTS
+aihubcampus-web-1   aihubcampus-web:local   Up 7 minutes (healthy)   2026/tcp
+
+$ docker port aihubcampus-web-1   # empty output = no host port mapped
+exit=0  (lines above: none expected)
+
+$ docker inspect aihubcampus-web-1 --format '{{json .NetworkSettings.Ports}}'
+{"2026/tcp":null}
+
+$ docker inspect aihubcampus-web-1 --format '{{json .NetworkSettings.Networks}}' (subnet/ip only)
+aihubcampus_internal ip=10.202.0.2 gw=10.202.0.1
+

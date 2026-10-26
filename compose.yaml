@@ -1,0 +1,72 @@
+# AI Hub Campus — single Compose project, single internal network, no host ports.
+#
+#   docker compose config --quiet      # validate without printing expanded env
+#   docker compose build web
+#   docker compose up -d web           # web only; cloudflared is started by the operator (S13)
+#
+# Port coupling: the existing Cloudflare tunnel publishes www.aihubcampus.online and
+# aihubcampus.online to http://web:2026. The app therefore listens on 2026 and the service
+# must stay named `web` (the ingress targets that Docker DNS name). See docs/architecture.md §5.
+
+name: aihubcampus
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: aihubcampus-web:local
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      APP_DB_PATH: /app/storage/aihubcampus.db
+      APP_PORT: "2026"
+    volumes:
+      - app_storage:/app/storage
+    expose:
+      - "2026"
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:2026/_stcore/health', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+    security_opt:
+      - no-new-privileges:true
+
+  # Outbound-only tunnel client. Started only when the operator deploys (S13); it is not
+  # required to build or run `web`, and its token file is optional so that
+  # `docker compose config` and `up web` work without any Cloudflare credential.
+  cloudflared:
+    image: cloudflare/cloudflared:2026.8.2
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    env_file:
+      - path: .env.cloudflared
+        required: false
+    depends_on:
+      web:
+        condition: service_healthy
+    networks:
+      - internal
+    security_opt:
+      - no-new-privileges:true
+
+networks:
+  internal:
+    driver: bridge
+    # Host constraint (S1): the Docker daemon's predefined address pools are fully
+    # subnetted by the other stacks on ridergami2, so an implicitly-allocated bridge
+    # network fails with "all predefined address pools have been fully subnetted".
+    # The subnet is pinned instead. 10.202.0.0/24 is outside every default pool
+    # (172.16.0.0/12, 192.168.0.0/16) and outside every network that existed at S1
+    # time — see docs/architecture.md §11.
+    ipam:
+      config:
+        - subnet: 10.202.0.0/24
+
+volumes:
+  app_storage:

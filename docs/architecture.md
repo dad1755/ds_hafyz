@@ -1,8 +1,9 @@
 # Architecture — AI Hub Campus credit card default risk prediction
 
-Status: **design frozen in Sprint 0**; no application code exists yet. Anything here
-describing behaviour is a specification, not a claim that it runs. Deviations from
-`blueprint.md` are recorded in §9.
+Status: **design frozen in Sprint 0**; **Sprint 1 adds the container skeleton** (§11) —
+a branded shell and a health probe, with no authentication, database or model. Anything
+here describing behaviour beyond that is a specification, not a claim that it runs.
+Deviations from `blueprint.md` are recorded in §9.
 
 ## 1. Purpose and boundary
 
@@ -142,12 +143,32 @@ canonical host:
 
 - Do **not** pin `browser.serverAddress`; Streamlit derives it from the request `Host`
   header, which keeps XSRF/CORS origin checks correct for whichever name is used.
+  *(Superseded in S1 — see the amendment at the end of this section: the S1 card requires
+  the pin, and both hostnames were re-verified as reachable with it in place.)*
 - No apex→www redirect is needed or configured (Cloudflare already routes both).
 - S13 must test login, upload and a prediction over **both** hostnames.
 
 **Risk if the report is wrong.** If the real route is `8501`, the symptom is a 502/1033
 at the edge while the container is healthy. S13 detects it in one curl; the fix is the
 `APP_PORT` value. Nothing else in the design depends on the number.
+
+**S1 amendment — `browser.serverAddress` / `browser.serverPort` are pinned.** The S1 card
+requires `browser.serverAddress=www.aihubcampus.online` and `browser.serverPort=443` in
+`.streamlit/config.toml` (blueprint §2 asks for them "if required for proxy support"), so
+they are set. They change only the URL Streamlit *reports* (`docker compose logs web` shows
+`URL: http://www.aihubcampus.online:443`); where the socket binds is still `server.address`,
+and S1 verified below that both hostnames still reach the app.
+
+```text
+GET http://web:2026/_stcore/health                        -> 200 ok
+GET http://web:2026/ with Host: www.aihubcampus.online    -> 200
+GET http://web:2026/ with Host: aihubcampus.online        -> 200
+```
+
+Both hostnames therefore still reach the app with the values pinned
+(`evidence/s1/ingress_target.txt`). S13 must re-test login, upload and a prediction over
+both hostnames in a real browser; if the apex turns out to be affected there, deleting the
+two `[browser]` keys is the whole fix.
 
 ## 6. Data flow and storage
 
@@ -217,11 +238,66 @@ project other than `aihubcampus`.
 | D3 | `PAY_1` implied by "six status columns" naming | `PAY_0, PAY_2…PAY_6` exactly as the CSV | The dataset has no `PAY_1`; inventing one would break the contract |
 | D4 | Dataset described as all-integer monetary columns | Monetary columns read as float-safe, whole-NTD values | 4,262 cells use scientific notation (see `docs/report_evidence.md`) |
 | D5 | Six EDA plots as a fixed list | Same six; captions must state the actual observed numbers | Draft's education "others" figure was wrong (C7) |
+| D6 | §2: pin `browser.serverAddress`/`serverPort` only "if required" | Pinned to `www.aihubcampus.online` / `443` | Required by the S1 card; both hostnames re-verified reachable with the pin (§5 amendment) |
+| D7 | §7 compose: `networks: internal: driver: bridge` | Same, plus `ipam` subnet `10.202.0.0/24` | The host daemon's predefined address pools are exhausted, so an implicitly-subnetted network cannot be created (§11) |
+| D8 | §7 compose: `cloudflared` reads `${TUNNEL_TOKEN:?}` | `cloudflared` reads `.env.cloudflared` via `env_file` with `required: false` | `${TUNNEL_TOKEN:?}` makes `docker compose config` fail when the token is absent; the app must build and run without any Cloudflare credential (§11) |
 
 ## 10. Open decisions deferred to later sprints
 
-- Exact Streamlit/sklearn pins (S1) — must be compatible with Python 3.12.
+- ~~Exact Streamlit/sklearn pins (S1)~~ — resolved in S1: `requirements.in` (direct) →
+  `requirements.txt` (fully pinned lock, 54 entries) on Python 3.12; see §11.
 - Whether the optional `127.0.0.1:2026` troubleshooting bind is enabled (S12, off by default).
 - Model selection if reproduction differs from the draft's Decision Tree (S4) — decided on
   F1 and default-class recall, never accuracy alone.
 - Backup/restore drill mechanics (S12).
+
+## 11. S1 implementation record — container skeleton
+
+**What exists now.** `app.py` renders the branded shell and an inert sign-in form;
+`src/config.py` is the typed, non-secret settings loader; `Dockerfile`, `compose.yaml`,
+`.streamlit/config.toml`, `.env.example`, `.env.cloudflared.example` and `.dockerignore`
+define the runtime. There is still no authentication, no database, no model and no dataset
+in the image.
+
+**Container facts, each captured in `evidence/s1/`.**
+
+| Fact | Value | Evidence |
+|---|---|---|
+| Base image | `python:3.12-slim`, Python 3.12.14 | `image_contents.txt` |
+| Runtime user | `app` (uid/gid 1001), non-root | `health_inside.txt` |
+| Listening port | `2026` (`EXPOSE 2026`, `expose: 2026`, no `ports:`) | `image.txt`, `compose_config.txt` |
+| Host port mapping | none — `docker port` empty, `NetworkSettings.Ports = {"2026/tcp":null}` | `no_host_port.txt` |
+| Health | `/_stcore/health` → `200 ok` from inside the container and from a peer container on the network | `health_inside.txt`, `ingress_target.txt` |
+| Image contents | `/app` = `.streamlit`, `app.py`, `requirements.txt`, `src/`, `storage`; no `.env`, no `.db`, no dataset | `image_contents.txt` |
+| Tests | 11 passed (settings + shell) | `pytest.txt` |
+| Shell behaviour | submitting the form produces a warning only: 0 success, 0 error, no credential echoed | `apptest.txt` |
+
+**Host constraint — the pinned subnet (D7).** On `ridergami2` the Docker daemon's predefined
+address pools are fully subnetted by the other ~40 networks on the host, so creating the
+project network implicitly fails:
+
+```text
+$ docker network create aihubcampus-s1-probe
+Error response from daemon: all predefined address pools have been fully subnetted
+exit=1
+```
+
+`compose.yaml` therefore pins `10.202.0.0/24` for `internal`. The range sits outside the
+daemon's default pools (`172.16.0.0/12`, `192.168.0.0/16`), so it cannot be handed to a
+later stack, and it overlapped none of the host's other networks — the check records
+`overlaps=0` in `evidence/s1/network_constraint.txt`. This is a project-local compose
+setting; no daemon configuration was touched. If the host is ever re-subnetted, the value
+is one line.
+
+**Tunnel token handling (D8).** `cloudflared` gets `TUNNEL_TOKEN` from `.env.cloudflared`
+through an `env_file` entry marked `required: false`. Consequences: `docker compose config
+--quiet` and `docker compose up -d web` work on a host with no Cloudflare credential at all,
+and the token never enters compose interpolation (so it cannot leak into `docker compose
+config` output, which is only ever run with `--quiet`). The service stays named `web`
+because the ingress targets that DNS name, and `cloudflared` was deliberately **not started**
+in S1 — starting the tunnel is S13's job.
+
+**Not done in S1, by design.** No authentication, no RBAC, no SQLite, no dataset versioning,
+no model, no EDA, no tunnel, no deployment. Nothing in this sprint answers on a public
+hostname, and `docker compose down` (never `-v`) left the stack stopped at the end of the
+sprint.

@@ -2,6 +2,7 @@
 .env
 .env.*
 !.env.example
+!.env.cloudflared.example
 # operator record; contains plaintext demo credentials — keep it out of git
 PROJECT_DETAILS.md
 *.pem

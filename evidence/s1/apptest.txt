@@ -1,0 +1,12 @@
+# Streamlit AppTest renders the script headlessly and reports any exception.
+# Second block submits the form with probe credentials and shows the only feedback.
+$ docker run --rm aihubcampus-web:local python -c 'AppTest.from_file("app.py").run(); ...'
+exceptions: []
+title: ['AI Hub Campus']
+subheader: ['Credit Card Default Risk Prediction']
+text_inputs: ['Username', 'Password']
+buttons: ['Sign in']
+
+after submit -> exceptions: []
+after submit -> success blocks: 0 | error blocks: 0
+after submit -> warning: ['Sign-in is not available in this build. Nothing was checked, and what you typed was discarded immediately — it is not stored or logged anywhere.']

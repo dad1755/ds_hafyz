@@ -1,0 +1,3 @@
+$ docker run --rm -v "$PWD/tests:/app/tests:ro,z" aihubcampus-web:local python -m pytest tests -q
+...........                                                              [100%]
+11 passed in 16.25s

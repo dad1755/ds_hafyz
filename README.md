@@ -6,9 +6,11 @@ probability, a display tier and supportive recommendations. Admin and User roles
 Streamlit + scikit-learn + SQLite in Docker, published through an existing Cloudflare
 Tunnel at **www.aihubcampus.online**.
 
-> **Status: Sprint 0 complete, awaiting independent verification.** Only discovery,
-> dataset verification and documentation exist. There is no application code, no trained
-> model, no container and no deployment yet. Anything claiming otherwise is unverified.
+> **Status: Sprint 1 complete, awaiting independent verification.** A buildable container
+> exists: a branded shell with an inert sign-in form and a healthy probe on the internal
+> port, reproducible from a clean checkout. There is still **no authentication, no
+> database, no model, no dataset versioning and no deployment** — nothing on the page
+> authenticates anyone or scores anything, and the app is not reachable from the internet.
 
 ## Data provenance and citation
 
@@ -44,26 +46,33 @@ Produced by `python3 ml/inspect_dataset.py` (full output: `evidence/s0/inspect_d
 | Class 0 — no default next month | 23,364 (77.88%) |
 | Class 1 — default next month | 6,636 (22.12%) |
 
-## Repository layout (target)
+## Repository layout (current)
 
 ```text
 .
 ├── README.md                  # this file
 ├── blueprint.md               # implementation specification, S0–S16
 ├── Group Project 40%.md       # assessment authority (report + presentation rubric)
+├── app.py                     # Streamlit entry point — branded shell + inert sign-in (S1)
+├── src/config.py              # typed, non-secret environment settings (S1)
+├── .streamlit/config.toml     # server address/port 2026, CORS + XSRF on (S1)
+├── Dockerfile                 # python:3.12-slim, non-root, healthcheck (S1)
+├── compose.yaml               # project `aihubcampus`: web + cloudflared, no host ports (S1)
+├── requirements.in            # direct dependencies (human-edited)
+├── requirements.txt           # fully pinned lock, 54 entries (generated)
+├── .env.example               # placeholders only
+├── .env.cloudflared.example   # tunnel-token placeholder only
+├── .dockerignore
 ├── data/UCI_Credit_Card.csv   # immutable benchmark seed
-├── docs/
-│   ├── source_of_truth.md     # precedence rules + conflict register
-│   ├── rubric_matrix.md       # 26 report components + 9+9 rubric items → sprints
-│   ├── architecture.md        # topology, tech choices, ingress, threat model
-│   └── report_evidence.md     # verified vs claimed, discrepancies, limitations
-├── evidence/s0/               # captured Sprint 0 command output
+├── docs/                      # architecture, source of truth, rubric matrix, evidence
+├── evidence/s0/, evidence/s1/ # captured command output
 ├── ml/                        # inspect_dataset.py, verify_draft_claims.py (S0)
-│                              # + schema.py, eda, train, evaluate (S2–S5)
-├── src/                       # app logic: auth, validation, inference (S2–S9)
-├── models/                    # artifacts + metrics.json (S4–S5)
-└── app.py                     # Streamlit entry point (S1)
+├── tests/                     # pytest: settings loader + login shell (S1)
+└── models/                    # artifacts + metrics.json (S4–S5)
 ```
+
+Modules are added when the sprint that implements them runs — no dead placeholder files.
+`schema.py`, `db.py`, `security.py`, `inference.py` and the page modules arrive with S2–S9.
 
 ## Sprint 0 commands (run today, no dependencies)
 
@@ -79,10 +88,35 @@ data disagrees with the documented contract, and regenerate `evidence/s0/*.txt`.
 (the `EDUCATION` "others" default rate is 5.7% for code 4 alone, not the 7.05% aggregate
 of codes 0,4,5,6). See `docs/report_evidence.md` §4.
 
+## Sprint 1 — build and run the container
+
+```bash
+cp .env.example .env && chmod 600 .env     # replace every REPLACE_WITH_* value
+docker compose config --quiet              # validation only; never print expanded env
+docker compose build web
+docker compose up -d web
+docker compose ps                          # STATUS must show (healthy); PORTS must show 2026/tcp only
+docker compose exec -T web python -c "import urllib.request; print(urllib.request.urlopen('http://127.0.0.1:2026/_stcore/health').status)"
+docker compose exec -T web python -c "import urllib.request; print(urllib.request.urlopen('http://web:2026/_stcore/health').status)"   # the exact ingress target
+docker compose down                        # never `down -v`
+```
+
+`cloudflared` is **not** started by these commands and needs no token to exist. When the
+tunnel is eventually started (S13) it reads `TUNNEL_TOKEN` from `.env.cloudflared` — see
+`.env.cloudflared.example`.
+
+Tests run inside the built image, so they use the pinned dependencies and no host Python:
+
+```bash
+docker run --rm -v "$PWD/tests:/app/tests:ro,z" aihubcampus-web:local python -m pytest tests -q
+```
+
+S1 evidence (real command output, nothing hand-written): `evidence/s1/`.
+
 ## Security and scope rules
 
 - Secrets live only in the operator's `.env` / `.env.cloudflared` (mode 600, git-ignored).
-  No credential is committed, logged, echoed or screenshotted. `.env.example` will carry
+  No credential is committed, logged, echoed or screenshotted; the example files carry
   placeholders only.
 - `scripts/check_no_secrets.py` is the gate: it reads the operator env, scans every
   tracked file (including the `.docx` drafts) and fails on any secret or credential
@@ -105,6 +139,6 @@ of codes 0,4,5,6). See `docs/report_evidence.md` §4.
 
 ## Next sprint
 
-**S1** — repository skeleton, pinned dependencies, `.env.example`, `.streamlit/config.toml`,
-Dockerfile, Compose, static login shell and health endpoint on port 2026. No model, no
-auth logic yet.
+**S2** — CSV integrity, schema and dataset version manager: `ml/schema.py` + `src/validation.py`
+(23-feature contract), checksum/version recording, and the quarantine path for rejected uploads.
+The container, pins and shell it builds on are in place from S1.

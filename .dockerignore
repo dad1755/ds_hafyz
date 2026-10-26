@@ -1,0 +1,33 @@
+# Keep the build context small and secret-free.
+.git
+.gitignore
+.dockerignore
+
+# secrets — never sent to the daemon
+.env
+.env.*
+!.env.example
+!.env.cloudflared.example
+PROJECT_DETAILS.md
+
+# runtime state and data (mounted, never baked in)
+storage/
+*.db
+*.db-wal
+*.db-shm
+logs/
+data/
+models/
+evidence/
+
+# documentation and drafting material
+docs/
+*.md
+*.docx
+
+# tests are not part of the runtime image
+tests/
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
