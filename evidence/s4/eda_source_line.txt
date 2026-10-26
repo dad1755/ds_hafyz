@@ -1,0 +1,38 @@
+# F-1 carry-in from the S3 gate: ml/generate_eda.py passed source=False to finish() for the
+# correlation heatmap, so figure 06 had no source line while the other five did. Fix = drop
+# the argument; the other five figures must not change.
+$ git diff 7ab66ce -- ml/generate_eda.py
+diff --git a/ml/generate_eda.py b/ml/generate_eda.py
+index e4d197c..b20e6b9 100644
+--- a/ml/generate_eda.py
++++ b/ml/generate_eda.py
+@@ -320,7 +320,7 @@ def plot_correlation_heatmap(df: pd.DataFrame, out: Path) -> Path:
+     bar = fig.colorbar(image, ax=ax, fraction=0.046, pad=0.03)
+     bar.set_label("Pearson r", fontsize=7)
+     bar.ax.tick_params(labelsize=6.5)
+-    return finish(fig, out, len(df), source=False)
++    return finish(fig, out, len(df))
+ 
+ 
+ # --------------------------------------------------------------------------- statistics
+
+$ python ml/generate_eda.py --csv data/UCI_Credit_Card.csv --out models/eda --quiet
+wrote 6 figures to models/eda/
+  01_target_class_distribution.png      49,050 B
+  02_age_by_class.png                   37,386 B
+  03_limit_bal_by_class.png             37,584 B
+  04_default_rate_by_pay0.png           55,088 B
+  05_default_rate_by_education.png      43,507 B
+  06_correlation_heatmap.png            55,133 B
+  summary.json                          14,041 B
+exit=0
+
+# committed blob at 7ab66ce  vs  regenerated file now
+file                                   7ab66ce            regenerated        verdict
+01_target_class_distribution.png       dd5c223d8a6ff479   dd5c223d8a6ff479   unchanged
+02_age_by_class.png                    c5ba850c00a2f0a9   c5ba850c00a2f0a9   unchanged
+03_limit_bal_by_class.png              4c545232d827506b   4c545232d827506b   unchanged
+04_default_rate_by_pay0.png            46a3801519c54708   46a3801519c54708   unchanged
+05_default_rate_by_education.png       46a6fb6a72aadc96   46a6fb6a72aadc96   unchanged
+06_correlation_heatmap.png             3c6673b55d3c81e8   c618a81cffbf3b46   CHANGED
+summary.json                           d72443df7d962b56   d72443df7d962b56   unchanged

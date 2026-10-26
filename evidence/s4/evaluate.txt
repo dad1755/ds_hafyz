@@ -1,0 +1,23 @@
+# S4 evaluation: score each fitted pipeline once on the 6,000 held-out rows.
+# Threshold 0.5, positive class 1. The test set was not read by ml/train.py.
+#   docker run --rm --user "$(id -u):$(id -g)" -e HOME=/tmp -e MPLCONFIGDIR=/tmp/mpl \
+#     -v "$PWD:/app:z" -w /app aihubcampus-web:local python -m ml.evaluate --models-dir models
+$ python -m ml.evaluate --models-dir models
+test set : 6,000 rows, untouched until now (class 0 4,673 / class 1 1,327)
+threshold: 0.5  positive class: 1
+
+model                      acc    prec     rec      f1     auc       TN    FP    FN    TP
+logistic_regression     0.8077  0.6868  0.2396  0.3553  0.7076    4,528   145 1,009   318
+decision_tree           0.8172  0.6611  0.3557  0.4625  0.7423    4,431   242   855   472
+random_forest           0.8122  0.6773  0.2879  0.4040  0.7665    4,491   182   945   382
+always_class_0          0.7788  0.0000  0.0000  0.0000       —    4,673     0 1,327     0
+
+selected : decision_tree  (DecisionTreeClassifier)
+shipped  : models/best_pipeline.joblib  sha256 48ce02563b2aad9fbf9397603c642b0319be617c57fde8e1fd26ec08d518ad7b
+figures  : 4 written to models/figures/
+  confusion_logistic_regression.png
+  confusion_decision_tree.png
+  confusion_random_forest.png
+  feature_importance_selected.png
+wrote    : models/metrics.json  and models/model_manifest.json
+exit=0

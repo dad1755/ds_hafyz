@@ -96,7 +96,7 @@ numeric** in the S4 baseline: no one-hot encoding. Reasons:
 Limitation, which must appear in the report: `EDUCATION` and `MARRIAGE` are **not** ordinal —
 code 2 ("university") is not twice code 1 ("graduate school"). A linear model can only fit a
 straight-line effect on those codes, and the observed non-monotone default rates (see
-`docs/report_evidence.md` §7.3) are evidence that a straight line is a poor description. If S4
+`docs/report_evidence.md` §6.3) are evidence that a straight line is a poor description. If S4
 adds a one-hot variant it must be an *additional, separately named* candidate, and if such a
 model is selected the served artifact must contain the same one-hot transformer.
 

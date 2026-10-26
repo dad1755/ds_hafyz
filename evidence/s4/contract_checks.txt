@@ -1,0 +1,54 @@
+# The six checks docs/preprocessing_contract.md §6 requires, quoted from models/metrics.json.
+#   $ python -c 'import json; m=json.load(open("models/metrics.json")); print(json.dumps({...}))'
+
+[1] split (contract §2)
+    train_test_split(test_size=0.2, stratify=y, random_state=42)
+    train 24,000 {'0': 18691, '1': 5309}   test 6,000 {'0': 4673, '1': 1327}
+    dropped: ['ID', 'default.payment.next.month']   features: 23 in ml.schema.FEATURES order
+    dataset sha256: a0f0ab49d6326671d6cd83be5c88dcf18007025fe9a53ecd699119c871176ca1
+    metadata checksum: 905db2337636791e64afefd765a45b1973a7a0110b8984dabd96e87ffdf11f06
+
+[2] leakage — the scaler was fitted on X_train, not on the full dataset (contract §6.2)
+    checked_on: logistic_regression
+    limit_bal_mean_full: 167484.322667
+    limit_bal_mean_train: 167364.666667
+    limit_bal_scaler_mean: 167364.666667
+    max_abs_delta_vs_full_dataset_mean: 195.78052500000194
+    max_abs_delta_vs_train_mean: 0.0
+    tolerance: 1e-06
+    verdict: scaler fitted on X_train only
+
+[3] arithmetic — metrics re-derived from TN/FP/FN/TP (contract §6.3)
+    decision_tree          TN 4,431 FP  242 FN   855 TP  472 total 6,000  max|delta| 0.0  metrics consistent with TN/FP/FN/TP
+    logistic_regression    TN 4,528 FP  145 FN 1,009 TP  318 total 6,000  max|delta| 0.0  metrics consistent with TN/FP/FN/TP
+    random_forest          TN 4,491 FP  182 FN   945 TP  382 total 6,000  max|delta| 0.0  metrics consistent with TN/FP/FN/TP
+
+[4] order — the manifest's feature list is the schema's (contract §6.4)
+    manifest_features: ['LIMIT_BAL', 'SEX', 'EDUCATION', 'MARRIAGE', 'AGE', 'PAY_0', 'PAY_2', 'PAY_3', 'PAY_4', 'PAY_5', 'PAY_6', 'BILL_AMT1', 'BILL_AMT2', 'BILL_AMT3', 'BILL_AMT4', 'BILL_AMT5', 'BILL_AMT6', 'PAY_AMT1', 'PAY_AMT2', 'PAY_AMT3', 'PAY_AMT4', 'PAY_AMT5', 'PAY_AMT6']
+    scores_23_column_frame: True
+    verdict: the shipped pipeline scores a 23-column frame in ml.schema.FEATURES order
+
+[5] artifact — the shipped pipeline is the selected candidate, and still scores the same rows
+    bytes: 8187
+    path: models/best_pipeline.joblib
+    predictions_identical_to_candidate: True
+    probabilities_identical_to_candidate: True
+    sha256: 48ce02563b2aad9fbf9397603c642b0319be617c57fde8e1fd26ec08d518ad7b
+    source_candidate: decision_tree
+    source_candidate_sha256: 48ce02563b2aad9fbf9397603c642b0319be617c57fde8e1fd26ec08d518ad7b
+    verdict: the shipped pipeline reproduces its candidate's test predictions
+
+[6] no test-set tuning (contract §2)
+    objective: Maximise mean 5-fold cross-validated F1 on class 1 (default next month) on the training rows [...]
+    selected: decision_tree  decided_by: cv_f1
+    test rows used for selection: 0
+      rank 1  decision_tree          cv_f1 0.4643  cv_recall 0.3513  cv_precision 0.6868
+      rank 2  random_forest          cv_f1 0.4191  cv_recall 0.3001  cv_precision 0.6959
+      rank 3  logistic_regression    cv_f1 0.3647  cv_recall 0.2452  cv_precision 0.7118
+
+[7] environment recorded in metrics.json
+    joblib: 1.6.0
+    numpy: 2.5.4
+    pandas: 3.1.0
+    python: 3.12.14
+    scikit-learn: 1.9.1

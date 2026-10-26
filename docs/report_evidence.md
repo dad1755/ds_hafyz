@@ -159,9 +159,9 @@ the reproduction actually produces.
 
 | Claim | Source | Why unverified | Sprint that settles it |
 |---|---|---|---|
-| LR / DT / RF accuracy, precision, recall, F1 (Table 9) | v3 §4.2–4.3 | No artifact, seed or run log in repo; arithmetic alone is not evidence | S4 |
-| Decision Tree is the best model | v3 §4.3, v1 §5 | Depends on reproduced metrics | S4 |
-| Feature importance PAY_0 68.01%, PAY_2 13.77% | v3 Table 10 | No trained model to inspect | S4 |
+| LR / DT / RF accuracy, precision, recall, F1 (Table 9) | v3 §4.2–4.3 | **Settled in S4**: reproduced from `models/best_pipeline.joblib` and `models/metrics.json`; LR and RF match to four decimals, DT to ~1e-3 — see §7.3 | S4 |
+| Decision Tree is the best model | v3 §4.3, v1 §5 | **Settled in S4**: highest cross-validated F1 *and* highest held-out F1 of the three — but it misses 64.4 % of defaulters, so "best" means least-bad; see §7.4–7.5 | S4 |
+| Feature importance PAY_0 68.01%, PAY_2 13.77% | v3 Table 10 | **Settled in S4**: reproduced exactly (68.01 % / 13.77 %) from the shipped tree — `evidence/s4/feature_importances.txt` | S4 |
 | All 12 system tests pass (T01–T12) | v3 §6.1, v1 §6 | No test files, no recorded output | S11 |
 | "Fourteen day" schedule met | v3 §1.4, v1 §7 | Planning assumption; deadline not confirmed by the lecturer | S14/S15 |
 | Four-member division of work | v3 §1.4 | Not confirmed by the group | S15 (B8) |
@@ -220,7 +220,8 @@ docker run --rm --user "$(id -u):$(id -g)" -e HOME=/tmp -e MPLCONFIGDIR=/tmp/mpl
 
 | Fact | Value | Evidence |
 |---|---|---|
-| Figures written | 6 PNG + `summary.json`, 49,050 / 37,386 / 37,584 / 55,088 / 43,507 / 46,373 / 14,041 B | `evidence/s3/eda_run.txt`, `eda_files.txt` |
+| Figures written | 6 PNG + `summary.json`, 49,050 / 37,386 / 37,584 / 55,088 / 43,507 / 55,133 / 14,041 B | `evidence/s3/eda_run.txt`, `eda_files.txt`, `evidence/s4/eda_source_line.txt` |
+| Source line on every figure | after the S3 gate (finding F-1) the correlation heatmap also carries the source line; blueprint §9 asks for title, axes, source and units on the figure set and figure 06 was the one exception. Dropping `source=False` changed **only** figure 06 (46,373 → 55,133 B); the other five blobs and `summary.json` are unchanged | `evidence/s4/eda_source_line.txt` |
 | Regeneration is deterministic | two independent runs into separate directories → all 7 files **byte-for-byte identical** (SHA-256 per file) | `evidence/s3/eda_determinism.txt` |
 | Files are real, on disk | a fresh container process decoded all six with Pillow: `PNG 750×610` ×5, `PNG 940×820` ×1, mode RGBA | `evidence/s3/eda_render_after_restart.txt` |
 | Legible at 375 px | 750 px wide is 2× the 375 px viewport the app must support (S7/S10); heatmap 940 px | same |
@@ -329,9 +330,176 @@ and no direction of effect is established.
    it.
 5. The data is a historical Taiwanese sample from April–September 2005 in NTD. Nothing here
    transfers to current Malaysian portfolios without new evidence.
-6. These plots describe the data, not the model. Per-model performance appears in S4.
+6. These plots describe the data, not the model. Per-model performance appears in §7.
 
-## 7. Evidence index
+## 7. Sprint 4 — three-model training and fair evaluation
+
+### 7.1 How the three models were trained
+
+`ml/train.py` implements `docs/preprocessing_contract.md` and nothing else: the 23 features of
+`ml.schema.FEATURES` in that order, `ID` and the target dropped, one stratified 80/20 split at
+`random_state=42`, one `Pipeline` per candidate whose first step is a `ColumnTransformer` fitted
+on `X_train` alone.
+
+```bash
+docker run --rm --user "$(id -u):$(id -g)" -e HOME=/tmp -e MPLCONFIGDIR=/tmp/mpl \
+  -v "$PWD:/app:z" -w /app aihubcampus-web:local \
+  python -m ml.train --csv data/UCI_Credit_Card.csv --out models
+docker run --rm --user "$(id -u):$(id -g)" -e HOME=/tmp -e MPLCONFIGDIR=/tmp/mpl \
+  -v "$PWD:/app:z" -w /app aihubcampus-web:local \
+  python -m ml.evaluate --models-dir models
+```
+
+Full stdout: `evidence/s4/train.txt` and `evidence/s4/evaluate.txt`.
+
+| Candidate | Numeric treatment fitted on `X_train` | Hyper-parameters |
+|---|---|---|
+| `LogisticRegression` | `StandardScaler` | `max_iter=1000`, `random_state=42` |
+| `DecisionTreeClassifier` | `passthrough` | `max_depth=5`, `random_state=42` |
+| `RandomForestClassifier` | `passthrough` | `n_estimators=100`, `max_depth=5`, `random_state=42` |
+
+The scaling difference is deliberate (contract §3.1), not an accident of the code. A tree splits
+on order, so a monotone rescaling cannot change the fitted tree; a linear model's coefficients
+and solver convergence need comparable scales, because `LIMIT_BAL` spans 10,000–1,000,000 NTD
+while the `PAY_*` codes span −2…8. The three candidates are therefore *not* "the same pipeline
+with a different last step", and the comparison below is between three fair, leakage-free
+pipelines rather than one pipeline and two handicapped copies.
+
+### 7.2 The split, and the evidence it did not leak
+
+`train_test_split(test_size=0.2, stratify=y, random_state=42)` → **24,000 train / 6,000 test**,
+class mix 18,691/5,309 and 4,673/1,327. Dataset SHA-256 `a0f0ab49…176ca1`, unchanged.
+
+The scaler check is the one that could catch the classic leak. Fitted on the training rows, its
+`mean_` for `LIMIT_BAL` is **167,364.666667** — exactly the training mean — while the whole-dataset
+mean is 167,484.322667. Maximum absolute difference from the training mean: **0.0**; from the
+full-dataset mean: **195.78**. A transform fitted on all 30,000 rows would have produced the
+second number. Quoted in `evidence/s4/contract_checks.txt`.
+
+### 7.3 Claimed vs reproduced
+
+The v3 draft's Table 9 numbers as `claimed/reference`, the held-out numbers this repository
+produces as `reproduced`. Threshold 0.5, positive class 1, the same 6,000 rows for all three.
+
+| Model | Metric | Claimed (v3) | Reproduced | Delta |
+|---|---|---:|---:|---:|
+| Logistic Regression | accuracy | 0.8077 | **0.8077** | 0.0000 |
+| | precision | 0.6868 | **0.6868** | 0.0000 |
+| | recall | 0.2396 | **0.2396** | 0.0000 |
+| | F1 | 0.3553 | **0.3553** | 0.0000 |
+| Decision Tree | accuracy | 0.8172 | **0.8172** | 0.0000 |
+| | precision | 0.6615 | **0.6611** | −0.0004 |
+| | recall | 0.3549 | **0.3557** | +0.0008 |
+| | F1 | 0.4620 | **0.4625** | +0.0005 |
+| Random Forest | accuracy | 0.8122 | **0.8122** | 0.0000 |
+| | precision | 0.6773 | **0.6773** | 0.0000 |
+| | recall | 0.2879 | **0.2879** | 0.0000 |
+| | F1 | 0.4040 | **0.4040** | 0.0000 |
+
+**The Decision Tree does not reproduce exactly, and the report keeps the reproduced numbers.**
+Precision is 0.0004 lower, recall 0.0008 higher, F1 0.0005 higher than the draft. The gap is
+three orders of magnitude smaller than the differences between models, so it changes no
+conclusion — but it is real and it is stated rather than rounded away.
+
+What the draft did not publish is a seed, a library version or a run log, so exact agreement was
+never guaranteed. Two further facts say the draft's numbers were *computed*, not invented: its
+test-set composition (4,673/1,327) matches this split exactly, and the draft's Table 10
+importances reproduce to the second decimal from the tree shipped here — `PAY_0` **68.01 %**,
+`PAY_2` **13.77 %** (`evidence/s4/feature_importances.txt`). The residual Decision Tree gap is
+consistent with a different scikit-learn version breaking a split threshold tie differently; it
+is **not** proven, and the report does not claim to know its cause.
+
+### 7.4 The three confusion matrices
+
+One figure per model, axes labelled, all four counts printed with their share of the 6,000:
+`models/figures/confusion_logistic_regression.png`,
+`models/figures/confusion_decision_tree.png`,
+`models/figures/confusion_random_forest.png`.
+
+| Model | TN | FP | FN | TP | total | accuracy | precision | recall | F1 | ROC-AUC |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| Logistic Regression | 4,528 | 145 | 1,009 | 318 | 6,000 | 0.8077 | 0.6868 | 0.2396 | 0.3553 | 0.7076 |
+| Decision Tree | 4,431 | 242 | 855 | 472 | 6,000 | 0.8172 | 0.6611 | 0.3557 | 0.4625 | 0.7423 |
+| Random Forest | 4,491 | 182 | 945 | 382 | 6,000 | 0.8122 | 0.6773 | 0.2879 | 0.4040 | 0.7665 |
+| **always class 0** | 4,673 | 0 | 1,327 | 0 | 6,000 | 0.7788 | 0.0000 | 0.0000 | 0.0000 | — |
+
+Every matrix totals 6,000, and every accuracy/precision/recall/F1 above was re-derived from its
+own TN/FP/FN/TP with a maximum absolute difference of **0.0** (`evidence/s4/contract_checks.txt`).
+
+Three things the table says that the draft's prose did not:
+
+1. **The baseline is a serious competitor.** Always answering "no default" scores 77.88 %. The
+   best model's accuracy is 81.72 %, i.e. **3.84 percentage points** of genuine signal. Any
+   report sentence that calls 81.7 % "high accuracy" without that sentence is misleading.
+2. **The best model still misses most defaulters.** The Decision Tree catches 472 of 1,327
+   defaulters and misses **855 (64.4 %)**. That is the model's headline risk, not a footnote.
+3. **The two tree models trade recall against precision in opposite directions.** The Random
+   Forest raises precision (0.6773 vs 0.6611) by cutting false positives 242 → 182, and pays for
+   it with 90 more missed defaulters (945 vs 855). Neither is "better" in the abstract; the
+   objective in §7.5 is what picks one.
+
+ROC-AUC is reported for all three because all three produce probabilities; the always-class-0
+baseline produces none, so its cell is a dash rather than a fabricated 0.5.
+
+### 7.5 Selection used the training rows only
+
+Selection ran on 5-fold `StratifiedKFold(shuffle=True, random_state=42)` over the 24,000
+training rows. The held-out 6,000 were not read by `ml/train.py` at all —
+`selection.test_rows_used_for_selection` is `0` in `models/metrics.json`.
+
+| Rank | Candidate | mean CV F1 | mean CV recall | mean CV precision | mean CV ROC-AUC |
+|---:|---|---:|---:|---:|---:|
+| 1 | Decision Tree | **0.4643** | 0.3513 | 0.6868 | 0.7555 |
+| 2 | Random Forest | 0.4191 | 0.3001 | 0.6959 | 0.7765 |
+| 3 | Logistic Regression | 0.3647 | 0.2452 | 0.7118 | 0.7261 |
+
+Objective, recorded verbatim in `models/metrics.json`: maximise mean cross-validated F1 on class
+1, because 77.88 % of the sample is class 0 and accuracy is therefore dominated by the majority
+class; ties within 0.005 absolute F1 break on recall, then precision. F1 is the right primary
+here because it charges for both failure modes — a missed defaulter (FN) and a false alarm (FP) —
+whereas recall alone would reward a model that flags everyone.
+
+The choice is Decision Tree, and it is not the ROC-AUC winner: the Random Forest ranks best by
+ROC-AUC (0.7765 vs 0.7555), a threshold-free ranking measure, yet is worse at the 0.5 operating
+point on both F1 and recall — the two metrics the objective uses. Both facts are stated rather
+than smoothed over, because the report must not imply the selected model dominates the
+alternatives; it wins on the stated objective, not on every measure.
+
+Cross-validation ordering also agrees with the held-out ordering, which is the useful sanity
+check: the model chosen without seeing the test set is the one that wins on it.
+
+### 7.6 Reproducibility
+
+Two independent runs — separate output directories, nothing reused — were compared field by
+field (`evidence/s4/determinism.txt`): `models/metrics.json` is **identical** across 208 numeric
+fields, largest absolute difference **0.0**; the three candidate `joblib` artifacts, the shipped
+`best_pipeline.joblib`, all four figures and `model_manifest.json` are **byte-identical**. The
+only fields excluded from the comparison are the run timestamps, and the only normalisation is
+the output-directory prefix in recorded paths.
+
+`models/metrics.json` records the dataset SHA-256, the split and its seed, every
+hyper-parameter, the CV numbers per fold, the per-model test metrics with their confusion
+matrices, and the package versions (python 3.12.14, scikit-learn 1.9.1, numpy 2.5.4, pandas
+3.1.0, joblib 1.6.0).
+
+### 7.7 What this does not show
+
+1. **No calibration.** The probabilities are uncalibrated; no calibration test has been run, and
+   the report must not describe 0.72 as "a 72 % chance" in any validated sense.
+2. **No threshold optimisation.** 0.5 was evaluated, not chosen. Every number above is at 0.5.
+   A different threshold would need train/validation-only selection and its own evidence.
+3. **No significance testing.** The 3.84-point accuracy edge over the baseline and the gaps
+   between the three models are point estimates on one split; no confidence interval or
+   significance test was run, so "better" here means "higher on these 6,000 rows".
+4. **Numeric codes, not ordinal semantics.** `EDUCATION` and `MARRIAGE` are still fed in as
+   integers (contract §3.2). A linear model can only fit a straight-line effect on a code that is
+   not ordinal, which is one reason the Logistic Regression ranks last.
+5. **Historical and foreign.** 2005 Taiwan, NTD, 30,000 accounts. Nothing here transfers to a
+   current Malaysian portfolio without new evidence.
+
+---
+
+## 8. Evidence index
 
 | Path | Produced by | Content |
 |---|---|---|
@@ -343,6 +511,14 @@ and no direction of effect is established.
 | `evidence/s3/eda_files.txt` | `ls -l`, `sha256sum` | the seven generated files with sizes and SHA-256; seed checksum unchanged |
 | `evidence/s3/eda_determinism.txt` | two runs, `sha256sum`, `diff` | byte-for-byte identical regeneration |
 | `evidence/s3/eda_render_after_restart.txt` | Pillow in a fresh container | all six PNGs decode from disk with their pixel dimensions |
+| `evidence/s4/eda_source_line.txt` | `ml/generate_eda.py`, `git show 7ab66ce:`, `sha256sum` | F-1 fix: figure 06 gains its source line, and only figure 06 changes |
+| `evidence/s4/train.txt` | `ml/train.py` | full stdout: dataset identity, split and its class counts, per-candidate CV table, selection |
+| `evidence/s4/evaluate.txt` | `ml/evaluate.py` | full stdout: per-model accuracy/precision/recall/F1/AUC and TN/FP/FN/TP, baseline, artifact checksum, figures written |
+| `evidence/s4/train_rerun.txt`, `evidence/s4/evaluate_rerun.txt` | second independent run into `models_rerun/` | the same two commands, same output |
+| `evidence/s4/determinism.txt` | field-by-field comparison of the two runs | `metrics.json` identical across 208 numeric fields; all artifacts and figures byte-identical |
+| `evidence/s4/contract_checks.txt` | `models/metrics.json` | the six contract checks: split, scaler-on-train leak test, arithmetic consistency, feature order, artifact identity, no test-set tuning |
+| `evidence/s4/feature_importances.txt` | shipped `best_pipeline.joblib` | the selected tree's 23 importances; `PAY_0` 68.01 %, `PAY_2` 13.77 % |
+| `evidence/s4/pytest.txt` | `pytest tests -q` | 64 tests, including the S4 model-contract tests |
 
 Reproduce all of it:
 
@@ -352,8 +528,16 @@ python3 ml/verify_draft_claims.py --csv data/UCI_Credit_Card.csv
 docker run --rm --user "$(id -u):$(id -g)" -e HOME=/tmp -e MPLCONFIGDIR=/tmp/mpl \
   -v "$PWD:/app:z" -w /app aihubcampus-web:local \
   python ml/generate_eda.py --csv data/UCI_Credit_Card.csv --out models/eda
+docker run --rm --user "$(id -u):$(id -g)" -e HOME=/tmp -e MPLCONFIGDIR=/tmp/mpl \
+  -v "$PWD:/app:z" -w /app aihubcampus-web:local \
+  python -m ml.train --csv data/UCI_Credit_Card.csv --out models
+docker run --rm --user "$(id -u):$(id -g)" -e HOME=/tmp -e MPLCONFIGDIR=/tmp/mpl \
+  -v "$PWD:/app:z" -w /app aihubcampus-web:local \
+  python -m ml.evaluate --models-dir models
 ```
 
 The two S0 scripts are stdlib-only by design so they run before `requirements.txt` exists, and
 both exit non-zero when the data disagrees with the documented contract. The S3 generator is
-the first tool that needs the pinned ML environment (pandas + matplotlib).
+the first tool that needs the pinned ML environment (pandas + matplotlib); `ml/train.py` and
+`ml/evaluate.py` add scikit-learn and joblib, and must run in the project image so the pinned
+versions in `models/metrics.json` are the versions that actually produced the numbers.

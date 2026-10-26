@@ -1,0 +1,28 @@
+# Determinism: run A = models/ (evidence/s4/train.txt + evaluate.txt),
+#              run B = models_rerun/ (evidence/s4/train_rerun.txt + evaluate_rerun.txt).
+# Both runs: same image (scikit-learn 1.9.1), same CSV, same random_state=42, separate
+# output directories, nothing reused between them. The run timestamps (`generated_at`,
+# `created_at`) are the only fields expected to differ; the output-directory prefix in
+# recorded paths is normalised (models_rerun/ -> models/) before comparing. Nothing
+# else is touched.
+
+$ python compare_runs.py   # canonical JSON equality of metrics.json
+metrics.json identical (timestamp and output-directory prefix excluded): True
+differing fields: none
+numeric fields compared: 208
+largest absolute difference: 0.000000000000  at .candidates.decision_tree.artifact_bytes
+floating-point tolerance used: 1e-12 -> PASS
+
+artifact checksums, both runs:
+  candidates/logistic_regression.joblib     e3d29f8d1a88d8b2  e3d29f8d1a88d8b2  identical
+  candidates/decision_tree.joblib           48ce02563b2aad9f  48ce02563b2aad9f  identical
+  candidates/random_forest.joblib           a2fa13076c98fdfd  a2fa13076c98fdfd  identical
+  best_pipeline.joblib                      48ce02563b2aad9f  48ce02563b2aad9f  identical
+
+figures, both runs:
+  confusion_decision_tree.png               becc57b862f70794  becc57b862f70794  identical
+  confusion_logistic_regression.png         bf1f805fa4a73c20  bf1f805fa4a73c20  identical
+  confusion_random_forest.png               96ddafd8bac810c8  96ddafd8bac810c8  identical
+  feature_importance_selected.png           d1cda289a81b6200  d1cda289a81b6200  identical
+
+model_manifest.json identical (created_at excluded): True

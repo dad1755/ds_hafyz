@@ -1,0 +1,125 @@
+{
+  "artifact": {
+    "bytes": 8187,
+    "creation_path": "ml/train.py \u2192 ml/evaluate.py; never loaded from an upload",
+    "format": "joblib (scikit-learn Pipeline: transform + model)",
+    "path": "models/best_pipeline.joblib",
+    "sha256": "48ce02563b2aad9fbf9397603c642b0319be617c57fde8e1fd26ec08d518ad7b"
+  },
+  "calibration": "uncalibrated \u2014 no calibration test has been run",
+  "classes": {
+    "0": "predicted non-default next month (not a guarantee of payment)",
+    "1": "predicted default next month (not a confirmed delinquency)"
+  },
+  "created_at": "2026-10-26T08:04:18+00:00",
+  "dataset": {
+    "path": "data/UCI_Credit_Card.csv",
+    "sha256": "a0f0ab49d6326671d6cd83be5c88dcf18007025fe9a53ecd699119c871176ca1"
+  },
+  "environment": {
+    "joblib": "1.6.0",
+    "numpy": "2.5.4",
+    "pandas": "3.1.0",
+    "python": "3.12.14",
+    "scikit-learn": "1.9.1"
+  },
+  "features": {
+    "count": 23,
+    "dropped": [
+      "ID",
+      "default.payment.next.month"
+    ],
+    "order": [
+      "LIMIT_BAL",
+      "SEX",
+      "EDUCATION",
+      "MARRIAGE",
+      "AGE",
+      "PAY_0",
+      "PAY_2",
+      "PAY_3",
+      "PAY_4",
+      "PAY_5",
+      "PAY_6",
+      "BILL_AMT1",
+      "BILL_AMT2",
+      "BILL_AMT3",
+      "BILL_AMT4",
+      "BILL_AMT5",
+      "BILL_AMT6",
+      "PAY_AMT1",
+      "PAY_AMT2",
+      "PAY_AMT3",
+      "PAY_AMT4",
+      "PAY_AMT5",
+      "PAY_AMT6"
+    ],
+    "unit_source": "ml/schema.py COLUMN_SPECS"
+  },
+  "model": {
+    "estimator": "DecisionTreeClassifier",
+    "hyperparameters": {
+      "max_depth": 5,
+      "random_state": 42
+    },
+    "positive_class": 1,
+    "selected": "decision_tree",
+    "selection": {
+      "decided_by": "cv_f1",
+      "objective": "Maximise mean 5-fold cross-validated F1 on class 1 (default next month) on the training rows only. F1 is the primary objective because 77.88% of the sample is class 0, so accuracy is dominated by the majority class; F1 balances default-class recall against the false-positive cost that precision charges for. Ties within 0.005 absolute CV F1 are broken by higher mean CV recall, then higher mean CV precision. A candidate whose mean CV F1 is not above zero is ineligible. The held-out test set plays no part in this choice.",
+      "test_rows_used_for_selection": 0
+    },
+    "threshold": 0.5,
+    "threshold_note": "fixed at the evaluated value; an alternative threshold needs train/validation-only selection and its own evaluation evidence",
+    "transform": "passthrough (a tree splits on order, not distance)"
+  },
+  "probability_label": "Estimated model probability of next-month default",
+  "schema_version": 1,
+  "split": {
+    "dropped": [
+      "ID",
+      "default.payment.next.month"
+    ],
+    "features": [
+      "LIMIT_BAL",
+      "SEX",
+      "EDUCATION",
+      "MARRIAGE",
+      "AGE",
+      "PAY_0",
+      "PAY_2",
+      "PAY_3",
+      "PAY_4",
+      "PAY_5",
+      "PAY_6",
+      "BILL_AMT1",
+      "BILL_AMT2",
+      "BILL_AMT3",
+      "BILL_AMT4",
+      "BILL_AMT5",
+      "BILL_AMT6",
+      "PAY_AMT1",
+      "PAY_AMT2",
+      "PAY_AMT3",
+      "PAY_AMT4",
+      "PAY_AMT5",
+      "PAY_AMT6"
+    ],
+    "function": "train_test_split(test_size=0.2, stratify=y, random_state=42)",
+    "positive_class": 1,
+    "random_state": 42,
+    "target_column": "default.payment.next.month",
+    "test_class_counts": {
+      "0": 4673,
+      "1": 1327
+    },
+    "test_rows": 6000,
+    "test_size": 0.2,
+    "train_class_counts": {
+      "0": 18691,
+      "1": 5309
+    },
+    "train_rows": 24000
+  },
+  "sprint": "S4"
+}

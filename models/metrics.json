@@ -1,0 +1,547 @@
+{
+  "candidates": {
+    "decision_tree": {
+      "artifact": "models/candidates/decision_tree.joblib",
+      "artifact_bytes": 8187,
+      "artifact_sha256": "48ce02563b2aad9fbf9397603c642b0319be617c57fde8e1fd26ec08d518ad7b",
+      "cv": {
+        "folds": 5,
+        "metrics": {
+          "f1": {
+            "folds": [
+              0.477521,
+              0.463104,
+              0.481638,
+              0.445426,
+              0.453674
+            ],
+            "mean": 0.464273,
+            "std": 0.013755
+          },
+          "precision": {
+            "folds": [
+              0.671795,
+              0.713725,
+              0.66778,
+              0.674952,
+              0.705765
+            ],
+            "mean": 0.686803,
+            "std": 0.019036
+          },
+          "recall": {
+            "folds": [
+              0.370405,
+              0.34275,
+              0.376648,
+              0.332392,
+              0.334275
+            ],
+            "mean": 0.351294,
+            "std": 0.01859
+          },
+          "roc_auc": {
+            "folds": [
+              0.753761,
+              0.756236,
+              0.745598,
+              0.759253,
+              0.762511
+            ],
+            "mean": 0.755472,
+            "std": 0.005742
+          }
+        },
+        "rows": 24000,
+        "scored_on": "training rows only",
+        "strategy": "StratifiedKFold(n_splits=5, shuffle=True, random_state=42)"
+      },
+      "estimator": "DecisionTreeClassifier",
+      "hyperparameters": {
+        "max_depth": 5,
+        "random_state": 42
+      },
+      "scaled": false,
+      "transform": "passthrough (a tree splits on order, not distance)"
+    },
+    "logistic_regression": {
+      "artifact": "models/candidates/logistic_regression.joblib",
+      "artifact_bytes": 3681,
+      "artifact_sha256": "e3d29f8d1a88d8b255e5e4bc986f186470428c4eab0480d340de7f04a5126dd7",
+      "cv": {
+        "folds": 5,
+        "metrics": {
+          "f1": {
+            "folds": [
+              0.366059,
+              0.373239,
+              0.38069,
+              0.364017,
+              0.339489
+            ],
+            "mean": 0.364699,
+            "std": 0.013903
+          },
+          "precision": {
+            "folds": [
+              0.715068,
+              0.740223,
+              0.71134,
+              0.701613,
+              0.690751
+            ],
+            "mean": 0.711799,
+            "std": 0.016526
+          },
+          "recall": {
+            "folds": [
+              0.245994,
+              0.249529,
+              0.259887,
+              0.245763,
+              0.225047
+            ],
+            "mean": 0.245244,
+            "std": 0.011327
+          },
+          "roc_auc": {
+            "folds": [
+              0.741207,
+              0.727416,
+              0.709614,
+              0.718637,
+              0.733669
+            ],
+            "mean": 0.726109,
+            "std": 0.011088
+          }
+        },
+        "rows": 24000,
+        "scored_on": "training rows only",
+        "strategy": "StratifiedKFold(n_splits=5, shuffle=True, random_state=42)"
+      },
+      "estimator": "LogisticRegression",
+      "hyperparameters": {
+        "max_iter": 1000,
+        "random_state": 42
+      },
+      "scaled": true,
+      "transform": "StandardScaler fitted on X_train only"
+    },
+    "random_forest": {
+      "artifact": "models/candidates/random_forest.joblib",
+      "artifact_bytes": 530802,
+      "artifact_sha256": "a2fa13076c98fdfd43d9a9e23a512a7db1abddaf0c1a4594ccd774f138f7e970",
+      "cv": {
+        "folds": 5,
+        "metrics": {
+          "f1": {
+            "folds": [
+              0.436856,
+              0.431425,
+              0.419334,
+              0.415243,
+              0.392761
+            ],
+            "mean": 0.419124,
+            "std": 0.015335
+          },
+          "precision": {
+            "folds": [
+              0.690428,
+              0.736364,
+              0.684435,
+              0.686957,
+              0.681395
+            ],
+            "mean": 0.695916,
+            "std": 0.020441
+          },
+          "recall": {
+            "folds": [
+              0.31951,
+              0.305085,
+              0.30226,
+              0.297552,
+              0.275895
+            ],
+            "mean": 0.30006,
+            "std": 0.014132
+          },
+          "roc_auc": {
+            "folds": [
+              0.776145,
+              0.776513,
+              0.771434,
+              0.779339,
+              0.779023
+            ],
+            "mean": 0.776491,
+            "std": 0.002836
+          }
+        },
+        "rows": 24000,
+        "scored_on": "training rows only",
+        "strategy": "StratifiedKFold(n_splits=5, shuffle=True, random_state=42)"
+      },
+      "estimator": "RandomForestClassifier",
+      "hyperparameters": {
+        "max_depth": 5,
+        "n_estimators": 100,
+        "random_state": 42
+      },
+      "scaled": false,
+      "transform": "passthrough (a tree splits on order, not distance)"
+    }
+  },
+  "checks": {
+    "arithmetic": {
+      "decision_tree": "metrics consistent with TN/FP/FN/TP",
+      "logistic_regression": "metrics consistent with TN/FP/FN/TP",
+      "random_forest": "metrics consistent with TN/FP/FN/TP"
+    },
+    "artifact": {
+      "bytes": 8187,
+      "path": "models/best_pipeline.joblib",
+      "predictions_identical_to_candidate": true,
+      "probabilities_identical_to_candidate": true,
+      "sha256": "48ce02563b2aad9fbf9397603c642b0319be617c57fde8e1fd26ec08d518ad7b",
+      "source_candidate": "decision_tree",
+      "source_candidate_sha256": "48ce02563b2aad9fbf9397603c642b0319be617c57fde8e1fd26ec08d518ad7b",
+      "verdict": "the shipped pipeline reproduces its candidate's test predictions"
+    },
+    "feature_order": {
+      "count": 23,
+      "manifest_features": [
+        "LIMIT_BAL",
+        "SEX",
+        "EDUCATION",
+        "MARRIAGE",
+        "AGE",
+        "PAY_0",
+        "PAY_2",
+        "PAY_3",
+        "PAY_4",
+        "PAY_5",
+        "PAY_6",
+        "BILL_AMT1",
+        "BILL_AMT2",
+        "BILL_AMT3",
+        "BILL_AMT4",
+        "BILL_AMT5",
+        "BILL_AMT6",
+        "PAY_AMT1",
+        "PAY_AMT2",
+        "PAY_AMT3",
+        "PAY_AMT4",
+        "PAY_AMT5",
+        "PAY_AMT6"
+      ],
+      "matches_schema": true,
+      "verdict": "pipelines consume the 23 features in ml.schema.FEATURES order"
+    },
+    "leakage": {
+      "checked_on": "logistic_regression",
+      "limit_bal_mean_full": 167484.322667,
+      "limit_bal_mean_train": 167364.666667,
+      "limit_bal_scaler_mean": 167364.666667,
+      "max_abs_delta_vs_full_dataset_mean": 195.78052500000194,
+      "max_abs_delta_vs_train_mean": 0.0,
+      "tolerance": 1e-06,
+      "verdict": "scaler fitted on X_train only"
+    },
+    "order": {
+      "manifest_features": [
+        "LIMIT_BAL",
+        "SEX",
+        "EDUCATION",
+        "MARRIAGE",
+        "AGE",
+        "PAY_0",
+        "PAY_2",
+        "PAY_3",
+        "PAY_4",
+        "PAY_5",
+        "PAY_6",
+        "BILL_AMT1",
+        "BILL_AMT2",
+        "BILL_AMT3",
+        "BILL_AMT4",
+        "BILL_AMT5",
+        "BILL_AMT6",
+        "PAY_AMT1",
+        "PAY_AMT2",
+        "PAY_AMT3",
+        "PAY_AMT4",
+        "PAY_AMT5",
+        "PAY_AMT6"
+      ],
+      "scores_23_column_frame": true,
+      "verdict": "the shipped pipeline scores a 23-column frame in ml.schema.FEATURES order"
+    }
+  },
+  "dataset": {
+    "class_counts": {
+      "0": 23364,
+      "1": 6636
+    },
+    "columns": 25,
+    "features": 23,
+    "metadata_checksum": "905db2337636791e64afefd765a45b1973a7a0110b8984dabd96e87ffdf11f06",
+    "path": "data/UCI_Credit_Card.csv",
+    "rows": 30000,
+    "seed_metadata_checksum": "ceae980f66ed32281e669b2d3dfd67c6e5cbba973f0c10637187d5f591bb8a27",
+    "sha256": "a0f0ab49d6326671d6cd83be5c88dcf18007025fe9a53ecd699119c871176ca1"
+  },
+  "environment": {
+    "joblib": "1.6.0",
+    "numpy": "2.5.4",
+    "pandas": "3.1.0",
+    "python": "3.12.14",
+    "scikit-learn": "1.9.1"
+  },
+  "evaluation": {
+    "baseline": {
+      "confusion_matrix": {
+        "fn": 1327,
+        "fp": 0,
+        "tn": 4673,
+        "total": 6000,
+        "tp": 0
+      },
+      "description": "always predict class 0 (no default next month)",
+      "metrics": {
+        "accuracy": 0.778833,
+        "f1": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "roc_auc": null
+      },
+      "note": "Accuracy alone is not evidence of learning: a constant answer reaches 77.88% on this split, which is exactly the class-0 share.",
+      "threshold": "not applicable \u2014 no probability is produced"
+    },
+    "delta_vs_baseline": {
+      "decision_tree": {
+        "accuracy": 0.038334,
+        "f1": 0.462518,
+        "recall": 0.35569
+      },
+      "logistic_regression": {
+        "accuracy": 0.028834,
+        "f1": 0.355307,
+        "recall": 0.239638
+      },
+      "random_forest": {
+        "accuracy": 0.033334,
+        "f1": 0.404019,
+        "recall": 0.287867
+      }
+    },
+    "figures": [
+      "models/figures/confusion_logistic_regression.png",
+      "models/figures/confusion_decision_tree.png",
+      "models/figures/confusion_random_forest.png",
+      "models/figures/feature_importance_selected.png"
+    ],
+    "models": {
+      "decision_tree": {
+        "arithmetic_check": {
+          "derived_from_matrix": {
+            "accuracy": 0.817167,
+            "f1": 0.462518,
+            "precision": 0.661064,
+            "recall": 0.35569
+          },
+          "max_abs_delta": 0.0,
+          "tolerance": 1e-06,
+          "verdict": "metrics consistent with TN/FP/FN/TP"
+        },
+        "artifact": "models/candidates/decision_tree.joblib",
+        "artifact_sha256": "48ce02563b2aad9fbf9397603c642b0319be617c57fde8e1fd26ec08d518ad7b",
+        "confusion_matrix": {
+          "fn": 855,
+          "fp": 242,
+          "labels": [
+            "0 = no default next month",
+            "1 = default next month"
+          ],
+          "tn": 4431,
+          "total": 6000,
+          "tp": 472
+        },
+        "estimator": "DecisionTreeClassifier",
+        "figure": "models/figures/confusion_decision_tree.png",
+        "metrics": {
+          "accuracy": 0.817167,
+          "f1": 0.462518,
+          "precision": 0.661064,
+          "recall": 0.35569,
+          "roc_auc": 0.742324
+        },
+        "threshold": 0.5
+      },
+      "logistic_regression": {
+        "arithmetic_check": {
+          "derived_from_matrix": {
+            "accuracy": 0.807667,
+            "f1": 0.355307,
+            "precision": 0.686825,
+            "recall": 0.239638
+          },
+          "max_abs_delta": 0.0,
+          "tolerance": 1e-06,
+          "verdict": "metrics consistent with TN/FP/FN/TP"
+        },
+        "artifact": "models/candidates/logistic_regression.joblib",
+        "artifact_sha256": "e3d29f8d1a88d8b255e5e4bc986f186470428c4eab0480d340de7f04a5126dd7",
+        "confusion_matrix": {
+          "fn": 1009,
+          "fp": 145,
+          "labels": [
+            "0 = no default next month",
+            "1 = default next month"
+          ],
+          "tn": 4528,
+          "total": 6000,
+          "tp": 318
+        },
+        "estimator": "LogisticRegression",
+        "figure": "models/figures/confusion_logistic_regression.png",
+        "metrics": {
+          "accuracy": 0.807667,
+          "f1": 0.355307,
+          "precision": 0.686825,
+          "recall": 0.239638,
+          "roc_auc": 0.707636
+        },
+        "threshold": 0.5
+      },
+      "random_forest": {
+        "arithmetic_check": {
+          "derived_from_matrix": {
+            "accuracy": 0.812167,
+            "f1": 0.404019,
+            "precision": 0.677305,
+            "recall": 0.287867
+          },
+          "max_abs_delta": 0.0,
+          "tolerance": 1e-06,
+          "verdict": "metrics consistent with TN/FP/FN/TP"
+        },
+        "artifact": "models/candidates/random_forest.joblib",
+        "artifact_sha256": "a2fa13076c98fdfd43d9a9e23a512a7db1abddaf0c1a4594ccd774f138f7e970",
+        "confusion_matrix": {
+          "fn": 945,
+          "fp": 182,
+          "labels": [
+            "0 = no default next month",
+            "1 = default next month"
+          ],
+          "tn": 4491,
+          "total": 6000,
+          "tp": 382
+        },
+        "estimator": "RandomForestClassifier",
+        "figure": "models/figures/confusion_random_forest.png",
+        "metrics": {
+          "accuracy": 0.812167,
+          "f1": 0.404019,
+          "precision": 0.677305,
+          "recall": 0.287867,
+          "roc_auc": 0.766483
+        },
+        "threshold": 0.5
+      }
+    },
+    "positive_class": 1,
+    "scored_once": true,
+    "selected": "decision_tree",
+    "test_rows": 6000,
+    "threshold": 0.5
+  },
+  "generated_at": "2026-10-26T08:04:18+00:00",
+  "schema_version": 1,
+  "selection": {
+    "decided_by": "cv_f1",
+    "objective": "Maximise mean 5-fold cross-validated F1 on class 1 (default next month) on the training rows only. F1 is the primary objective because 77.88% of the sample is class 0, so accuracy is dominated by the majority class; F1 balances default-class recall against the false-positive cost that precision charges for. Ties within 0.005 absolute CV F1 are broken by higher mean CV recall, then higher mean CV precision. A candidate whose mean CV F1 is not above zero is ineligible. The held-out test set plays no part in this choice.",
+    "ranking": [
+      {
+        "candidate": "decision_tree",
+        "cv_f1_mean": 0.464273,
+        "cv_precision_mean": 0.686803,
+        "cv_recall_mean": 0.351294,
+        "rank": 1
+      },
+      {
+        "candidate": "random_forest",
+        "cv_f1_mean": 0.419124,
+        "cv_precision_mean": 0.695916,
+        "cv_recall_mean": 0.30006,
+        "rank": 2
+      },
+      {
+        "candidate": "logistic_regression",
+        "cv_f1_mean": 0.364699,
+        "cv_precision_mean": 0.711799,
+        "cv_recall_mean": 0.245244,
+        "rank": 3
+      }
+    ],
+    "rule": [
+      "rank by mean 5-fold CV F1 on class 1",
+      "treat gaps <= 0.005 as a tie and prefer the higher mean CV recall",
+      "then the higher mean CV precision",
+      "cross-validation runs on the 24,000 training rows only",
+      "the held-out 6,000 rows are scored once, later, by ml/evaluate.py"
+    ],
+    "selected": "decision_tree",
+    "test_rows_used_for_selection": 0
+  },
+  "split": {
+    "dropped": [
+      "ID",
+      "default.payment.next.month"
+    ],
+    "features": [
+      "LIMIT_BAL",
+      "SEX",
+      "EDUCATION",
+      "MARRIAGE",
+      "AGE",
+      "PAY_0",
+      "PAY_2",
+      "PAY_3",
+      "PAY_4",
+      "PAY_5",
+      "PAY_6",
+      "BILL_AMT1",
+      "BILL_AMT2",
+      "BILL_AMT3",
+      "BILL_AMT4",
+      "BILL_AMT5",
+      "BILL_AMT6",
+      "PAY_AMT1",
+      "PAY_AMT2",
+      "PAY_AMT3",
+      "PAY_AMT4",
+      "PAY_AMT5",
+      "PAY_AMT6"
+    ],
+    "function": "train_test_split(test_size=0.2, stratify=y, random_state=42)",
+    "positive_class": 1,
+    "random_state": 42,
+    "target_column": "default.payment.next.month",
+    "test_class_counts": {
+      "0": 4673,
+      "1": 1327
+    },
+    "test_rows": 6000,
+    "test_size": 0.2,
+    "train_class_counts": {
+      "0": 18691,
+      "1": 5309
+    },
+    "train_rows": 24000
+  },
+  "sprint": "S4"
+}

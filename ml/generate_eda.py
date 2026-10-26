@@ -320,7 +320,7 @@ def plot_correlation_heatmap(df: pd.DataFrame, out: Path) -> Path:
     bar = fig.colorbar(image, ax=ax, fraction=0.046, pad=0.03)
     bar.set_label("Pearson r", fontsize=7)
     bar.ax.tick_params(labelsize=6.5)
-    return finish(fig, out, len(df), source=False)
+    return finish(fig, out, len(df))
 
 
 # --------------------------------------------------------------------------- statistics

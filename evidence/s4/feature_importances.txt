@@ -1,0 +1,34 @@
+# Decision Tree feature importances (the selected model), read back from the shipped artifact.
+$ python -c 'import joblib, ml.schema as s; m=joblib.load("models/best_pipeline.joblib").named_steps["model"]; ...'
+feature       importance  share_pct
+PAY_0           0.680061      68.01
+PAY_2           0.137682      13.77
+PAY_AMT3        0.043952       4.40
+PAY_5           0.033120       3.31
+BILL_AMT1       0.031706       3.17
+LIMIT_BAL       0.021916       2.19
+PAY_3           0.011477       1.15
+AGE             0.008794       0.88
+PAY_4           0.008470       0.85
+EDUCATION       0.005236       0.52
+PAY_AMT5        0.004847       0.48
+PAY_AMT6        0.003816       0.38
+BILL_AMT5       0.003725       0.37
+PAY_AMT2        0.002729       0.27
+BILL_AMT2       0.001157       0.12
+MARRIAGE        0.000854       0.09
+BILL_AMT6       0.000457       0.05
+SEX             0.000000       0.00
+PAY_6           0.000000       0.00
+BILL_AMT3       0.000000       0.00
+BILL_AMT4       0.000000       0.00
+PAY_AMT1        0.000000       0.00
+PAY_AMT4        0.000000       0.00
+
+tree depth reached : 5  (max_depth=5)
+leaves             : 31
+n_features         : 23
+
+v3 draft Table 10 claims PAY_0 = 68.01%, PAY_2 = 13.77%
+reproduced         : PAY_0 = 68.01%, PAY_2 = 13.77%
+exit=0
