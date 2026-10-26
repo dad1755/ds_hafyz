@@ -1,0 +1,15 @@
+$ docker compose config --quiet
+exit=0
+
+# service "web" of compose project aihubcampus was started from the S2 image (see the run above)
+$ docker ps --filter name=aihubcampus
+aihubcampus-web-1  Up 4 minutes (healthy)  aihubcampus-web:local
+
+$ docker exec aihubcampus-web-1 python -c "urllib.request.urlopen(http://127.0.0.1:2026/_stcore/health)"
+ok
+
+$ docker port aihubcampus-web-1    # empty output = no host port, as required
+(no host ports published)
+
+$ docker exec aihubcampus-web-1 python -c "import ml.schema, src.validation"
+contract importable at runtime: ID -> default.payment.next.month | 23 features

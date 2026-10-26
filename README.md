@@ -6,11 +6,12 @@ probability, a display tier and supportive recommendations. Admin and User roles
 Streamlit + scikit-learn + SQLite in Docker, published through an existing Cloudflare
 Tunnel at **www.aihubcampus.online**.
 
-> **Status: Sprint 1 complete, awaiting independent verification.** A buildable container
-> exists: a branded shell with an inert sign-in form and a healthy probe on the internal
-> port, reproducible from a clean checkout. There is still **no authentication, no
-> database, no model, no dataset versioning and no deployment** — nothing on the page
-> authenticates anyone or scores anything, and the app is not reachable from the internet.
+> **Status: Sprint 2 complete, awaiting independent verification.** The container from S1
+> builds and serves; the 25-column data contract, the CSV validator, the upload quarantine
+> and the 23-feature request validator are implemented and tested against the seed file.
+> There is still **no authentication, no database, no model, no dataset activation and no
+> deployment** — nothing on the page authenticates anyone or scores anything, and the app
+> is not reachable from the internet.
 
 ## Data provenance and citation
 
@@ -45,6 +46,7 @@ Produced by `python3 ml/inspect_dataset.py` (full output: `evidence/s0/inspect_d
 | Duplicate full rows | 0 |
 | Class 0 — no default next month | 23,364 (77.88%) |
 | Class 1 — default next month | 6,636 (22.12%) |
+| Metadata checksum (dataset-version identity) | `ceae980f66ed32281e669b2d3dfd67c6e5cbba973f0c10637187d5f591bb8a27` |
 
 ## Repository layout (current)
 
@@ -55,6 +57,8 @@ Produced by `python3 ml/inspect_dataset.py` (full output: `evidence/s0/inspect_d
 ├── Group Project 40%.md       # assessment authority (report + presentation rubric)
 ├── app.py                     # Streamlit entry point — branded shell + inert sign-in (S1)
 ├── src/config.py              # typed, non-secret environment settings (S1)
+├── src/validation.py          # CSV + 23-feature validation, quarantine (S2)
+├── ml/schema.py               # the 25-column / 23-feature contract, single source (S2)
 ├── .streamlit/config.toml     # server address/port 2026, CORS + XSRF on (S1)
 ├── Dockerfile                 # python:3.12-slim, non-root, healthcheck (S1)
 ├── compose.yaml               # project `aihubcampus`: web + cloudflared, no host ports (S1)
@@ -64,15 +68,15 @@ Produced by `python3 ml/inspect_dataset.py` (full output: `evidence/s0/inspect_d
 ├── .env.cloudflared.example   # tunnel-token placeholder only
 ├── .dockerignore
 ├── data/UCI_Credit_Card.csv   # immutable benchmark seed
-├── docs/                      # architecture, source of truth, rubric matrix, evidence
-├── evidence/s0/, evidence/s1/ # captured command output
-├── ml/                        # inspect_dataset.py, verify_draft_claims.py (S0)
-├── tests/                     # pytest: settings loader + login shell (S1)
+├── docs/                      # architecture, data dictionary, source of truth, rubric matrix
+├── evidence/s0/ … evidence/s2/ # captured command output
+├── ml/                        # schema.py, inspect_dataset.py, verify_draft_claims.py
+├── tests/                     # pytest: settings, login shell (S1), schema/validation (S2)
 └── models/                    # artifacts + metrics.json (S4–S5)
 ```
 
 Modules are added when the sprint that implements them runs — no dead placeholder files.
-`schema.py`, `db.py`, `security.py`, `inference.py` and the page modules arrive with S2–S9.
+`db.py`, `security.py`, `inference.py` and the page modules arrive with S6–S9.
 
 ## Sprint 0 commands (run today, no dependencies)
 
@@ -128,6 +132,25 @@ S1 evidence (real command output, nothing hand-written): `evidence/s1/`.
 - The app serves on **2026** to match the existing tunnel ingress — rationale and
   alternatives in `docs/architecture.md` §5.
 
+## Sprint 2 — schema, validation and quarantine
+
+```bash
+python -m ml.inspect_dataset --csv data/UCI_Credit_Card.csv   # contract checks + metadata checksum
+python -m pytest tests/test_schema.py -q                      # the S2 gate
+```
+
+- `ml/schema.py` is the single source of the 25-column file contract, the 23-feature model
+  contract, the legal code sets, the documented ranges and the dataset metadata checksum.
+  It is standard-library only, so the inspection tool still runs without pandas.
+- `src/validation.py` validates a whole CSV (`validate_csv_bytes`, `validate_dataframe`),
+  one 23-feature request (`validate_features`) and the quarantine path
+  (`quarantine_upload`, `ingest_upload`). Every failure carries a stable code and a message
+  that names the column and row count, never a cell value.
+- `docs/data_dictionary.md` renders the contract for humans: units (NTD), month mapping
+  (`PAY_0` = Sep 2005 … `PAY_6` = Apr 2005), code meanings, constraints and error codes.
+- `data/quarantine/` is git-ignored; uploads are stored under a generated name with their
+  SHA-256, and the seed CSV is never a destination.
+
 ## Documentation index
 
 | Doc | Read it for |
@@ -135,10 +158,11 @@ S1 evidence (real command output, nothing hand-written): `evidence/s1/`.
 | `docs/source_of_truth.md` | Which source wins when two disagree; the conflict register |
 | `docs/rubric_matrix.md` | Every marked item mapped to the sprint that produces its evidence |
 | `docs/architecture.md` | Components, topology, tech choices, ingress port decision, threat model |
+| `docs/data_dictionary.md` | Every column, its unit (NTD), month, code meanings, constraints and rejection codes |
 | `docs/report_evidence.md` | What is verified by code today vs still `claimed` from the drafts |
 
 ## Next sprint
 
-**S2** — CSV integrity, schema and dataset version manager: `ml/schema.py` + `src/validation.py`
-(23-feature contract), checksum/version recording, and the quarantine path for rejected uploads.
-The container, pins and shell it builds on are in place from S1.
+**S3** — preprocessing and EDA evidence: `ml/generate_eda.py`, six real plots with
+interpretive captions and a descriptive-statistics summary in `docs/report_evidence.md`.
+It builds on the validated contract from S2 (`ml/schema.py`) and the untouched seed file.

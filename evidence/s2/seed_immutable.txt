@@ -1,0 +1,15 @@
+# Seed immutability: SHA-256 taken before any S2 command ran, and again after every command
+$ sha256sum data/UCI_Credit_Card.csv   (before: evidence/s2/seed_sha256_before.txt)
+a0f0ab49d6326671d6cd83be5c88dcf18007025fe9a53ecd699119c871176ca1  data/UCI_Credit_Card.csv
+
+$ sha256sum data/UCI_Credit_Card.csv   (after: inspect_dataset, 50 tests, quarantine demo, image build, health run)
+a0f0ab49d6326671d6cd83be5c88dcf18007025fe9a53ecd699119c871176ca1  data/UCI_Credit_Card.csv
+
+$ stat -c "%s bytes  mtime=%y" data/UCI_Credit_Card.csv
+2862995 bytes  mtime=2026-10-26 10:26:55.301086421 +0800
+
+$ git status --porcelain data/
+(empty = the tracked seed is unmodified)
+
+$ cmp <(git show HEAD:data/UCI_Credit_Card.csv) data/UCI_Credit_Card.csv
+identical to the committed blob

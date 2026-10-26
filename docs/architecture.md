@@ -241,6 +241,9 @@ project other than `aihubcampus`.
 | D6 | §2: pin `browser.serverAddress`/`serverPort` only "if required" | Pinned to `www.aihubcampus.online` / `443` | Required by the S1 card; both hostnames re-verified reachable with the pin (§5 amendment) |
 | D7 | §7 compose: `networks: internal: driver: bridge` | Same, plus `ipam` subnet `10.202.0.0/24` | The host daemon's predefined address pools are exhausted, so an implicitly-subnetted network cannot be created (§11) |
 | D8 | §7 compose: `cloudflared` reads `${TUNNEL_TOKEN:?}` | `cloudflared` reads `.env.cloudflared` via `env_file` with `required: false` | `${TUNNEL_TOKEN:?}` makes `docker compose config` fail when the token is absent; the app must build and run without any Cloudflare credential (§11) |
+| D9 | §4: "avoid over-restricting to observed min/max without documenting choice" | Dataset validation enforces hard floors/ceilings only (`PAY_AMT* >= 0`, `LIMIT_BAL >= 1`, `18 <= AGE <= 100`); the UI form uses the documented bands `LIMIT_BAL` 10,000–1,000,000 and `AGE` 18–100 | The observed range is descriptive, not a contract; a legitimate future upload must not be rejected for being outside 2005's sample (§12) |
+| D10 | §4: "validate against actual observed data and accepted source semantics" for `PAY_*` | Legal set is −2…9, i.e. the observed −2…8 plus code 9 ("nine months or more") from the source's documented scale | Rejecting 9 would reject a value the source scale defines; accepting it changes nothing in the seed (§12) |
+| D11 | §3 layout: `ml/` is tooling beside the app; the Dockerfile copied only `app.py` and `src/` | The image also copies `ml/` (contract module only) | `src/validation.py` imports the contract from `ml/schema.py`; one definition of the schema beats two copies (§12) |
 
 ## 10. Open decisions deferred to later sprints
 
@@ -302,3 +305,53 @@ in S1 — starting the tunnel is S13's job.
 no model, no EDA, no tunnel, no deployment. Nothing in this sprint answers on a public
 hostname, and `docker compose down` (never `-v`) left the stack stopped at the end of the
 sprint.
+
+## 12. S2 implementation record — data contract, validation and quarantine
+
+**What exists now.** `ml/schema.py` is the only definition of the 25-column file contract,
+the 23-feature model contract, the legal code sets, the documented ranges, the month
+mapping and the dataset-version checksum. `src/validation.py` enforces it for a whole CSV,
+for an already-parsed frame and for one 23-feature request, and owns the upload quarantine.
+`docs/data_dictionary.md` renders the same contract for humans. Nothing writes to
+`data/UCI_Credit_Card.csv`; there is still no database, no dataset activation and no model.
+
+**Design decisions.**
+
+- **One definition, two consumers.** The contract lives in `ml/schema.py` and is imported by
+  `src/validation.py` and by `ml/inspect_dataset.py`. `ml/schema.py` is standard-library only
+  so the inspection tool still runs on a bare Python (S0's requirement); `src/validation.py`
+  is the only place pandas is imported. The image now copies `ml/` (D11).
+- **Structural failures stop, value failures accumulate.** A file with a broken header cannot
+  be value-checked, so `duplicate_column` / `missing_column` / `extra_column` /
+  `column_order` are terminal. Value problems are collected into one report so an admin sees
+  every problem at once, each with a stable code, the column name and the number of offending
+  rows.
+- **No data in error messages.** Messages name the column, the documented code set or bound,
+  and a row count — never a cell value, row content or uploaded filename. A rejected upload
+  is shown back to an admin, and the dataset contains customer records.
+- **Quarantine before parse.** An upload is written to `data/quarantine/` (git-ignored) under
+  a generated `YYYYmmddTHHMMSSZ-<12 hex>.csv` name with `O_CREAT|O_EXCL|O_NOFOLLOW` and mode
+  `0600` before any parsing happens, so the uploaded name cannot influence a path, cannot
+  traverse, and cannot overwrite or follow a planted link. The uploaded name survives only as
+  a display label (`original_filename_safe`).
+- **Metadata checksum.** `dataset_versions` identity is the SHA-256 of the canonical JSON of
+  `{sha256, record_count, column_count, feature_count, class_zero, class_one, columns,
+  features}` (`ml.schema.metadata_checksum`). It is reproducible across hosts and Python
+  versions because the JSON uses sorted keys, no whitespace and no floats.
+
+**Facts, each captured in `evidence/s2/`.**
+
+| Fact | Value | Evidence |
+|---|---|---|
+| Seed passes the contract | 30,000 × 25, 0 missing, 0 dupes, classes 23,364 / 6,636 | `inspect_dataset.txt` |
+| Seed metadata checksum | `ceae980f66ed32281e669b2d3dfd67c6e5cbba973f0c10637187d5f591bb8a27` | `inspect_dataset.txt`, `inspect_dataset.json` |
+| Seed unchanged | SHA-256 `a0f0ab49…176ca1` before and after every S2 command; byte-identical to the committed blob | `seed_immutable.txt` |
+| Tests | 50 passed (11 from S1 + 39 in `tests/test_schema.py`), run inside the image | `pytest.txt` |
+| Malformed fixtures | each rejected with its expected code asserted, not merely a raise | `pytest.txt` |
+| Quarantine | hostile name `../../../../etc/passwd` → generated name, inside the directory, mode `0600`, checksum recorded | `quarantine.txt` |
+| Rejection reasons | oversize → `file_too_large`, empty → `empty_file`, bad code → `unsupported_code` with the column and count | `quarantine.txt` |
+| Image | rebuilt with `ml/`; `/_stcore/health` → `ok`, no host ports, `ml.schema` + `src.validation` importable at runtime | `image_health.txt`, `image_import.txt` |
+
+**Not done in S2, by design.** No SQLite, no `dataset_versions` rows, no activation, no admin
+upload screen (S6/S9), no model, no EDA, no tunnel, no deployment. The stack was started only
+for the health check above and left stopped with `docker compose down` (never `-v`).

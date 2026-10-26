@@ -29,6 +29,9 @@ RUN pip install --no-cache-dir --no-compile -r requirements.txt
 COPY .streamlit/config.toml ./.streamlit/config.toml
 COPY app.py ./
 COPY src/ ./src/
+# The data contract lives in ml/schema.py and src/validation.py imports it, so the
+# package must ship with the image. No model artefacts or data are copied.
+COPY ml/ ./ml/
 
 # Writable storage for the SQLite database (mounted as a named volume in compose).
 RUN mkdir -p /app/storage && chown -R app:app /app/storage

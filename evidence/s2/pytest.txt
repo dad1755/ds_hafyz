@@ -1,0 +1,4 @@
+$ docker run --rm -v "$PWD/tests:/app/tests:ro,z" -v "$PWD/data:/app/data:ro,z" aihubcampus-web:local python -m pytest tests -q -p no:cacheprovider
+..................................................                       [100%]
+50 passed in 13.57s
+exit=0

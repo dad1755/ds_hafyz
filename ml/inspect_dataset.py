@@ -6,9 +6,10 @@ re-run in CI without pandas. Prints a deterministic report to stdout and exits
 non-zero when the CSV disagrees with the documented contract.
 
 Usage:
+    python -m ml.inspect_dataset --csv data/UCI_Credit_Card.csv
     python3 ml/inspect_dataset.py --csv data/UCI_Credit_Card.csv
-    python3 ml/inspect_dataset.py --csv data/UCI_Credit_Card.csv \
-        --expect-rows 30000 --expect-cols 25 --json
+    python -m ml.inspect_dataset --csv data/UCI_Credit_Card.csv --json \
+        --out evidence/s2/inspect_dataset.json
 """
 
 from __future__ import annotations
@@ -21,47 +22,46 @@ import sys
 from collections import Counter
 from pathlib import Path
 
-TARGET = "default.payment.next.month"
-ID_COLUMN = "ID"
+try:  # `python -m ml.inspect_dataset` from the repository root
+    from ml.schema import (
+        COLUMNS as EXPECTED_COLUMNS,
+        FEATURES,
+        ID_COLUMN,
+        SEED_CLASS_COUNTS,
+        SEED_METADATA_CHECKSUM,
+        SEED_ROWS,
+        SEED_SHA256,
+        SEED_SIZE_BYTES,
+        TARGET_COLUMN as TARGET,
+        dataset_metadata,
+        metadata_checksum,
+    )
+except ModuleNotFoundError:  # `python3 ml/inspect_dataset.py` from the repository root
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+    from ml.schema import (
+        COLUMNS as EXPECTED_COLUMNS,
+        FEATURES,
+        ID_COLUMN,
+        SEED_CLASS_COUNTS,
+        SEED_METADATA_CHECKSUM,
+        SEED_ROWS,
+        SEED_SHA256,
+        SEED_SIZE_BYTES,
+        TARGET_COLUMN as TARGET,
+        dataset_metadata,
+        metadata_checksum,
+    )
 
-# Ordered column contract (blueprint §4). Kept here so the inspection can fail
-# loudly if the supplied file ever drifts from the documented schema.
-EXPECTED_COLUMNS = [
-    "ID",
-    "LIMIT_BAL",
-    "SEX",
-    "EDUCATION",
-    "MARRIAGE",
-    "AGE",
-    "PAY_0",
-    "PAY_2",
-    "PAY_3",
-    "PAY_4",
-    "PAY_5",
-    "PAY_6",
-    "BILL_AMT1",
-    "BILL_AMT2",
-    "BILL_AMT3",
-    "BILL_AMT4",
-    "BILL_AMT5",
-    "BILL_AMT6",
-    "PAY_AMT1",
-    "PAY_AMT2",
-    "PAY_AMT3",
-    "PAY_AMT4",
-    "PAY_AMT5",
-    "PAY_AMT6",
-    "default.payment.next.month",
-]
-
-# Documented facts this sprint must verify by code (blueprint §0 / §9 S0).
-EXPECTED_ROWS = 30_000
-EXPECTED_COLS = 25
+# The column contract, the feature contract and the expected seed facts all live in
+# ml/schema.py — this tool only reads them, so inspection and validation cannot drift.
+EXPECTED_COLS = len(EXPECTED_COLUMNS)
+EXPECTED_ROWS = SEED_ROWS
 EXPECTED_MISSING = 0
 EXPECTED_DUPES = 0
-EXPECTED_CLASS_0 = 23_364
-EXPECTED_CLASS_1 = 6_636
-EXPECTED_SHA256 = "a0f0ab49d6326671d6cd83be5c88dcf18007025fe9a53ecd699119c871176ca1"
+EXPECTED_CLASS_0 = SEED_CLASS_COUNTS[0]
+EXPECTED_CLASS_1 = SEED_CLASS_COUNTS[1]
+EXPECTED_SHA256 = SEED_SHA256
+EXPECTED_SIZE_BYTES = SEED_SIZE_BYTES
 
 
 def sha256_of(path: Path) -> str:
@@ -182,15 +182,30 @@ def inspect(path: Path) -> dict:
     report["predictor_count"] = len(features)
     report["predictors"] = features
 
+    # Reproducible dataset-version metadata: the checksum over the canonical JSON of
+    # these facts identifies the version without re-reading the file (blueprint §6).
+    metadata = dataset_metadata(
+        sha256=report["sha256"],
+        record_count=row_count,
+        column_count=len(header),
+        class_zero=target_counts.get("0", 0),
+        class_one=target_counts.get("1", 0),
+        feature_count=len(features),
+    )
+    report["metadata"] = metadata
+    report["metadata_checksum"] = metadata_checksum(metadata)
+
     # Contract checks
     checks = []
     def check(label: str, actual, expected) -> None:
         checks.append({"check": label, "actual": actual, "expected": expected, "pass": actual == expected})
 
     check("sha256", report["sha256"], EXPECTED_SHA256)
+    check("size_bytes", report["size_bytes"], EXPECTED_SIZE_BYTES)
     check("row_count", row_count, EXPECTED_ROWS)
     check("column_count", len(header), EXPECTED_COLS)
-    check("ordered_columns", header, EXPECTED_COLUMNS)
+    check("ordered_columns", header, list(EXPECTED_COLUMNS))
+    check("feature_contract", features, list(FEATURES))
     check("missing_cells", total_missing, EXPECTED_MISSING)
     check("duplicate_full_rows", report["duplicate_full_rows"], EXPECTED_DUPES)
     check("ragged_rows", ragged, 0)
@@ -198,6 +213,7 @@ def inspect(path: Path) -> dict:
     check("class_0", target_counts.get("0", 0), EXPECTED_CLASS_0)
     check("class_1", target_counts.get("1", 0), EXPECTED_CLASS_1)
     check("target_total_equals_rows", total_target, row_count)
+    check("metadata_checksum", report["metadata_checksum"], SEED_METADATA_CHECKSUM)
     # Monetary columns are whole NTD in this source; a fractional value would mean
     # the export mangled precision and the dataset must not be trusted as-is.
     check("fractional_values_in_monetary_columns", sum(fractional), 0)
@@ -213,6 +229,7 @@ def print_report(report: dict) -> None:
     print(f"path        : {report['csv']}")
     print(f"size_bytes  : {report['size_bytes']}")
     print(f"sha256      : {report['sha256']}")
+    print(f"metadata    : {report['metadata_checksum']}  (reproducible dataset-version checksum)")
     print(f"rows        : {report['row_count']}")
     print(f"columns     : {report['column_count']}")
     print(f"predictors  : {report['predictor_count']} (excluding ID and target)")

@@ -24,7 +24,7 @@ grouping under chapters **only if** all 26 stay findable via headings or this cr
 | 4 | Problem Statement | S0 → S14 | `docs/report/04_problem_statement.md` (framing frozen in `docs/architecture.md` §1) | pending |
 | 5 | Objectives | S0 → S14 | `docs/report/05_objectives.md` (SMART objectives seeded here) | pending |
 | 6 | Project Scope | S0 → S14 | `docs/report/06_scope.md` + no-go list in `docs/architecture.md` §8 | pending |
-| 7 | Dataset Description | **S0** → S2 → S14 | `evidence/s0/inspect_dataset.txt`, `docs/data_dictionary.md` (S2), `README.md` provenance | **verified** (S0 facts) |
+| 7 | Dataset Description | **S0** → S2 → S14 | `evidence/s0/inspect_dataset.txt`, `docs/data_dictionary.md` (S2), `README.md` provenance | **verified** (S0 facts + S2 contract) |
 | 8 | Data Preprocessing | S3 → S14 | `ml/preprocess.py` + `docs/report/08_preprocessing.md` | pending |
 | 9 | Exploratory Data Analysis | S3 → S14 | `models/eda/*.png` (6 plots) + interpretations in `docs/report_evidence.md` | pending |
 | 10 | Machine Learning Methodology | S4 → S14 | `docs/report/10_methodology.md` + `ml/train.py` | pending |

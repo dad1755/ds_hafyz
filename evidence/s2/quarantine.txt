@@ -1,0 +1,35 @@
+$ docker run --rm -e PYTHONPATH=/app -v "$PWD:/app:ro,z" -v "$SCRATCH/s2_quarantine_demo.py:/demo.py:ro,z" -w /app aihubcampus-web:local python /demo.py
+quarantine dir: /tmp/s2-quarantine-l83f_zcj
+seed sha256  : a0f0ab49d6326671d6cd83be5c88dcf18007025fe9a53ecd699119c871176ca1
+
+1. hostile uploaded name, real seed bytes
+   stored name           : 20261026T060451Z-1d1ac18fc9c0.csv
+   stored inside dir     : True
+   label kept for admin  : passwd.csv
+   recorded sha256       : a0f0ab49d6326671d6cd83be5c88dcf18007025fe9a53ecd699119c871176ca1
+   file mode             : 0o600
+
+2. windows path and a bare name are reduced to labels
+   'C:\\Users\\someone\\Book1.csv'        -> 'Book1.csv'
+   'book 1 (final).CSV'                   -> 'book 1 (final).CSV'
+   ''                                     -> 'upload.csv'
+   None                                   -> 'upload.csv'
+   '..'                                   -> 'upload.csv'
+   '/etc/shadow'                          -> 'shadow.csv'
+
+3. invalid upload is quarantined first, then rejected with a reason
+   retained on disk      : True -> 20261026T060452Z-845df15af616.csv
+   report.ok             : False
+   [unsupported_code] column 'EDUCATION' has 1 value(s) outside its documented code set [0, 1, 2, 3, 4, 5, 6]
+
+4. oversize and empty uploads are refused before anything is written
+   oversize  -> [file_too_large] the upload is 10485761 bytes, above the 10485760 byte limit
+   empty     -> [empty_file] the upload is empty; nothing was quarantined
+   directories created   : none
+
+5. the seed file itself is still byte-identical
+   seed sha256           : a0f0ab49d6326671d6cd83be5c88dcf18007025fe9a53ecd699119c871176ca1
+   seed untouched        : True
+
+header line used for the mutation, first 80 bytes: b'"ID","LIMIT_BAL","SEX","EDUCATION","MARRIAGE","AGE","PAY_0","PAY_2","PAY_3","PAY'
+exit=0
