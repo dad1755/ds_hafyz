@@ -1,0 +1,72 @@
+SPRINT 0 ACCEPTANCE RUN — 2026-10-26T12:15:37+08:00
+host: ridergami2  cwd: /home/ec-user/non_prod/hafyz_ds  branch: sprint-0/discovery-intake
+
+=== A1. dataset contract (ml/inspect_dataset.py) ===
+exit=0
+sha256      : a0f0ab49d6326671d6cd83be5c88dcf18007025fe9a53ecd699119c871176ca1
+rows        : 30000
+columns     : 25
+predictors  : 23 (excluding ID and target)
+missing     : 0 cells
+dupes       : 0 duplicated full rows (0 groups)
+RESULT: ALL CHECKS PASS
+
+=== A2. 23 predictors, named ===
+predictor_count = 23
+LIMIT_BAL, SEX, EDUCATION, MARRIAGE, AGE, PAY_0, PAY_2, PAY_3, PAY_4, PAY_5, PAY_6, BILL_AMT1, BILL_AMT2, BILL_AMT3, BILL_AMT4, BILL_AMT5, BILL_AMT6, PAY_AMT1, PAY_AMT2, PAY_AMT3, PAY_AMT4, PAY_AMT5, PAY_AMT6
+
+=== A3. class counts by executed code ===
+TARGET DISTRIBUTION — default.payment.next.month
+  class 0 (no default next month): 23364 (77.88%)
+  class 1 (default next month): 6636 (22.12%)
+
+
+=== A4. draft claim verification ===
+exit=1 (1 = the one known draft error, expected)
+
+confirmed: 67/68
+MISMATCHES:
+  - default rate EDUCATION in 0,4,5,6 (draft 'others' 5.7): actual=7.0513 draft=5.7000
+
+=== A5. no credentials in any tracked file (incl. untracked, non-ignored) ===
+scanned 21 file(s); 4 secret value(s) loaded from operator env
+
+PASS — no operator secret and no credential pattern in any tracked file.
+exit=0
+
+=== A6. dataset untouched ===
+(empty above = unmodified)
+a0f0ab49d6326671d6cd83be5c88dcf18007025fe9a53ecd699119c871176ca1  data/UCI_Credit_Card.csv
+
+=== A7. no compose project created (read-only docker query) ===
+no 'aihubcampus' compose project exists (expected in S0)
+
+=== A8. rubric matrix counts ===
+report components (rows in section 1 table): 26
+rubric A criteria: 9
+rubric B criteria: 9
+presentation topics: 15
+
+=== A9. tracked deliverables ===
+.gitignore
+README.md
+docs/architecture.md
+docs/report_evidence.md
+docs/rubric_matrix.md
+docs/source_of_truth.md
+evidence/s0/acceptance.txt
+evidence/s0/check_no_secrets.txt
+evidence/s0/draft_v1_extracted.txt
+evidence/s0/draft_v3_extracted.txt
+evidence/s0/inspect_dataset.txt
+evidence/s0/ucicitation_check.txt
+evidence/s0/verify_draft_claims.txt
+ml/inspect_dataset.py
+ml/verify_draft_claims.py
+scripts/check_no_secrets.py
+
+=== A10. git state ===
+ce97546 S0: discovery, scope freeze, data/source intake
+4c65538 Sprint 0: intake — blueprint, assessment brief, dataset, drafts; secrets held outside git
+ M evidence/s0/acceptance.txt
+(clean above = nothing uncommitted)

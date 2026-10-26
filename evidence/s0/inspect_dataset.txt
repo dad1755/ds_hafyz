@@ -1,0 +1,101 @@
+==============================================================================
+DATASET INSPECTION — UCI_Credit_Card.csv
+==============================================================================
+path        : data/UCI_Credit_Card.csv
+size_bytes  : 2862995
+sha256      : a0f0ab49d6326671d6cd83be5c88dcf18007025fe9a53ecd699119c871176ca1
+rows        : 30000
+columns     : 25
+predictors  : 23 (excluding ID and target)
+missing     : 0 cells
+dupes       : 0 duplicated full rows (0 groups)
+ragged rows : 0
+sci-notation: 4262 numeric cells written as 5e+05 (all parse to whole numbers; 0 fractional values)
+              - LIMIT_BAL: 4150
+              - BILL_AMT1: 2
+              - BILL_AMT2: 3
+              - BILL_AMT3: 4
+              - BILL_AMT4: 5
+              - BILL_AMT5: 8
+              - BILL_AMT6: 5
+              - PAY_AMT1: 16
+              - PAY_AMT2: 18
+              - PAY_AMT3: 9
+              - PAY_AMT4: 11
+              - PAY_AMT5: 19
+              - PAY_AMT6: 12
+
+ORDERED COLUMNS
+   0. ID
+   1. LIMIT_BAL
+   2. SEX
+   3. EDUCATION
+   4. MARRIAGE
+   5. AGE
+   6. PAY_0
+   7. PAY_2
+   8. PAY_3
+   9. PAY_4
+  10. PAY_5
+  11. PAY_6
+  12. BILL_AMT1
+  13. BILL_AMT2
+  14. BILL_AMT3
+  15. BILL_AMT4
+  16. BILL_AMT5
+  17. BILL_AMT6
+  18. PAY_AMT1
+  19. PAY_AMT2
+  20. PAY_AMT3
+  21. PAY_AMT4
+  22. PAY_AMT5
+  23. PAY_AMT6
+  24. default.payment.next.month
+
+DTYPES / MISSING / RANGE
+  column                         dtype    missing  unique          min          max
+  ID                             int64          0   30000            1        30000
+  LIMIT_BAL                      float64        0      81        10000      1000000
+  SEX                            int64          0       2            1            2
+  EDUCATION                      int64          0       7            0            6
+  MARRIAGE                       int64          0       4            0            3
+  AGE                            int64          0      56           21           79
+  PAY_0                          int64          0      11           -2            8
+  PAY_2                          int64          0      11           -2            8
+  PAY_3                          int64          0      11           -2            8
+  PAY_4                          int64          0      11           -2            8
+  PAY_5                          int64          0      10           -2            8
+  PAY_6                          int64          0      10           -2            8
+  BILL_AMT1                      float64        0   22723      -165580       964511
+  BILL_AMT2                      float64        0   22346       -69777       983931
+  BILL_AMT3                      float64        0   22026      -157264      1664089
+  BILL_AMT4                      float64        0   21548      -170000       891586
+  BILL_AMT5                      float64        0   21010       -81334       927171
+  BILL_AMT6                      float64        0   20604      -339603       961664
+  PAY_AMT1                       float64        0    7943            0       873552
+  PAY_AMT2                       float64        0    7899            0      1684259
+  PAY_AMT3                       float64        0    7518            0       896040
+  PAY_AMT4                       float64        0    6937            0       621000
+  PAY_AMT5                       float64        0    6897            0       426529
+  PAY_AMT6                       float64        0    6939            0       528666
+  default.payment.next.month     int64          0       2            0            1
+
+TARGET DISTRIBUTION — default.payment.next.month
+  class 0 (no default next month): 23364 (77.88%)
+  class 1 (default next month): 6636 (22.12%)
+
+CONTRACT CHECKS
+  [PASS] sha256
+  [PASS] row_count
+  [PASS] column_count
+  [PASS] ordered_columns
+  [PASS] missing_cells
+  [PASS] duplicate_full_rows
+  [PASS] ragged_rows
+  [PASS] predictor_count
+  [PASS] class_0
+  [PASS] class_1
+  [PASS] target_total_equals_rows
+  [PASS] fractional_values_in_monetary_columns
+
+RESULT: ALL CHECKS PASS

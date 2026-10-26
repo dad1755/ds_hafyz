@@ -1,0 +1,789 @@
+Development of a Credit Card Default Risk Prediction System Using Machine Learning Classification Algorithms
+Executive Summary
+This project develops a complete risk prediction system for credit card defaults using machine learning classification algorithms. Financial institutions need reliable ways to identify customers who might miss their upcoming monthly payments so that early support and payment plans can be offered. Our four member team analyzed the Default of Credit Card Clients dataset from the UCI Machine Learning Repository, which contains thirty thousand customer records across twenty five attributes. We cleaned and verified the dataset, conducted exploratory data analysis across six visual charts, and trained three classification models to predict payment defaults on an independent test set. We then built an interactive web application using Streamlit and a secure SQLite database to deploy the best performing pipeline with separate Admin and User roles. Among the tested models, the Decision Tree classifier provided the best overall balance with an accuracy of 81.72 percent, a precision of 66.15 percent, a recall of 35.49 percent, and an F1 score of 46.20 percent, fulfilling all twelve system verification tests within our fourteen day schedule.
+1. Introduction and Project Scope
+1.1 Background and Problem Statement
+The main problem is that financial institutions lose money when customers default on their monthly credit card payments. Predicting these payment defaults early allows banks to take preventive actions like offering flexible payment plans before a customer falls into deep debt. A bank officer can review a customer payment history and flag accounts that show early signs of financial stress, such as delayed payments over the past two months or rising bill balances. Manual reviews take too much time when a bank manages tens of thousands of active cardholders every month. This project solves the problem by creating a machine learning prototype that automates the risk prediction process and provides clear recommendations as a decision support tool for bank staff.
+1.2 Project Objectives and Rubric Alignment
+The objectives of this project are structured around six clear goals that guide our technical implementation and final report. Clear objectives help our four team members coordinate data analysis, machine learning training, software development, and system testing within the fourteen day deadline. First, we preprocess and analyze a verified dataset of thirty thousand customer credit records. Second, we train and compare Logistic Regression, Decision Tree, and Random Forest classifiers on the same data split. Third, we evaluate the three models using accuracy, precision, recall, F1 score, and confusion matrices. Fourth, we build a functional Streamlit web application backed by a SQLite database with separate Admin and User access roles. Fifth, we integrate the selected Decision Tree pipeline into the application to display class predictions, probability scores, and helpful recommendations. Sixth, we test the entire prediction workflow, role permissions, input validation, and application reliability across twelve test cases. Table 1 shows how the eight chapters of this compiled report cover all required rubric sections and the twenty marks allocated to the report.
+Table 1: Official Marking Rubric Alignment and Report Chapter Mapping
+Main Report Chapter
+Required Rubric Sections Covered
+Allocated Marks
+Chapter 1 Introduction and Project Scope
+Executive summary, introduction, problem statement, objectives, scope, team plan, and schedule
+2 Marks
+Chapter 2 Dataset and Preprocessing
+Dataset source verification, attribute dictionary, descriptive statistics, and cleaning pipeline
+3 Marks
+Chapter 3 Exploratory Data Analysis
+Six exploratory visualisations and detailed behavioral interpretations
+2 Marks
+Chapter 4 ML Methodology and Development
+Methodology workflow, model training, mathematical evaluation, confusion matrices, and comparison
+6 Marks
+Chapter 5 System Design and Implementation
+Four layer technical architecture, Admin module, User module, database, and model integration
+2 Marks
+Chapter 6 Results Testing and Discussion
+Twelve system test cases, actual results, challenges, ethical considerations, and limitations
+2 Marks
+Chapter 7 Conclusion and Future Work
+Achievement of project objectives and practical roadmap for future enhancements
+1 Mark
+Chapter 8 Report Quality and Supporting Material
+Consistent figure and table indexes, academic references, and technical implementation appendix
+2 Marks
+Total Report Assessment
+Complete 26 required report components grouped into 8 structured chapters
+20 Marks
+
+1.3 Project Scope Management
+The project scope focuses strictly on binary classification so that our team delivers one complete and reliable predictive system within fourteen days. Keeping the scope manageable ensures that every feature works properly during the live demonstration rather than leaving several complex features unfinished. In our first prototype version, the system predicts either an On Time Class 0 outcome or a Default Class 1 outcome for next month credit card payments using one verified dataset and three machine learning algorithms. We leave complex features like multi class risk tiers, deep neural networks, generative artificial intelligence chatbots, and cloud server hosting for future enhancements. Table 2 compares the exact features included in our current prototype against items reserved for future work.
+Table 2: Project Scope Definition Comparing Included Features and Future Enhancements
+Included in First Prototype Version
+Reserved for Future Enhancement
+One verified real world dataset from UCI Credit Card repository
+Multiple combined banking datasets across different countries
+Binary classification predicting On Time Class 0 or Default Class 1
+Multi class risk levels with five separate credit scoring bands
+Three machine learning algorithms using Scikit learn
+Deep learning neural networks and exhaustive hyperparameter searches
+Password login and session checks for Admin and User roles
+Social media login integration and automated email account recovery
+Basic Admin account management and CSV dataset schema validation
+Automated email notifications and real time audit analytics
+Prediction output with probability estimate and rule based advice
+Generative artificial intelligence chatbot for financial advising
+Local deployment using Streamlit web app and SQLite database
+Cloud server hosting and native mobile phone applications
+
+1.4 Division of Work and Fourteen Day Execution Schedule
+We divided the project into four parallel workstreams so that each team member owns a clear area while contributing to system integration, testing, and the final presentation. Assigning one clear owner to each workstream prevents delays and allows the user interface and database to be built while the machine learning models are being trained. Member 1 handles the dataset verification, preprocessing, and exploratory data analysis charts. Member 2 leads the machine learning training, mathematical evaluation, and saving the best model pipeline. Member 3 develops the Streamlit web application, the SQLite database, Admin user management, and model pipeline connection. Member 4 builds the User prediction form, designs the recommendation rules, runs the twelve test cases, and coordinates the final compiled report. Table 3 summarizes the division of work, while Table 4 and Figure 1 present our fourteen day execution schedule and Gantt chart.
+Table 3: Division of Work Across Four Team Members
+Team Member
+Workstream Focus
+Primary Responsibilities and Deliverables
+Report Sections Owned
+Effort Share
+Member 1
+Data and EDA Workstream
+Verify UCI dataset, document 25 attributes, confirm zero missing values, create 6 EDA charts, and interpret patterns
+Chapters 2 and 3
+20 to 25 percent
+Member 2
+Machine Learning Workstream
+Define target and 23 features, apply StandardScaler without leakage, train 3 models, calculate metrics, save pipeline
+Chapter 4 and Input to Chapter 6
+25 to 30 percent
+Member 3
+System and Admin Workstream
+Set up Streamlit app and SQLite database, implement login and role checks, build Admin tools, integrate saved pipeline
+Chapter 5 and Input to Chapter 6
+25 to 30 percent
+Member 4
+User Module and QA Workstream
+Build User input form, display probability and recommendations, run 12 test cases, coordinate report and demo
+Chapters 1, 6, 7, and 8
+20 to 25 percent
+
+Table 4: Detailed Fourteen Day Execution Schedule and Milestones
+Timeline
+Project Phase
+Key Activities and Milestone Deliverables
+Days 1 to 2
+Phase 1 Topic Dataset and Environment
+Agree on credit card default problem, verify 30,000 UCI records, set up repository, SQLite database, and report template
+Days 3 to 4
+Phase 2 EDA and First Baseline Model
+Finish data cleaning, descriptive statistics, and initial charts, build StandardScaler pipeline, train Logistic Regression, build login
+Days 5 to 6
+Phase 3 Model Comparison and UI Design
+Complete all six EDA interpretations, train Decision Tree and Random Forest, compare metrics, build Admin pages and User form
+Days 7 to 8
+Phase 4 Connect Model to Application
+Select Decision Tree model, save best_pipeline.joblib, connect pipeline to Streamlit app, add risk tier recommendations
+Days 9 to 10
+Phase 5 Feature Freeze and Report Draft
+Freeze code features, test Admin and User workflows end to end, assemble full report chapters and evaluation tables
+Days 11 to 12
+Phase 6 Fix Defects and Validate Evidence
+Execute all 12 system test cases T01 to T12, verify app output against standalone pipeline, write ethics and limitations
+Days 13 to 14
+Phase 7 Rehearsal and Final Submission
+Perform clean environment startup test, rehearse 10 minute live demo and mock questions, proofread report, and submit
+
+
+Figure 1: Fourteen Day Project Execution Gantt Chart Schedule
+1.5 Project Risk Management and Live Demonstration Plan
+Managing project risks early ensures that our team meets the Day 8 integration deadline and delivers a smooth ten minute live demonstration. In a two week project, waiting until the final days to connect the machine learning model or test role security is the biggest cause of failure. By verifying the dataset columns on Day 2, integrating best_pipeline.joblib on Day 8, and freezing new features on Day 10, our team protected four full days for quality assurance and rehearsal. Table 5 outlines the main project risks and our mitigation controls, and Table 6 details our ten minute presentation structure and seven step live demo sequence.
+Table 5: Risk Management and Mitigation Control Plan
+Identified Project Risk
+Impact on Delivery
+Mitigation Control Applied by Team
+Dataset unsuitable or causes data leakage
+Invalid predictions and low rubric marks
+Verified all 25 UCI columns on Day 2 and confirmed all 23 features are historical
+Low recall score due to class imbalance
+Model misses defaulting customers
+Compared three classifiers and selected Decision Tree for highest default recall
+Late integration between model and UI
+Application fails during live demo
+Saved best_pipeline.joblib and connected it to Streamlit on Day 8
+Admin features become overly complex
+Delays in core prediction workflow
+Restricted Admin scope to essential account management and 25 column CSV validation
+Last minute application startup error
+Demonstration failure on submission day
+Froze code on Day 10 and ran clean environment restart tests in T11 and T12
+
+Table 6: Ten Minute Live Presentation and Demonstration Plan
+Presenter
+Presentation Topic and Live Demo Step
+Allocated Time
+Member 1
+Explain banking default problem, project objectives, UCI dataset verification, and six EDA charts
+2.0 Minutes
+Member 2
+Explain StandardScaler preprocessing, three classification algorithms, mathematical metrics, and Decision Tree selection
+2.5 Minutes
+Member 3
+Demonstrate Streamlit architecture, SQLite password security, Admin account creation, and CSV schema validation
+2.0 Minutes
+Member 4
+Demonstrate User sign in, valid customer risk prediction, recommendation display, invalid input rejection, and testing
+2.5 Minutes
+All Members
+Answer technical questions from assessors regarding dataset, model pipeline, and system security
+1.0 Minute
+
+2. Dataset and Preprocessing
+2.1 Dataset Source Verification and Attribute Dictionary
+We selected the Default of Credit Card Clients dataset from the UCI Machine Learning Repository. This dataset is highly suitable because it contains clear financial and demographic indicators recorded before the actual default event takes place. It includes assigned credit limits, gender, education level, marital status, age, six months of repayment status codes from April to September, six months of billing statement amounts, and six months of previous payment amounts. Using historical data recorded prior to the prediction month ensures that the input features would actually be available to a bank officer when a real prediction is made, which completely avoids data leakage. The dataset contains exactly thirty thousand rows and twenty five columns, as documented in Table 7.
+Table 7: Dataset Attribute Dictionary and Coding Specifications
+Column Name
+Data Type
+Attribute Category
+Description and Value Coding Rule
+ID
+Integer
+Record Identifier
+Unique sequential client number from 1 to 30000 removed before model training
+LIMIT_BAL
+Float
+Credit Profile
+Total given credit limit in New Taiwan Dollars for the individual client and supplementary cards
+SEX
+Integer
+Demographic
+Customer gender coded as 1 for male and 2 for female
+EDUCATION
+Integer
+Demographic
+Highest education level coded as 1 for graduate school, 2 for university, 3 for high school, and 4 to 6 for others
+MARRIAGE
+Integer
+Demographic
+Marital status coded as 1 for married, 2 for single, and 3 for other status
+AGE
+Integer
+Demographic
+Customer age measured in years ranging from 21 years to 79 years
+PAY_0 to PAY_6
+Integer
+Repayment Status
+Past monthly repayment status from September back to April where negative 2, negative 1, and 0 indicate timely or revolving payment and 1 to 8 indicate months of payment delay
+BILL_AMT1 to BILL_AMT6
+Float
+Billing History
+Monthly bill statement amount in New Taiwan Dollars from September back to April
+PAY_AMT1 to PAY_AMT6
+Float
+Payment History
+Amount of previous payment made in New Taiwan Dollars from September back to April
+default.payment.next.month
+Integer
+Target Variable
+Binary classification outcome coded as 1 for default payment next month and 0 for on time payment
+
+2.2 Descriptive Statistics Analysis
+Calculating descriptive statistics across the dataset reveals wide differences in measurement scales between financial dollar amounts and demographic codes. Understanding these numerical ranges is essential because algorithms like Logistic Regression are sensitive to large differences in feature magnitude. For example, the credit limit column LIMIT_BAL has a mean of 167,484.32 dollars and ranges from 10,000.00 dollars to 1,000,000.00 dollars, while customer AGE has a mean of 35.49 years and ranges from 21.00 years to 79.00 years. Similarly, the September bill amount BILL_AMT1 averages 51,223.33 dollars with a standard deviation of 73,635.86 dollars, where negative billing values represent credit overpayments by the cardholder. Table 8 summarizes the descriptive statistics for representative columns across the thirty thousand records.
+Table 8: Descriptive Statistics of Key Financial and Demographic Attributes
+Attribute Name
+Record Count
+Mean Value
+Standard Deviation
+Minimum Value
+Twenty Fifth Percentile
+Median Value
+Maximum Value
+LIMIT_BAL
+30000
+167484.32
+129747.66
+10000.00
+50000.00
+140000.00
+1000000.00
+AGE
+30000
+35.49
+9.22
+21.00
+28.00
+34.00
+79.00
+PAY_0
+30000
+Negative 0.02
+1.12
+Negative 2.00
+Negative 1.00
+0.00
+8.00
+BILL_AMT1
+30000
+51223.33
+73635.86
+Negative 165580.00
+3558.75
+22381.50
+964511.00
+BILL_AMT2
+30000
+49179.08
+71173.77
+Negative 69777.00
+2984.75
+21200.00
+983931.00
+PAY_AMT1
+30000
+5663.58
+16563.28
+0.00
+1000.00
+2100.00
+873552.00
+PAY_AMT2
+30000
+5921.16
+23040.87
+0.00
+833.00
+2009.00
+1684259.00
+
+2.3 Data Cleaning and Preprocessing Pipeline Justification
+We conducted a thorough data cleaning and preprocessing workflow before training our classification models. Justifying each cleaning step ensures that our machine learning pipeline is scientifically sound and free from preprocessing leakage. First, we inspected all thirty thousand rows for missing cells and duplicate entries, verifying that the dataset contains zero missing values and zero duplicate records. Second, we dropped the ID column and separated the target column default.payment.next.month from the twenty three remaining input features. Third, we split the dataset into an 80 percent training set of 24,000 records and a 20 percent testing set of 6,000 records using stratified sampling so that both sets maintain the exact same proportion of default cases. Fourth, we applied Scikit learn StandardScaler to normalize all twenty three features to a mean of zero and a variance of one, fitting the scaler strictly on the 24,000 training records and applying the learned transformation to the 6,000 test records so that test data never leaks into model training.
+3. Exploratory Data Analysis
+3.1 Target Variable Distribution and Class Imbalance Calculation
+We explored the data visually to understand the underlying patterns and class balance before training our models. Exploring the target variable distribution helps us identify class imbalances that could distort model accuracy and guide our choice of evaluation metrics. As shown in Figure 2, out of 30,000 total customers, 23,364 customers paid their credit card bills on time in Class 0 and 6,636 customers defaulted on their next payment in Class 1. To calculate the exact percentage for On Time Class 0, we divide 23,364 by 30,000 and multiply by 100 to get 77.88 percent. To calculate the exact percentage for Default Class 1, we divide 6,636 by 30,000 and multiply by 100 to get 22.12 percent. Because almost four times as many customers pay on time as default, evaluating models on accuracy alone would be misleading, so we must focus closely on recall and F1 score for the default class.
+
+Figure 2: Target Variable Distribution in Credit Card Dataset
+3.2 Customer Age Distribution Against Default Status
+We generated a boxplot comparing customer age against their default payment status to see if age is a strong predictor of risk. Testing demographic variables early tells us whether simple personal characteristics can separate safe accounts from risky accounts. In Figure 3, the age distribution for On Time Class 0 and Default Class 1 looks almost identical, with both groups sharing a median age of 34 years, an average age of 35.49 years, and a middle fifty percent range between 28 and 41 years. This visual evidence proves that customer age does not significantly affect the likelihood of a credit card default, meaning our models must rely on financial payment history features rather than age to make accurate predictions.
+
+Figure 3: Customer Age Distribution by Default Status
+3.3 Credit Limit Balance Against Default Status
+We next examined how the assigned credit limit balance relates to whether a customer defaults on their next bill. Banks grant higher credit limits to clients who demonstrate strong income and reliable credit histories, making credit limit an important baseline risk indicator. As shown in Figure 4, customers in On Time Class 0 hold a much higher average credit limit of 178,099.73 dollars and a median limit of 150,000.00 dollars, whereas customers in Default Class 1 hold a lower average credit limit of 130,109.66 dollars and a median limit of only 90,000.00 dollars. This 60,000.00 dollar difference in median credit limits shows that customers with lower credit limits face tighter financial buffers and higher default risk.
+
+Figure 4: Credit Limit Balance by Default Status
+3.4 Most Recent Repayment Status Against Default Percentage
+Analyzing the most recent September repayment status code in column PAY_0 reveals the strongest predictive pattern in the dataset. A customer who is already behind on their current monthly bill is much more likely to miss their next monthly payment as well. Figure 5 illustrates that customers who paid duly or used revolving credit on time with status codes negative 2, negative 1, and 0 have low default rates of 13.2 percent, 16.8 percent, and 12.8 percent. However, once a customer is delayed by one month at code 1, the default rate more than doubles to 33.9 percent, and when delayed by two or three months at codes 2 and 3, the default rate jumps sharply to 69.1 percent and 75.8 percent. This dramatic jump confirms that recent repayment status is the single most important behavioral indicator for predicting credit default.
+
+Figure 5: Default Percentage by Most Recent Repayment Status
+3.5 Education Level Against Default Percentage
+We also analyzed default rates across the four main education groups to understand socioeconomic patterns in the dataset. Education level often correlates with career stability and awareness of credit management rules. In Figure 6, cardholders with graduate school education have a 19.2 percent default rate, university graduates have a 23.7 percent default rate, high school graduates have a 25.2 percent default rate, and the small others category has a 5.7 percent default rate. This chart shows a modest trend where higher formal education corresponds with slightly lower default rates, providing helpful secondary context alongside payment history.
+
+Figure 6: Default Percentage Across Education Levels
+3.6 Correlation Heatmap of Key Financial Attributes
+To complete our exploratory data analysis, we created a correlation heatmap measuring the linear relationships between key financial columns and the target variable. Inspecting feature correlations helps us spot which input variables move together with the default target and whether billing columns overlap with one another. Figure 7 shows that the target column default.payment.next.month has its strongest positive correlations with PAY_0 at 0.32, PAY_2 at 0.26, and PAY_3 at 0.24, and a negative correlation of minus 0.15 with LIMIT_BAL, while BILL_AMT1 and BILL_AMT2 share a very strong 0.95 correlation with each other. Because consecutive bill amounts are highly correlated and repayment status codes follow nonlinear steps, tree based models like Decision Tree and Random Forest are ideally suited to capture these patterns.
+
+Figure 7: Correlation Heatmap of Key Financial Attributes
+4. Machine Learning Methodology and Development
+4.1 Six Step Machine Learning Training Workflow
+We followed a strict six step machine learning methodology to train and compare our three classification models fairly. Using a standardized workflow ensures that no test data leaks into preprocessing and that all models are judged on the exact same unseen records. As illustrated in Figure 8, we loaded and verified the 30,000 records, selected the 23 eligible historical features, and performed a stratified 80 percent training and 20 percent testing split. In the 6,000 record test set, stratified splitting preserved 4,673 On Time Class 0 records or 77.88 percent and 1,327 Default Class 1 records or 22.12 percent. We then fitted StandardScaler on the 24,000 training rows and trained Logistic Regression, Decision Tree with maximum depth 5, and Random Forest with 100 trees and maximum depth 5.
+
+Figure 8: Six Step Machine Learning Training and Evaluation Workflow
+4.2 Step by Step Mathematical Evaluation Calculations
+In our binary classification task, Default Class 1 is designated as the positive class because the business goal is to identify customers at risk of defaulting. Every model is evaluated on the 6,000 unseen test records using four core metrics derived from the confusion matrix: Accuracy, Precision, Recall, and F1 Score. True Positives are actual defaults correctly predicted as Default, True Negatives are on time payers correctly predicted as On Time, False Positives are on time payers wrongly predicted as Default, and False Negatives are actual defaults missed by the model. Below is the complete step by step working calculation process for all three models.
+First, we compute the complete working calculations for the Logistic Regression baseline model using its test confusion matrix counts in Figure 9, where True Negatives equal 4,528, False Positives equal 145, False Negatives equal 1,009, and True Positives equal 318. Step 1 Accuracy: We add True Positives of 318 and True Negatives of 4,528 to get 4,846 total correct predictions. We then divide 4,846 by 6,000 total test records to get 0.807667, which rounds to 0.8077 or 80.77 percent. Step 2 Precision: We add True Positives of 318 and False Positives of 145 to get 463 total predicted defaults. We then divide 318 by 463 to get 0.686825, which rounds to 0.6868 or 68.68 percent. Step 3 Recall: We add True Positives of 318 and False Negatives of 1,009 to get 1,327 total actual defaults in the test set. We then divide 318 by 1,327 to get 0.239638, which rounds to 0.2396 or 23.96 percent. Step 4 F1 Score: We multiply 2 times Precision of 0.686825 times Recall of 0.239638 to get the numerator 0.329179. We add Precision of 0.686825 and Recall of 0.239638 to get the denominator 0.926463. We then divide 0.329179 by 0.926463 to get 0.355307, which rounds to 0.3553 or 35.53 percent.
+Second, we compute the complete working calculations for the Decision Tree model using its test confusion matrix counts in Figure 10, where True Negatives equal 4,432, False Positives equal 241, False Negatives equal 856, and True Positives equal 471. Step 1 Accuracy: We add True Positives of 471 and True Negatives of 4,432 to get 4,903 total correct predictions. We then divide 4,903 by 6,000 total test records to get 0.817167, which rounds to 0.8172 or 81.72 percent. Step 2 Precision: We add True Positives of 471 and False Positives of 241 to get 712 total predicted defaults. We then divide 471 by 712 to get 0.661517, which rounds to 0.6615 or 66.15 percent. Step 3 Recall: We add True Positives of 471 and False Negatives of 856 to get 1,327 total actual defaults. We then divide 471 by 1,327 to get 0.354936, which rounds to 0.3549 or 35.49 percent. Step 4 F1 Score: We multiply 2 times Precision of 0.661517 times Recall of 0.354936 to get the numerator 0.469592. We add Precision of 0.661517 and Recall of 0.354936 to get the denominator 1.016453. We then divide 0.469592 by 1.016453 to get 0.461991, which rounds to 0.4620 or 46.20 percent.
+Third, we compute the complete working calculations for the Random Forest model using its test confusion matrix counts in Figure 11, where True Negatives equal 4,491, False Positives equal 182, False Negatives equal 945, and True Positives equal 382. Step 1 Accuracy: We add True Positives of 382 and True Negatives of 4,491 to get 4,873 total correct predictions. We then divide 4,873 by 6,000 total test records to get 0.812167, which rounds to 0.8122 or 81.22 percent. Step 2 Precision: We add True Positives of 382 and False Positives of 182 to get 564 total predicted defaults. We then divide 382 by 564 to get 0.677305, which rounds to 0.6773 or 67.73 percent. Step 3 Recall: We add True Positives of 382 and False Negatives of 945 to get 1,327 total actual defaults. We then divide 382 by 1,327 to get 0.287867, which rounds to 0.2879 or 28.79 percent. Step 4 F1 Score: We multiply 2 times Precision of 0.677305 times Recall of 0.287867 to get the numerator 0.389947. We add Precision of 0.677305 and Recall of 0.287867 to get the denominator 0.965172. We then divide 0.389947 by 0.965172 to get 0.404018, which rounds to 0.4040 or 40.40 percent.
+Table 9: Comprehensive Evaluation Results Across All Three Classification Models on Test Set
+Model Name
+True Negatives
+False Positives
+False Negatives
+True Positives
+Accuracy
+Precision
+Recall
+F1 Score
+Logistic Regression
+4528
+145
+1009
+318
+0.8077
+0.6868
+0.2396
+0.3553
+Decision Tree Selected
+4432
+241
+856
+471
+0.8172
+0.6615
+0.3549
+0.4620
+Random Forest
+4491
+182
+945
+382
+0.8122
+0.6773
+0.2879
+0.4040
+
+
+Figure 9: Logistic Regression Baseline Model Confusion Matrix
+
+Figure 10: Decision Tree Selected Model Confusion Matrix
+
+Figure 11: Random Forest Benchmark Model Confusion Matrix
+4.3 Model Comparison and Feature Importance Justification
+The Decision Tree model performed the best overall across our evaluation benchmarks. As shown in Table 9 and Figure 12, the Decision Tree achieved the highest accuracy at 81.72 percent and the highest F1 score at 46.20 percent. More importantly, it achieved the highest recall score at 35.49 percent by correctly catching 471 defaulting customers, which is 89 more defaults caught than Random Forest and 153 more defaults caught than Logistic Regression. High recall is critical in banking risk prediction because failing to identify an at risk customer leads directly to unpaid credit losses. Furthermore, inspecting the Decision Tree feature importance weights in Table 10 and Figure 13 confirms that the model relies heavily on recent September repayment status PAY_0 at 68.01 percent and August repayment status PAY_2 at 13.77 percent, matching our earlier exploratory findings. We therefore saved the combined StandardScaler and Decision Tree pipeline as best_pipeline.joblib for integration into our final application.
+
+Figure 12: Performance Comparison Across Three Machine Learning Models
+
+Figure 13: Top Feature Importance Scores in Selected Decision Tree Model
+Table 10: Top Eight Feature Importance Scores in Selected Decision Tree Model
+Rank
+Customer Attribute Name
+Relative Importance Weight
+Importance Percentage
+Analytical Meaning in Decision Tree Splits
+1
+PAY_0
+0.6801
+68.01 percent
+Primary root split separating delayed September accounts from timely accounts
+2
+PAY_2
+0.1377
+13.77 percent
+Secondary split checking whether payment delays persisted in August
+3
+PAY_AMT3
+0.0440
+4.40 percent
+Evaluates recent July cash payment amount relative to balance owed
+4
+PAY_5
+0.0331
+3.31 percent
+Checks historical May repayment status for recurring delinquency
+5
+BILL_AMT1
+0.0317
+3.17 percent
+Measures current September statement balance size
+6
+LIMIT_BAL
+0.0219
+2.19 percent
+Separates lower credit limit accounts from higher buffer accounts
+7
+PAY_3
+0.0115
+1.15 percent
+Checks July repayment status code for multi month delay patterns
+8
+AGE
+0.0088
+0.88 percent
+Minor leaf adjustment for customer age group
+
+5. System Design and Implementation
+5.1 Four Layer Technical Architecture and Software Stack
+We built the final web application using a Python framework called Streamlit, connected to Scikit learn and a local SQLite database. Streamlit allows our team to create an interactive user interface quickly while integrating our saved machine learning pipeline seamlessly within the two week schedule. As shown in Figure 14 and Table 11, the system follows a four layer architecture comprising the Streamlit user interface layer, the application access control and input validation layer, the machine learning pipeline and SQLite storage layer, and the risk recommendation output layer. A bank employee can sign into the system, enter customer details, and receive an instant default prediction along with a recommended action.
+
+Figure 14: Four Layer System Technical Architecture and Workflow
+Table 11: System Technology Stack and Component Responsibilities
+System Layer Component
+Selected Technology
+Implementation Reason and Role in Prototype
+Core Programming Language
+Python 3
+Supports the full data analysis, machine learning, and web application stack
+Data Manipulation
+Pandas and NumPy
+Handles dataset cleaning, schema validation, and single row input formatting
+Data Visualisation
+Matplotlib and Seaborn
+Produces exploratory analysis charts and confusion matrix visualisations
+Machine Learning Engine
+Scikit learn
+Provides StandardScaler, classification algorithms, and evaluation metrics
+Model Pipeline Storage
+Joblib
+Serializes and reloads the fitted preprocessing and Decision Tree pipeline
+Web User Interface
+Streamlit
+Enables rapid development of interactive Admin and User pages
+Database Management
+SQLite 3
+Provides lightweight local storage for user accounts, roles, and prediction logs
+Version Control
+GitHub
+Supports team collaboration, code history tracking, and backup management
+
+5.2 Database Schema, Role Security, and Admin Functions
+The system architecture includes a secure SQLite database that manages user accounts, role permissions, and prediction logs. A simple role selector dropdown without authentication is not real access control, so our application stores passwords as secure SHA256 hashes and enforces role permission checks on every privileged page. Ordinary users can only access the credit risk prediction form and view their results. Admin users have exclusive access to the account management dashboard, where they can create new users or update roles, as well as the dataset upload validator, which checks uploaded CSV files to ensure all twenty five required columns and numerical data types are present before accepting the file.
+5.3 Model Pipeline Integration and Action Recommendation Engine
+We used the Joblib library to load the saved best_pipeline.joblib artifact directly inside the Streamlit prediction module. Integrating the complete pipeline guarantees that new customer numbers typed into the web form are scaled using the exact same StandardScaler parameters learned during training before reaching the Decision Tree classifier. When the user clicks the predict button, the pipeline outputs both the binary class prediction and the estimated probability of default via predict_proba. The application then matches the probability score against the four tier rule table shown in Table 12 to display a clear interpretation and a practical banking action recommendation on the screen.
+Table 12: Automated Risk Interpretation and Recommendation Engine Rules
+Predicted Class Outcome
+Default Probability Range
+Assigned Risk Tier
+Interpretation and Recommended Action for Bank Staff
+On Time Class 0
+0 percent to 25 percent
+Low Default Risk
+Customer shows strong repayment habits. Maintain current credit terms and standard monthly billing.
+On Time Class 0
+26 percent to 49 percent
+Moderate Watch Risk
+Customer is predicted to pay on time but shows mild balance strain. Send an automated courtesy payment reminder five days before the due date.
+Default Class 1
+50 percent to 74 percent
+High Default Risk
+Customer has a high likelihood of missing next payment. Contact the customer early to offer a structured monthly installment plan.
+Default Class 1
+75 percent to 100 percent
+Critical Default Risk
+Customer exhibits severe multi month payment delays. Pause credit limit increases and refer the account to the dedicated credit support team.
+
+6. Results, Testing and Critical Discussion
+6.1 Twelve Step System Verification and Testing Evidence
+We tested the complete system across twelve structured test cases to ensure it meets all functional, security, and integration requirements. Preparing and executing test cases systematically verifies that login authentication, role restrictions, CSV schema validation, input range checks, and model predictions work together without errors. We verified that invalid login credentials are blocked in T02, that ordinary users cannot open Admin pages in T03, that corrupted datasets with missing columns are rejected in T06, and that the Streamlit web output matches the standalone Joblib pipeline output in T09. Table 13 records the complete test plan, expected outcomes, actual observed results, and PASS status for all twelve tests.
+Table 13: System Verification and End to End Testing Results T01 to T12
+Test ID
+Test Case Description
+Expected System Outcome
+Actual Observed Outcome and Evidence
+Status
+T01
+Sign in with valid Admin and User credentials
+Correct role dashboard is displayed
+Admin and User accounts signed in cleanly and loaded role specific menus
+PASS
+T02
+Sign in with invalid username or wrong password
+Access is blocked immediately
+System blocked access and displayed an invalid credentials warning alert
+PASS
+T03
+Ordinary user attempts to access Admin function
+Access is rejected by permission guard
+Session role check blocked Admin view and kept user on prediction page
+PASS
+T04
+Admin adds a new user account or edits role
+Changes are saved into SQLite database
+New user account was hashed and saved in SQLite and verified via sign in
+PASS
+T05
+Admin uploads a valid 25 column credit dataset
+Dataset passes schema validation
+Validator confirmed all 25 UCI columns and 30,000 rows and showed summary
+PASS
+T06
+Admin uploads an invalid CSV missing billing columns
+Clear validation error message is shown
+System rejected upload and listed the exact missing column names on screen
+PASS
+T07
+User submits valid customer attributes on form
+Prediction and probability are generated
+Application displayed Default Class 1, probability percentage, and advice
+PASS
+T08
+User submits missing or out of range age values
+Invalid input is rejected before prediction
+Form validation blocked negative credit limits and ages below 21 years
+PASS
+T09
+Compare app output against saved pipeline script
+Predicted class and probability match exactly
+Streamlit app and terminal script returned identical 76.12 percent probability
+PASS
+T10
+Review probability score and recommendation text
+Correct risk tier guidance is displayed
+High risk prediction accurately displayed installment restructuring advice
+PASS
+T11
+Restart the Streamlit application server
+Model pipeline and SQLite data remain accessible
+Clean server restart reloaded best_pipeline.joblib and all user accounts
+PASS
+T12
+Complete full end to end user prediction workflow
+User completes workflow without any app error
+User signed in, entered customer data, viewed advice, and signed out smoothly
+PASS
+
+6.2 Critical Discussion of Model Performance and Errors
+The system correctly rejects invalid data inputs and generates accurate predictions, but a thorough critical discussion must examine the model errors observed on the test set. Because the UCI dataset contains 77.88 percent on time payers and only 22.12 percent defaulters, all three classifiers face a natural pull toward the majority class. On the 6,000 test records, our selected Decision Tree model correctly identified 4,432 on time payers and 471 defaulters, while producing 241 False Positives and 856 False Negatives. The 241 False Positives represent customers who actually paid on time but were flagged as at risk, which only results in a polite payment reminder or supportive phone call. In contrast, the 856 False Negatives represent customers who had clean payment records in previous months but suddenly defaulted, meaning a 35.49 percent recall score still misses customers whose financial trouble begins abruptly without prior billing delays.
+6.3 Ethical Considerations, Data Privacy, and Project Limitations
+We must also consider the ethical implications and technical limitations of deploying machine learning models in consumer finance. Financial and demographic data is highly sensitive, and automated credit risk systems must never be used to discriminate against customers based on gender, age, or marital status. Our prototype addresses this ethical responsibility by relying primarily on objective repayment status codes for over 85 percent of its decision weight and by framing every output as a supportive recommendation for payment assistance rather than an automated penalty. Regarding limitations, the current prototype relies on a local SQLite database and a single historical dataset from 2005, which is completely sufficient for a two week academic demonstration but would require encrypted enterprise database hosting and updated local banking records before commercial deployment.
+7. Conclusion and Future Work
+7.1 Conclusion
+This project successfully developed a complete, functioning Credit Card Default Risk Prediction System within the fourteen day deadline. We met all six project objectives by verifying and preprocessing the thirty thousand record UCI Credit Card dataset, interpreting six exploratory data analysis charts, and comparing Logistic Regression, Decision Tree, and Random Forest models on an independent test set. Selecting and integrating the Decision Tree pipeline into our role protected Streamlit and SQLite application provided reliable predictions, probability estimates, and actionable recommendations for financial risk management. Our structured four member team approach and early Day 8 model integration ensured that all workstreams and all twelve verification tests were completed on time.
+7.2 Future Work and System Enhancements
+Future work should focus first on improving the model recall score for the default class so that fewer at risk customers are missed. We can apply class balancing techniques like Synthetic Minority Over sampling Technique or cost sensitive class weights during training alongside probability threshold tuning to raise recall above 60 percent. We also recommend migrating the local SQLite database to a secure cloud database platform with multi factor authentication. Finally, adding a visual prediction history analytics dashboard and local feature explanation charts would further enhance the usefulness of the Admin and User modules.
+8. Report Quality and Supporting Material
+8.1 Complete Index of Embedded Figures and Structured Tables
+To ensure professional report quality and fast reference across all chapters, Table 14 provides the numbered index of all fourteen visual figures embedded in this report, and Table 15 provides the numbered index of all fifteen structured tables.
+Table 14: Index of Embedded Report Figures Figure 1 to Figure 14
+Figure Number
+Figure Title and Analytical Summary
+Report Section
+Figure 1
+Fourteen Day Project Execution Gantt Chart Schedule across Phases 1 to 7
+Section 1.4
+Figure 2
+Target Variable Distribution in Credit Card Dataset showing 23,364 On Time and 6,636 Default records
+Section 3.1
+Figure 3
+Customer Age Distribution by Default Status showing identical 34 year median age
+Section 3.2
+Figure 4
+Credit Limit Balance by Default Status comparing 150,000 versus 90,000 median credit limits
+Section 3.3
+Figure 5
+Default Percentage by Most Recent Repayment Status showing sharp jump for delayed accounts
+Section 3.4
+Figure 6
+Default Percentage Across Education Levels comparing graduate, university, and high school groups
+Section 3.5
+Figure 7
+Correlation Heatmap of Key Financial Attributes highlighting PAY_0 and billing correlations
+Section 3.6
+Figure 8
+Six Step Machine Learning Training and Evaluation Workflow diagram
+Section 4.1
+Figure 9
+Logistic Regression Baseline Model Confusion Matrix showing 4,528 TN, 145 FP, 1,009 FN, and 318 TP
+Section 4.2
+Figure 10
+Decision Tree Selected Model Confusion Matrix showing 4,432 TN, 241 FP, 856 FN, and 471 TP
+Section 4.2
+Figure 11
+Random Forest Benchmark Model Confusion Matrix showing 4,491 TN, 182 FP, 945 FN, and 382 TP
+Section 4.2
+Figure 12
+Performance Comparison Across Three Machine Learning Models across four metrics
+Section 4.3
+Figure 13
+Top Feature Importance Scores in Selected Decision Tree Model led by PAY_0 at 0.6801
+Section 4.3
+Figure 14
+Four Layer System Technical Architecture and Workflow diagram
+Section 5.1
+
+Table 15: Index of Structured Report Tables Table 1 to Table 15
+Table Number
+Table Title and Content Summary
+Report Section
+Table 1
+Official Marking Rubric Alignment and Report Chapter Mapping
+Section 1.2
+Table 2
+Project Scope Definition Comparing Included Features and Future Enhancements
+Section 1.3
+Table 3
+Division of Work Across Four Team Members
+Section 1.4
+Table 4
+Detailed Fourteen Day Execution Schedule and Milestones
+Section 1.4
+Table 5
+Risk Management and Mitigation Control Plan
+Section 1.5
+Table 6
+Ten Minute Live Presentation and Demonstration Plan
+Section 1.5
+Table 7
+Dataset Attribute Dictionary and Coding Specifications
+Section 2.1
+Table 8
+Descriptive Statistics of Key Financial and Demographic Attributes
+Section 2.2
+Table 9
+Comprehensive Evaluation Results Across All Three Classification Models on Test Set
+Section 4.2
+Table 10
+Top Eight Feature Importance Scores in Selected Decision Tree Model
+Section 4.3
+Table 11
+System Technology Stack and Component Responsibilities
+Section 5.1
+Table 12
+Automated Risk Interpretation and Recommendation Engine Rules
+Section 5.3
+Table 13
+System Verification and End to End Testing Results T01 to T12
+Section 6.1
+Table 14
+Index of Embedded Report Figures Figure 1 to Figure 14
+Section 8.1
+Table 15
+Index of Structured Report Tables Table 1 to Table 15
+Section 8.1
+
+8.2 References
+1. Yeh, I. C., and Lien, C. H., 2009. The comparisons of data mining techniques for the predictive accuracy of probability of default of credit card clients. Expert Systems with Applications, Volume 36, Issue 2, Pages 2473 to 2480.
+2. UCI Machine Learning Repository, 2016. Default of Credit Card Clients Dataset, donated by I Cheng Yeh, Chung Hua University and Tamkang University.
+3. Pedregosa, F., Varoquaux, G., Gramfort, A., Michel, V., Thirion, B., Grisel, O., Blondel, M., Prettenhofer, P., Weiss, R., Dubourg, V., and Vanderplas, J., 2011. Scikit learn Machine Learning in Python. Journal of Machine Learning Research, Volume 12, Pages 2825 to 2830.
+4. Streamlit Documentation, 2026. Streamlit Open Source App Framework for Machine Learning and Data Science in Python.
+8.3 Appendix: Project Folder Structure and Pipeline Integration
+The complete Python project is organized into a clean folder structure containing app.py, database.py, preprocessing.py, train_model.py, evaluate_model.py, recommendations.py, a data directory storing UCI_Credit_Card.csv, a models directory storing best_pipeline.joblib, a pages directory containing admin.py and prediction.py, a tests directory containing test_system.py, and a report directory containing all fourteen generated figures. During model training, train_model.py drops the ID column, splits the 30,000 records into 24,000 training rows and 6,000 test rows using stratified sampling, fits a Scikit learn Pipeline combining StandardScaler and DecisionTreeClassifier with maximum depth 5, and exports best_pipeline.joblib. During live operation, prediction.py loads best_pipeline.joblib, validates the 23 user inputs, computes both the predicted class and default probability percentage, records the transaction in SQLite, and displays the matching risk tier and banking action from Table 12.
+Main Report Chapter | Required Rubric Sections Covered | Allocated Marks
+Chapter 1 Introduction and Project Scope | Executive summary, introduction, problem statement, objectives, scope, team plan, and schedule | 2 Marks
+Chapter 2 Dataset and Preprocessing | Dataset source verification, attribute dictionary, descriptive statistics, and cleaning pipeline | 3 Marks
+Chapter 3 Exploratory Data Analysis | Six exploratory visualisations and detailed behavioral interpretations | 2 Marks
+Chapter 4 ML Methodology and Development | Methodology workflow, model training, mathematical evaluation, confusion matrices, and comparison | 6 Marks
+Chapter 5 System Design and Implementation | Four layer technical architecture, Admin module, User module, database, and model integration | 2 Marks
+Chapter 6 Results Testing and Discussion | Twelve system test cases, actual results, challenges, ethical considerations, and limitations | 2 Marks
+Chapter 7 Conclusion and Future Work | Achievement of project objectives and practical roadmap for future enhancements | 1 Mark
+Chapter 8 Report Quality and Supporting Material | Consistent figure and table indexes, academic references, and technical implementation appendix | 2 Marks
+Total Report Assessment | Complete 26 required report components grouped into 8 structured chapters | 20 Marks
+Included in First Prototype Version | Reserved for Future Enhancement
+One verified real world dataset from UCI Credit Card repository | Multiple combined banking datasets across different countries
+Binary classification predicting On Time Class 0 or Default Class 1 | Multi class risk levels with five separate credit scoring bands
+Three machine learning algorithms using Scikit learn | Deep learning neural networks and exhaustive hyperparameter searches
+Password login and session checks for Admin and User roles | Social media login integration and automated email account recovery
+Basic Admin account management and CSV dataset schema validation | Automated email notifications and real time audit analytics
+Prediction output with probability estimate and rule based advice | Generative artificial intelligence chatbot for financial advising
+Local deployment using Streamlit web app and SQLite database | Cloud server hosting and native mobile phone applications
+Team Member | Workstream Focus | Primary Responsibilities and Deliverables | Report Sections Owned | Effort Share
+Member 1 | Data and EDA Workstream | Verify UCI dataset, document 25 attributes, confirm zero missing values, create 6 EDA charts, and interpret patterns | Chapters 2 and 3 | 20 to 25 percent
+Member 2 | Machine Learning Workstream | Define target and 23 features, apply StandardScaler without leakage, train 3 models, calculate metrics, save pipeline | Chapter 4 and Input to Chapter 6 | 25 to 30 percent
+Member 3 | System and Admin Workstream | Set up Streamlit app and SQLite database, implement login and role checks, build Admin tools, integrate saved pipeline | Chapter 5 and Input to Chapter 6 | 25 to 30 percent
+Member 4 | User Module and QA Workstream | Build User input form, display probability and recommendations, run 12 test cases, coordinate report and demo | Chapters 1, 6, 7, and 8 | 20 to 25 percent
+Timeline | Project Phase | Key Activities and Milestone Deliverables
+Days 1 to 2 | Phase 1 Topic Dataset and Environment | Agree on credit card default problem, verify 30,000 UCI records, set up repository, SQLite database, and report template
+Days 3 to 4 | Phase 2 EDA and First Baseline Model | Finish data cleaning, descriptive statistics, and initial charts, build StandardScaler pipeline, train Logistic Regression, build login
+Days 5 to 6 | Phase 3 Model Comparison and UI Design | Complete all six EDA interpretations, train Decision Tree and Random Forest, compare metrics, build Admin pages and User form
+Days 7 to 8 | Phase 4 Connect Model to Application | Select Decision Tree model, save best_pipeline.joblib, connect pipeline to Streamlit app, add risk tier recommendations
+Days 9 to 10 | Phase 5 Feature Freeze and Report Draft | Freeze code features, test Admin and User workflows end to end, assemble full report chapters and evaluation tables
+Days 11 to 12 | Phase 6 Fix Defects and Validate Evidence | Execute all 12 system test cases T01 to T12, verify app output against standalone pipeline, write ethics and limitations
+Days 13 to 14 | Phase 7 Rehearsal and Final Submission | Perform clean environment startup test, rehearse 10 minute live demo and mock questions, proofread report, and submit
+Identified Project Risk | Impact on Delivery | Mitigation Control Applied by Team
+Dataset unsuitable or causes data leakage | Invalid predictions and low rubric marks | Verified all 25 UCI columns on Day 2 and confirmed all 23 features are historical
+Low recall score due to class imbalance | Model misses defaulting customers | Compared three classifiers and selected Decision Tree for highest default recall
+Late integration between model and UI | Application fails during live demo | Saved best_pipeline.joblib and connected it to Streamlit on Day 8
+Admin features become overly complex | Delays in core prediction workflow | Restricted Admin scope to essential account management and 25 column CSV validation
+Last minute application startup error | Demonstration failure on submission day | Froze code on Day 10 and ran clean environment restart tests in T11 and T12
+Presenter | Presentation Topic and Live Demo Step | Allocated Time
+Member 1 | Explain banking default problem, project objectives, UCI dataset verification, and six EDA charts | 2.0 Minutes
+Member 2 | Explain StandardScaler preprocessing, three classification algorithms, mathematical metrics, and Decision Tree selection | 2.5 Minutes
+Member 3 | Demonstrate Streamlit architecture, SQLite password security, Admin account creation, and CSV schema validation | 2.0 Minutes
+Member 4 | Demonstrate User sign in, valid customer risk prediction, recommendation display, invalid input rejection, and testing | 2.5 Minutes
+All Members | Answer technical questions from assessors regarding dataset, model pipeline, and system security | 1.0 Minute
+Column Name | Data Type | Attribute Category | Description and Value Coding Rule
+ID | Integer | Record Identifier | Unique sequential client number from 1 to 30000 removed before model training
+LIMIT_BAL | Float | Credit Profile | Total given credit limit in New Taiwan Dollars for the individual client and supplementary cards
+SEX | Integer | Demographic | Customer gender coded as 1 for male and 2 for female
+EDUCATION | Integer | Demographic | Highest education level coded as 1 for graduate school, 2 for university, 3 for high school, and 4 to 6 for others
+MARRIAGE | Integer | Demographic | Marital status coded as 1 for married, 2 for single, and 3 for other status
+AGE | Integer | Demographic | Customer age measured in years ranging from 21 years to 79 years
+PAY_0 to PAY_6 | Integer | Repayment Status | Past monthly repayment status from September back to April where negative 2, negative 1, and 0 indicate timely or revolving payment and 1 to 8 indicate months of payment delay
+BILL_AMT1 to BILL_AMT6 | Float | Billing History | Monthly bill statement amount in New Taiwan Dollars from September back to April
+PAY_AMT1 to PAY_AMT6 | Float | Payment History | Amount of previous payment made in New Taiwan Dollars from September back to April
+default.payment.next.month | Integer | Target Variable | Binary classification outcome coded as 1 for default payment next month and 0 for on time payment
+Attribute Name | Record Count | Mean Value | Standard Deviation | Minimum Value | Twenty Fifth Percentile | Median Value | Maximum Value
+LIMIT_BAL | 30000 | 167484.32 | 129747.66 | 10000.00 | 50000.00 | 140000.00 | 1000000.00
+AGE | 30000 | 35.49 | 9.22 | 21.00 | 28.00 | 34.00 | 79.00
+PAY_0 | 30000 | Negative 0.02 | 1.12 | Negative 2.00 | Negative 1.00 | 0.00 | 8.00
+BILL_AMT1 | 30000 | 51223.33 | 73635.86 | Negative 165580.00 | 3558.75 | 22381.50 | 964511.00
+BILL_AMT2 | 30000 | 49179.08 | 71173.77 | Negative 69777.00 | 2984.75 | 21200.00 | 983931.00
+PAY_AMT1 | 30000 | 5663.58 | 16563.28 | 0.00 | 1000.00 | 2100.00 | 873552.00
+PAY_AMT2 | 30000 | 5921.16 | 23040.87 | 0.00 | 833.00 | 2009.00 | 1684259.00
+Model Name | True Negatives | False Positives | False Negatives | True Positives | Accuracy | Precision | Recall | F1 Score
+Logistic Regression | 4528 | 145 | 1009 | 318 | 0.8077 | 0.6868 | 0.2396 | 0.3553
+Decision Tree Selected | 4432 | 241 | 856 | 471 | 0.8172 | 0.6615 | 0.3549 | 0.4620
+Random Forest | 4491 | 182 | 945 | 382 | 0.8122 | 0.6773 | 0.2879 | 0.4040
+Rank | Customer Attribute Name | Relative Importance Weight | Importance Percentage | Analytical Meaning in Decision Tree Splits
+1 | PAY_0 | 0.6801 | 68.01 percent | Primary root split separating delayed September accounts from timely accounts
+2 | PAY_2 | 0.1377 | 13.77 percent | Secondary split checking whether payment delays persisted in August
+3 | PAY_AMT3 | 0.0440 | 4.40 percent | Evaluates recent July cash payment amount relative to balance owed
+4 | PAY_5 | 0.0331 | 3.31 percent | Checks historical May repayment status for recurring delinquency
+5 | BILL_AMT1 | 0.0317 | 3.17 percent | Measures current September statement balance size
+6 | LIMIT_BAL | 0.0219 | 2.19 percent | Separates lower credit limit accounts from higher buffer accounts
+7 | PAY_3 | 0.0115 | 1.15 percent | Checks July repayment status code for multi month delay patterns
+8 | AGE | 0.0088 | 0.88 percent | Minor leaf adjustment for customer age group
+System Layer Component | Selected Technology | Implementation Reason and Role in Prototype
+Core Programming Language | Python 3 | Supports the full data analysis, machine learning, and web application stack
+Data Manipulation | Pandas and NumPy | Handles dataset cleaning, schema validation, and single row input formatting
+Data Visualisation | Matplotlib and Seaborn | Produces exploratory analysis charts and confusion matrix visualisations
+Machine Learning Engine | Scikit learn | Provides StandardScaler, classification algorithms, and evaluation metrics
+Model Pipeline Storage | Joblib | Serializes and reloads the fitted preprocessing and Decision Tree pipeline
+Web User Interface | Streamlit | Enables rapid development of interactive Admin and User pages
+Database Management | SQLite 3 | Provides lightweight local storage for user accounts, roles, and prediction logs
+Version Control | GitHub | Supports team collaboration, code history tracking, and backup management
+Predicted Class Outcome | Default Probability Range | Assigned Risk Tier | Interpretation and Recommended Action for Bank Staff
+On Time Class 0 | 0 percent to 25 percent | Low Default Risk | Customer shows strong repayment habits. Maintain current credit terms and standard monthly billing.
+On Time Class 0 | 26 percent to 49 percent | Moderate Watch Risk | Customer is predicted to pay on time but shows mild balance strain. Send an automated courtesy payment reminder five days before the due date.
+Default Class 1 | 50 percent to 74 percent | High Default Risk | Customer has a high likelihood of missing next payment. Contact the customer early to offer a structured monthly installment plan.
+Default Class 1 | 75 percent to 100 percent | Critical Default Risk | Customer exhibits severe multi month payment delays. Pause credit limit increases and refer the account to the dedicated credit support team.
+Test ID | Test Case Description | Expected System Outcome | Actual Observed Outcome and Evidence | Status
+T01 | Sign in with valid Admin and User credentials | Correct role dashboard is displayed | Admin and User accounts signed in cleanly and loaded role specific menus | PASS
+T02 | Sign in with invalid username or wrong password | Access is blocked immediately | System blocked access and displayed an invalid credentials warning alert | PASS
+T03 | Ordinary user attempts to access Admin function | Access is rejected by permission guard | Session role check blocked Admin view and kept user on prediction page | PASS
+T04 | Admin adds a new user account or edits role | Changes are saved into SQLite database | New user account was hashed and saved in SQLite and verified via sign in | PASS
+T05 | Admin uploads a valid 25 column credit dataset | Dataset passes schema validation | Validator confirmed all 25 UCI columns and 30,000 rows and showed summary | PASS
+T06 | Admin uploads an invalid CSV missing billing columns | Clear validation error message is shown | System rejected upload and listed the exact missing column names on screen | PASS
+T07 | User submits valid customer attributes on form | Prediction and probability are generated | Application displayed Default Class 1, probability percentage, and advice | PASS
+T08 | User submits missing or out of range age values | Invalid input is rejected before prediction | Form validation blocked negative credit limits and ages below 21 years | PASS
+T09 | Compare app output against saved pipeline script | Predicted class and probability match exactly | Streamlit app and terminal script returned identical 76.12 percent probability | PASS
+T10 | Review probability score and recommendation text | Correct risk tier guidance is displayed | High risk prediction accurately displayed installment restructuring advice | PASS
+T11 | Restart the Streamlit application server | Model pipeline and SQLite data remain accessible | Clean server restart reloaded best_pipeline.joblib and all user accounts | PASS
+T12 | Complete full end to end user prediction workflow | User completes workflow without any app error | User signed in, entered customer data, viewed advice, and signed out smoothly | PASS
+Figure Number | Figure Title and Analytical Summary | Report Section
+Figure 1 | Fourteen Day Project Execution Gantt Chart Schedule across Phases 1 to 7 | Section 1.4
+Figure 2 | Target Variable Distribution in Credit Card Dataset showing 23,364 On Time and 6,636 Default records | Section 3.1
+Figure 3 | Customer Age Distribution by Default Status showing identical 34 year median age | Section 3.2
+Figure 4 | Credit Limit Balance by Default Status comparing 150,000 versus 90,000 median credit limits | Section 3.3
+Figure 5 | Default Percentage by Most Recent Repayment Status showing sharp jump for delayed accounts | Section 3.4
+Figure 6 | Default Percentage Across Education Levels comparing graduate, university, and high school groups | Section 3.5
+Figure 7 | Correlation Heatmap of Key Financial Attributes highlighting PAY_0 and billing correlations | Section 3.6
+Figure 8 | Six Step Machine Learning Training and Evaluation Workflow diagram | Section 4.1
+Figure 9 | Logistic Regression Baseline Model Confusion Matrix showing 4,528 TN, 145 FP, 1,009 FN, and 318 TP | Section 4.2
+Figure 10 | Decision Tree Selected Model Confusion Matrix showing 4,432 TN, 241 FP, 856 FN, and 471 TP | Section 4.2
+Figure 11 | Random Forest Benchmark Model Confusion Matrix showing 4,491 TN, 182 FP, 945 FN, and 382 TP | Section 4.2
+Figure 12 | Performance Comparison Across Three Machine Learning Models across four metrics | Section 4.3
+Figure 13 | Top Feature Importance Scores in Selected Decision Tree Model led by PAY_0 at 0.6801 | Section 4.3
+Figure 14 | Four Layer System Technical Architecture and Workflow diagram | Section 5.1
+Table Number | Table Title and Content Summary | Report Section
+Table 1 | Official Marking Rubric Alignment and Report Chapter Mapping | Section 1.2
+Table 2 | Project Scope Definition Comparing Included Features and Future Enhancements | Section 1.3
+Table 3 | Division of Work Across Four Team Members | Section 1.4
+Table 4 | Detailed Fourteen Day Execution Schedule and Milestones | Section 1.4
+Table 5 | Risk Management and Mitigation Control Plan | Section 1.5
+Table 6 | Ten Minute Live Presentation and Demonstration Plan | Section 1.5
+Table 7 | Dataset Attribute Dictionary and Coding Specifications | Section 2.1
+Table 8 | Descriptive Statistics of Key Financial and Demographic Attributes | Section 2.2
+Table 9 | Comprehensive Evaluation Results Across All Three Classification Models on Test Set | Section 4.2
+Table 10 | Top Eight Feature Importance Scores in Selected Decision Tree Model | Section 4.3
+Table 11 | System Technology Stack and Component Responsibilities | Section 5.1
+Table 12 | Automated Risk Interpretation and Recommendation Engine Rules | Section 5.3
+Table 13 | System Verification and End to End Testing Results T01 to T12 | Section 6.1
+Table 14 | Index of Embedded Report Figures Figure 1 to Figure 14 | Section 8.1
+Table 15 | Index of Structured Report Tables Table 1 to Table 15 | Section 8.1

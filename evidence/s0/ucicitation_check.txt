@@ -1,0 +1,27 @@
+CITATION CHECK — Sprint 0 (the only network access permitted in S0)
+Date: 2026-10-26
+Query: UCI "Default of Credit Card Clients" dataset 350 Yeh Lien 2009 Expert Systems with Applications 36 2473
+
+CONFIRMED
+- Dataset: Default of Credit Card Clients, UCI Machine Learning Repository, id 350.
+  URL: https://archive.ics.uci.edu/dataset/350/default+of+credit+card+clients
+- Dataset DOI: 10.24432/C55S3H
+  Repository citation: "Yeh, I. (2009). Default of Credit Card Clients [Dataset].
+  UCI Machine Learning Repository. https://doi.org/10.24432/C55S3H"
+- Creators: I-Cheng Yeh; Che-hui Lien.
+- Paper: Yeh, I.-C. & Lien, C.-H. (2009). "The comparisons of data mining techniques for
+  the predictive accuracy of probability of default of credit card clients."
+  Expert Systems with Applications, 36(2), 2473-2480.
+  DOI: 10.1016/j.eswa.2007.12.020
+- Scope: customers' default payments in Taiwan. Matches the blueprint's framing
+  (Taiwanese 2005 billing data, amounts in NTD).
+
+NOT CONFIRMED HERE
+- Licence terms were not read from the UCI page in this check (the page's licence field
+  did not render in the search result). The report must state attribution and cite both
+  DOIs; the licence must be confirmed from the UCI page before any redistribution.
+- Instance/feature counts were NOT taken from the web page: they are verified against the
+  supplied CSV by ml/inspect_dataset.py (30,000 x 25). Web figures were not used.
+
+NOTE: web_extract was unavailable (backend is search-only), so this check used
+web_search result snippets from the UCI repository page and its mirrors.

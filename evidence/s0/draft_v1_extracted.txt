@@ -1,0 +1,51 @@
+Development of a Credit Card Default Risk Prediction System Using Machine Learning
+Executive Summary
+This project develops a risk prediction system for credit card defaults using machine learning. Financial institutions need to identify customers who might miss payments to manage risk effectively. We analyzed the UCI Credit Card dataset which contains thirty thousand customer records. We trained three classification models to predict payment defaults. We then built a web application using Streamlit to deploy the best performing model. The system includes separate admin and user roles to ensure security. The Decision Tree model provided the best balance of accuracy and recall for identifying at risk customers.
+1. Introduction and Project Scope
+The main problem is that financial institutions lose money when customers default on their credit card payments. Predicting these defaults early allows banks to take preventive actions like offering payment plans. A bank can review a customer payment history and flag accounts that show signs of financial stress. This project solves the problem by creating a machine learning prototype that automates the risk prediction process.
+The objectives of this project are clear. First we preprocess a dataset of customer credit records. Second we train Logistic Regression, Decision Tree and Random Forest classifiers. Third we evaluate the models using accuracy and recall metrics. Fourth we build a functional web application with admin and user access. Finally we integrate the best model to display predictions and recommendations.
+The project scope focuses strictly on binary classification. The system predicts either a pass or fail outcome for future payments. We leave complex features like deep learning and cloud hosting for future enhancements.
+2. Dataset and Preprocessing
+We selected the Default of Credit Card Clients dataset from the UCI Machine Learning Repository. This dataset is highly suitable because it contains clear financial indicators recorded before the actual default event. It includes billing amounts and payment histories from previous months. Using historical data ensures we avoid data leakage during the prediction phase.
+The dataset contains exactly thirty thousand rows and twenty five columns. We conducted a thorough data cleaning process. The data had zero missing values and zero duplicate records. We separated the target variable from the feature columns. We then applied a standard scaler to normalize the financial values. This scaling process helps the machine learning algorithms process the numbers more efficiently.
+3. Exploratory Data Analysis
+We explored the data visually to understand the patterns before training our models. Exploring the data helps us identify imbalances that could affect our predictions. We generated a count plot for the target variable and a boxplot comparing customer age against their default status. These visualizations guide our decisions during the model evaluation phase.
+The target variable distribution shows a clear class imbalance. Most customers in the dataset pay their bills on time. Only about six thousand and six hundred customers defaulted. The age analysis showed that customer age does not significantly affect the likelihood of a default. Both groups share an average age of thirty five years. We must rely on payment history features instead of age to make accurate predictions.
+4. ML Methodology and Development
+We followed a strict machine learning methodology to train and compare our models. We split the data into an eighty percent training set and a twenty percent testing set. We used the training set to teach the algorithms and the testing set to evaluate their performance on unseen data. This approach ensures our evaluation metrics reflect how the system will perform in the real world.
+We trained three specific models. We used Logistic Regression, Decision Tree and Random Forest classifiers. We evaluated them using accuracy, precision, recall and F1 scores.
+Model
+Accuracy
+Precision
+Recall
+F1 Score
+Logistic Regression
+0.8077
+0.6868
+0.2396
+0.3553
+Decision Tree
+0.8172
+0.6615
+0.3549
+0.4620
+Random Forest
+0.8122
+0.6773
+0.2879
+0.4040
+The Decision Tree model performed the best overall. It achieved the highest accuracy at eighty one point seven percent. More importantly it achieved the highest recall score at thirty five point four percent. High recall is critical because failing to identify a risky customer is a serious financial error. We saved the Decision Tree pipeline for integration into our final system.
+5. System Design and Implementation
+We built the final application using a Python framework called Streamlit. Streamlit allows us to create an interactive user interface quickly while integrating our machine learning pipeline seamlessly. A bank employee can log into the system and enter new customer details to receive an instant risk prediction. This design fulfills the project requirement for a functional prototype.
+The system architecture includes a secure SQLite database. The database manages user accounts and enforces role permissions. Normal users can only access the prediction form. Admin users have access to account management and dataset validation tools. We used the Joblib library to load the saved Decision Tree model. The application processes the user input through the pipeline and displays a clear recommendation on the screen.
+6. Results, Testing and Critical Discussion
+We tested the complete system to ensure it meets all functional requirements. We executed a twelve step testing plan covering logins and predictions. We verified that ordinary users are blocked from accessing admin pages. Thorough testing proves the reliability of our software prototype.
+The system correctly rejects invalid data inputs and generates accurate predictions. However there are limitations to discuss. The model struggles with the class imbalance in the dataset. A thirty five percent recall score means the system still misses some risky customers.
+We must also consider ethical implications. Financial data is highly sensitive. A real world system would require enterprise grade security to protect customer privacy. The current prototype relies on local storage which is sufficient for an academic project but not for commercial use.
+7. Conclusion and Future Work
+This project successfully developed a functioning risk prediction system within the fourteen day deadline. We met all objectives by processing the dataset and deploying a Decision Tree model via a Streamlit interface. The final product provides clear predictions and recommendations for financial risk management. The structured team approach ensured all workstreams were completed on time.
+Future work should focus on improving the model recall score. We can apply techniques like oversampling to handle the class imbalance better. We also recommend migrating the local database to a secure cloud platform. Adding a detailed prediction history dashboard would also enhance the usefulness of the admin module.
+Model | Accuracy | Precision | Recall | F1 Score
+Logistic Regression | 0.8077 | 0.6868 | 0.2396 | 0.3553
+Decision Tree | 0.8172 | 0.6615 | 0.3549 | 0.4620
+Random Forest | 0.8122 | 0.6773 | 0.2879 | 0.4040

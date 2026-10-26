@@ -2,6 +2,8 @@
 .env
 .env.*
 !.env.example
+# operator record; contains plaintext demo credentials — keep it out of git
+PROJECT_DETAILS.md
 *.pem
 *.key
 # python
