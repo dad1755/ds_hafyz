@@ -1,0 +1,13 @@
+# Direct dependencies only — human-edited.
+# The resolved, fully-pinned lock lives in requirements.txt (generated, not hand-edited).
+#
+# Runtime (Streamlit app)
+streamlit==1.66.1
+pandas==3.1.0
+numpy==2.5.4
+scikit-learn==1.9.1
+joblib==1.6.0
+argon2-cffi==25.1.0
+matplotlib==3.11.2
+# Test-only (kept here so the image and the test environment resolve identically)
+pytest==9.1.1

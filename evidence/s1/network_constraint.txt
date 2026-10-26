@@ -1,0 +1,11 @@
+# Host constraint found in S1: the daemon's predefined address pools are exhausted.
+# A bridge network created without an explicit subnet fails; the project network pins one.
+$ docker network create aihubcampus-s1-probe   # deliberately un-subnetted probe
+Error response from daemon: all predefined address pools have been fully subnetted
+exit=1
+
+$ docker network inspect aihubcampus_internal --format '{{range .IPAM.Config}}{{.Subnet}}{{end}}'
+10.202.0.0/24
+
+# How many pre-existing networks already use the pinned range 10.202.0.0/24? (0 expected)
+overlaps=0

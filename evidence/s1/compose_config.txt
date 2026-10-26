@@ -1,0 +1,21 @@
+$ docker compose config --quiet   # validation only; expanded env is never printed
+exit=0
+
+$ docker compose config --services
+web
+cloudflared
+
+$ docker compose config --format json | python3 -c '<print services.web ports/expose/networks only>'
+{
+  "ports": [],
+  "expose": [
+    "2026"
+  ],
+  "networks": [
+    "internal"
+  ],
+  "user": null,
+  "security_opt": [
+    "no-new-privileges:true"
+  ]
+}

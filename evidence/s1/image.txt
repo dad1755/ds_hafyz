@@ -1,0 +1,12 @@
+$ date -Is
+2026-10-26T12:48:20+08:00
+$ docker --version
+Docker version 29.7.2, build 1.fc44
+$ docker compose version
+Docker Compose version 5.5.1
+$ docker image inspect aihubcampus-web:local --format '{{.Id}} {{.Created}}'
+sha256:ee428012f5991a1954a5e9002adecbe4062459ec42cbc40ef014dcb297da0445 2026-10-26T12:36:19.125756147+08:00
+$ docker image inspect aihubcampus-web:local --format '{{json .Config.ExposedPorts}}'
+{"2026/tcp":{}}
+$ docker image inspect aihubcampus-web:local --format '{{.Config.User}} / {{json .Config.Cmd}}'
+app / ["streamlit","run","app.py","--server.address=0.0.0.0","--server.port=2026"]

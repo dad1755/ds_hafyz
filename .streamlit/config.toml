@@ -1,0 +1,22 @@
+# Streamlit runtime configuration — security defaults from blueprint.md §2.
+#
+# PORT COUPLING: the Cloudflare ingress targets http://web:2026, not 8501, so the
+# server listens on 2026. Rationale and the one-value reversal path are in
+# docs/architecture.md §5. Change the port here, in the Dockerfile CMD/EXPOSE/
+# HEALTHCHECK and in compose.yaml together.
+
+[server]
+address = "0.0.0.0"
+port = 2026
+headless = true
+enableCORS = true
+enableXsrfProtection = true
+
+[browser]
+serverAddress = "www.aihubcampus.online"
+serverPort = 443
+gatherUsageStats = false
+
+[client]
+showErrorDetails = false
+toolbarMode = "minimal"

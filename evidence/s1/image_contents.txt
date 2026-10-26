@@ -1,0 +1,27 @@
+# What the image does NOT contain: no .env, no SQLite file, no credentials, no dataset.
+$ docker run --rm aihubcampus-web:local sh -c 'ls -a /app; ls -a /app/src; find /app -maxdepth 2 -name "*.db" -o -maxdepth 2 -name ".env*"'
+.
+..
+.streamlit
+app.py
+requirements.txt
+src
+storage
+---
+.
+..
+__init__.py
+config.py
+---
+(no output above = none present)
+
+$ docker run --rm aihubcampus-web:local python -c 'import streamlit, pandas, sklearn, numpy, joblib, argon2, matplotlib; print(...)'
+python 3.12.14
+streamlit 1.66.1
+pandas 3.1.0
+numpy 2.5.4
+scikit-learn 1.9.1
+joblib 1.6.0
+matplotlib 3.11.2
+<string>:1: DeprecationWarning: Accessing argon2.__version__ is deprecated and will be removed in a future release. Use importlib.metadata directly to query for argon2-cffi's packaging metadata.
+argon2-cffi 25.1.0

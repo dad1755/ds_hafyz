@@ -1,0 +1,7 @@
+# Peer container on the aihubcampus_internal network, resolving the service name 'web'.
+# This is what cloudflared will do; the python:3.12-slim image is the project's own base image.
+$ docker run --rm --network aihubcampus_internal python:3.12-slim python -c '...urlopen("http://web:2026/_stcore/health")'
+resolve web -> 10.202.0.2
+GET http://web:2026/_stcore/health -> 200 ok
+GET http://web:2026/ with Host: www.aihubcampus.online -> 200 bytes= 200
+GET http://web:2026/ with Host: aihubcampus.online -> 200 bytes= 200

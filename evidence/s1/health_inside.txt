@@ -1,0 +1,8 @@
+$ docker compose exec -T web id
+uid=1001(app) gid=1001(app) groups=1001(app)
+
+$ docker compose exec -T web python -c "urllib.request.urlopen('http://127.0.0.1:2026/_stcore/health')"
+200 ok
+
+$ docker compose exec -T web python -c "urllib.request.urlopen('http://web:2026/_stcore/health')"   # the exact ingress target
+200 ok

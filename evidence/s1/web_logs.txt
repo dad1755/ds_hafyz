@@ -1,0 +1,7 @@
+$ docker compose logs --tail 20 web
+web-1  | 2026-10-26 04:40:37.322 Uvicorn server started on 0.0.0.0:2026
+web-1  | 
+web-1  |   You can now view your Streamlit app in your browser.
+web-1  | 
+web-1  |   URL: http://www.aihubcampus.online:443
+web-1  | 
