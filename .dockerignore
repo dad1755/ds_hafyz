@@ -10,13 +10,13 @@
 !.env.cloudflared.example
 PROJECT_DETAILS.md
 
-# runtime state and data (mounted, never baked in)
+# runtime state and uploads (mounted, never baked in)
 storage/
+data/quarantine/
 *.db
 *.db-wal
 *.db-shm
 logs/
-data/
 evidence/
 
 # model artifacts: the three read-only files the app needs are shipped (blueprint §7 —

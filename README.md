@@ -87,17 +87,18 @@ Produced by `python3 ml/inspect_dataset.py` (full output: `evidence/s0/inspect_d
 ├── data/UCI_Credit_Card.csv   # immutable benchmark seed
 ├── docs/                      # architecture, data dictionary, source of truth, rubric matrix,
 │                              #   report evidence, preprocessing + inference contracts
-├── evidence/s0/ … evidence/s8/ # captured command output
+├── evidence/s0/ … evidence/s9/ # captured command output
 ├── ml/                        # schema.py, inspect_dataset.py, verify_draft_claims.py
 ├── tests/                     # pytest: settings (S1), schema/validation (S2), model contract
 │                              #   + prediction (S5), security + app auth (S6), prediction log
-│                              #   + prediction UI (S7), admin user management (S8)
+│                              #   + prediction UI (S7), admin user management (S8),
+│                              #   dataset manager staged-vs-deployed (S9)
 └── models/                    # best_pipeline.joblib, metrics.json, model_manifest.json (S4/S5),
                                #   figures/ and eda/ committed evidence (S3/S4), candidates/
 ```
 
 Modules are added when the sprint that implements them runs — no dead placeholder files.
-The dataset manager and the evaluation panels arrive with S9–S10.
+The evaluation panels arrive with S10.
 
 ## Sprint 0 commands (run today, no dependencies)
 
@@ -365,6 +366,52 @@ python evidence/s8/audit_probe.py
   Chromium creates an account through the form, then signs in as it, zero horizontal overflow),
   `image_build.txt`, `container_health.txt`, `check_no_secrets.txt`, `clean_checkout.txt`.
 
+## Sprint 9 — admin dataset manager (staged dataset vs deployed model)
+
+```bash
+# the three probes: staging counts, the two rejections, and activation across a restart
+docker run --rm -v "$PWD:/app:z" -w /app aihubcampus-web:s9 python evidence/s9/probe_datasets.py
+
+# the gate tests (20 of them) and the whole suite
+docker run --rm -v "$PWD:/app:z" -w /app aihubcampus-web:s9 python -m pytest tests/test_admin.py -q
+docker run --rm -v "$PWD:/app:z" -w /app aihubcampus-web:s9 python -m pytest tests -q
+```
+
+- **Two datasets, never conflated.** The page shows the **deployed model dataset** — the
+  checksum recorded in `models/model_manifest.json`, the bytes the live artifact was trained
+  on — beside the **active dataset version**, a pointer a future retraining run would read. When
+  they are the same bytes the page says so; after an activation it says, in as many words, that
+  the active dataset is *not* the one that built the deployed model.
+- **An upload never trains and never replaces the artifact.** `src/data_manager.py` imports no
+  training or serialisation module and calls no `fit`/`predict`/`dump`; `evidence/s9/hygiene.txt`
+  prints the import list and method set of both new modules. The audit row for every upload and
+  every activation carries `retraining_triggered: false` and `model_replaced: false`, and the
+  artifact's SHA-256 is identical before and after (`probe_datasets.txt`).
+- **Validation, then a staged version.** Upload → quarantine under a *generated* filename (the
+  uploaded name is a display label only) → the S2 validator runs → one `dataset_versions` row
+  with SHA-256, record and column counts, class counts, `validated_at`, `uploaded_by` and
+  `status = validated`. The page then shows aggregates only — counts, class balance, per-column
+  min/max/mean/distinct — never a row.
+- **Rejections are recorded, not discarded.** A refused upload writes a `dataset_rejections` row
+  with the reason the administrator saw and the stable codes (`missing_column`,
+  `invalid_target_value`, …), plus an audit row; its quarantine copy is deleted once recorded.
+  Nothing is repaired, coerced or partially loaded.
+- **Exactly one active version.** Activation clears the old pointer and sets the new one in a
+  single transaction, and the database also carries a partial unique index on `is_active = 1`,
+  so a bypass cannot produce two active rows (asserted by a direct `UPDATE` in the tests).
+- **The seed is registered once, by checksum.** At startup the app hashes
+  `data/UCI_Credit_Card.csv` and records it as dataset version 1 if it is not already there; in
+  the container that file is a **read-only** mount, so the benchmark input cannot be altered by
+  the running app. A restart never re-points an operator's activation.
+- Evidence: `evidence/s9/` — `pytest_s9.txt` (20 tests), `pytest_all.txt` (247 tests),
+  `probe_datasets.txt` (30,000 / 25 / 23,364 / 6,636 quoted from the seed, both rejection
+  reasons, the pointer surviving a restart, artifact SHA-256 `48ce0256…` before and after),
+  `browser_check.txt` with `dataset_375px_initial.png`, `dataset_375px_staged.png`,
+  `dataset_375px_activated.png`, `dataset_375px_rejected.png` and `dataset_desktop_initial.png`
+  (a real Chromium stages, activates and gets refused, zero horizontal overflow),
+  `container_probe.txt` (the deployed container's own `dataset_versions` row and the manifest
+  checksum), `hygiene.txt`, `build.txt`, `deploy_first_visit.txt`, `clean_checkout.txt`.
+
 ## Documentation index
 
 | Doc | Read it for |
@@ -379,7 +426,8 @@ python evidence/s8/audit_probe.py
 
 ## Next sprint
 
-**S8** — administrator user management: list, create, edit, deactivate, change role and reset a
-password from the page, with an audit event per action and the last-admin rule enforced in the
-same transaction. The guarded API already exists in `src/accounts.py`; S8 adds the screens and
-the tests that a user session cannot reach them.
+**S10** — administrator model evaluation and insight panels: model comparison, metrics, the three
+confusion matrices and the six EDA plots read from the committed artifacts (not hard-coded
+numbers), with an accessible colour scheme and a TP/TN/FP/FN detail view. The artifacts and
+`models/metrics.json` already exist; S10 adds the panels and the tests that the page quotes them
+exactly.

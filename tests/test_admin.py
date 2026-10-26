@@ -19,17 +19,24 @@ page.
 Half the tests go through Streamlit's ``AppTest`` harness, so they execute ``app.py`` exactly as
 the server does, against ``APP_DB_PATH`` pointing at a temporary database. The other half call
 the service functions directly, which is the path an attacker would take.
+
+Sprint 9 continues in the same file (from ``SPRINT 9`` below): the dataset manager. Those tests
+stage the real seed CSV, quote the counts it produces, paste two malformed uploads' rejection
+reasons, and hash the model artifact before and after an upload and activation to show the
+deployed model is untouched.
 """
 
 from __future__ import annotations
 
+import hashlib
 import sqlite3
 from pathlib import Path
 
+import pandas as pd
 import pytest
 from streamlit.testing.v1 import AppTest
 
-from src import accounts, db, security
+from src import accounts, data_manager, db, security
 from src.security import (
     InvalidCredentials,
     PasswordChangeRequired,
@@ -644,3 +651,543 @@ def test_deactivating_from_the_ui_ends_the_session_and_keeps_the_row(app_db):
     assert "**demo_user** is active again." in _rendered(at)
     back = _sign_in(_app(), USER_USERNAME, USER_PASSWORD)
     assert "Signed in as" in _rendered(back)
+
+
+# ============================================================================ SPRINT 9
+# Dataset manager: staged dataset vs deployed model dataset.
+#
+# Every number below is the file's own: 30,000 records, 25 columns, 23,364 non-defaults and
+# 6,636 defaults are the counts the shipped seed CSV produces, and its sha256 is the dataset
+# sha256 recorded in models/model_manifest.json. The artifact hash is re-computed from disk
+# before and after each upload so "the deployed model is untouched" is measured, not asserted.
+
+SEED_CSV = Path(__file__).resolve().parents[1] / "data" / "UCI_Credit_Card.csv"
+MODELS_DIR = Path(__file__).resolve().parents[1] / "models"
+ARTIFACT = MODELS_DIR / "best_pipeline.joblib"
+MANIFEST = MODELS_DIR / "model_manifest.json"
+
+#: Whole-file facts, verified against the seed CSV itself (awk over the target column).
+SEED_ROWS = 30_000
+SEED_COLUMNS = 25
+SEED_CLASS_ZERO = 23_364
+SEED_CLASS_ONE = 6_636
+SEED_SHA256 = "a0f0ab49d6326671d6cd83be5c88dcf18007025fe9a53ecd699119c871176ca1"
+
+SECTION_DATASETS = "Dataset manager"
+
+
+def _sha256_of(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _seed_payload() -> bytes:
+    return SEED_CSV.read_bytes()
+
+
+def _frame_from_seed(rows: int | None = None) -> pd.DataFrame:
+    frame = pd.read_csv(SEED_CSV)
+    return frame if rows is None else frame.head(rows)
+
+
+def _csv_bytes(frame: pd.DataFrame) -> bytes:
+    return frame.to_csv(index=False).encode("utf-8")
+
+
+@pytest.fixture()
+def dataset_env(tmp_path, monkeypatch):
+    """A database and a quarantine directory of its own, with one admin and one user."""
+    db_path = tmp_path / "datasets.db"
+    quarantine = tmp_path / "quarantine"
+    monkeypatch.setenv("APP_DB_PATH", str(db_path))
+    monkeypatch.setenv("APP_QUARANTINE_DIR", str(quarantine))
+    connection = db.connect(db_path)
+    try:
+        db.migrate(connection)
+        _seed(connection, ADMIN_USERNAME, ADMIN_PASSWORD, "admin")
+        _seed(connection, USER_USERNAME, USER_PASSWORD, "user")
+    finally:
+        connection.close()
+    return {"db": db_path, "quarantine": quarantine}
+
+
+def _open(env) -> sqlite3.Connection:
+    return db.connect(env["db"])
+
+
+def _admin_token_conn(conn) -> str:
+    _, token = security.login(conn, ADMIN_USERNAME, ADMIN_PASSWORD)
+    return token
+
+
+def _dataset_page() -> AppTest:
+    at = _sign_in(_app(), ADMIN_USERNAME, ADMIN_PASSWORD)
+    at.sidebar.radio[0].set_value(SECTION_DATASETS)
+    return at.run()
+
+
+def _stage(at: AppTest, filename: str, payload: bytes) -> AppTest:
+    at.file_uploader(key="dataset_file").set_value((filename, payload, "text/csv"))
+    at.button(key="dataset_stage_button").click()
+    return at.run()
+
+
+# ------------------------------------------------ 1. the seed CSV stages, with real counts
+def test_the_seed_csv_validates_and_stages_with_its_real_counts(dataset_env):
+    connection = _open(dataset_env)
+    try:
+        token = _admin_token_conn(connection)
+        staged = data_manager.stage_upload(
+            connection,
+            token,
+            _seed_payload(),
+            "UCI_Credit_Card.csv",
+            quarantine_dir=dataset_env["quarantine"],
+        )
+        version = staged.version
+        active = data_manager.active_version(connection, token)
+        row = _row(connection, "SELECT * FROM dataset_versions WHERE id = ?", (version.id,))
+        actions = [
+            r["action"]
+            for r in connection.execute("SELECT action FROM audit_events ORDER BY id")
+        ]
+    finally:
+        connection.close()
+
+    assert staged.duplicate is False
+    assert version.record_count == SEED_ROWS
+    assert version.column_count == SEED_COLUMNS
+    assert version.class_zero == SEED_CLASS_ZERO
+    assert version.class_one == SEED_CLASS_ONE
+    assert version.sha256 == SEED_SHA256
+    assert version.status == data_manager.STATUS_VALIDATED
+    # Staged, not deployed: the model keeps its own dataset until something explicitly changes.
+    assert version.is_active is False
+    assert active is None, "staging must not activate anything"
+    assert version.validated_at and version.activated_at is None
+    assert row["uploaded_by"] == _user_id(dataset_env["db"], ADMIN_USERNAME)
+    # The stored copy carries a generated name, not the uploaded one.
+    assert version.quarantined_filename and version.quarantined_filename.endswith(".csv")
+    assert version.quarantined_filename != "UCI_Credit_Card.csv"
+    assert (Path(dataset_env["quarantine"]) / version.quarantined_filename).is_file()
+    assert "dataset.staged" in actions
+
+    # The preview is aggregates only — one row per column, no record.
+    preview = staged.preview
+    assert preview is not None
+    assert preview.record_count == SEED_ROWS
+    assert preview.class_zero == SEED_CLASS_ZERO and preview.class_one == SEED_CLASS_ONE
+    assert len(preview.columns) == SEED_COLUMNS
+    age = next(column for column in preview.columns if column.name == "AGE")
+    assert (age.minimum, age.maximum) == (21, 79)
+    assert not hasattr(preview, "records")
+
+
+# ------------------------------------------- 2. two malformed uploads, reasons quoted back
+def test_a_missing_column_upload_is_rejected_with_the_reason_recorded(dataset_env):
+    frame = _frame_from_seed(rows=50).drop(columns=["PAY_6"])
+    connection = _open(dataset_env)
+    try:
+        token = _admin_token_conn(connection)
+        with pytest.raises(data_manager.DatasetRejected) as raised:
+            data_manager.stage_upload(
+                connection, token, _csv_bytes(frame), "missing_pay6.csv",
+                quarantine_dir=dataset_env["quarantine"],
+            )
+        rejections = data_manager.list_rejections(connection, token)
+        versions = data_manager.list_versions(connection, token)
+        actions = [
+            r["action"]
+            for r in connection.execute("SELECT action FROM audit_events ORDER BY id")
+        ]
+        staged_copies = list(Path(dataset_env["quarantine"]).glob("*.csv"))
+    finally:
+        connection.close()
+
+    rejection = raised.value
+    assert "missing_column" in rejection.report.codes
+    assert rejection.reason.startswith("missing required column(s): PAY_6;")
+    assert "missing required column(s): PAY_6" in rejection.reason
+    # The reason is persisted with the rejection, and no version was created from it.
+    assert len(rejections) == 1
+    assert rejections[0]["error_codes"] == "missing_column"
+    assert rejections[0]["reason"] == rejection.reason
+    assert rejections[0]["original_filename_safe"] == "missing_pay6.csv"
+    assert versions == []
+    assert "dataset.rejected" in actions
+    # The quarantined copy of a rejected upload is removed once recorded.
+    assert staged_copies == []
+
+
+def test_a_wrong_target_upload_is_rejected_with_the_reason_recorded(dataset_env):
+    frame = _frame_from_seed(rows=50)
+    frame["default.payment.next.month"] = 2  # not a documented class
+    connection = _open(dataset_env)
+    try:
+        token = _admin_token_conn(connection)
+        with pytest.raises(data_manager.DatasetRejected) as raised:
+            data_manager.stage_upload(
+                connection, token, _csv_bytes(frame), "wrong_target.csv",
+                quarantine_dir=dataset_env["quarantine"],
+            )
+        rejections = data_manager.list_rejections(connection, token)
+        versions = data_manager.list_versions(connection, token)
+    finally:
+        connection.close()
+
+    assert raised.value.report.codes == {"invalid_target_value"}
+    assert "value(s) other than 0 or 1" in raised.value.reason
+    assert len(rejections) == 1 and rejections[0]["error_codes"] == "invalid_target_value"
+    assert versions == []
+
+
+# --------------------------- 3. the pointer persists, the artifact hash does not move
+def test_the_active_pointer_persists_across_a_restart_and_the_artifact_is_unchanged(dataset_env):
+    artifact_before = _sha256_of(ARTIFACT)
+    manifest_before = _sha256_of(MANIFEST)
+
+    connection = _open(dataset_env)
+    try:
+        token = _admin_token_conn(connection)
+        seed = data_manager.ensure_seed_version(connection)
+        assert seed is not None and seed.is_active
+        frame = _frame_from_seed(rows=600)
+        staged = data_manager.stage_upload(
+            connection, token, _csv_bytes(frame), "subset_600.csv",
+            quarantine_dir=dataset_env["quarantine"],
+        )
+        activated = data_manager.activate_version(connection, token, staged.version.id)
+        assert activated.is_active
+        assert activated.activated_at is not None
+        assert activated.status == data_manager.STATUS_ACTIVATED
+        active_before_restart = data_manager.active_version(connection, token)
+    finally:
+        connection.close()
+
+    # "Restart": close the connection, open the same database file again, re-read the pointer.
+    connection = _open(dataset_env)
+    try:
+        token = _admin_token_conn(connection)
+        active_after_restart = data_manager.active_version(connection, token)
+        rows = connection.execute(
+            "SELECT id, is_active, status FROM dataset_versions ORDER BY id"
+        ).fetchall()
+        assert data_manager.ensure_seed_version(connection) is not None  # startup is idempotent
+        active_after_second_start = data_manager.active_version(connection, token)
+        count = connection.execute("SELECT COUNT(*) AS n FROM dataset_versions").fetchone()["n"]
+    finally:
+        connection.close()
+
+    assert active_after_restart is not None
+    assert active_after_restart.id == active_before_restart.id == staged.version.id
+    assert active_after_restart.sha256 == hashlib.sha256(_csv_bytes(frame)).hexdigest()
+    assert active_after_second_start.id == staged.version.id, "a restart must not re-seed the pointer"
+    assert [row["is_active"] for row in rows].count(1) == 1
+    assert count == 2, "the seed must be registered exactly once"
+
+    # The deployed artifact is byte-identical: an upload and an activation do not rebuild it.
+    assert _sha256_of(ARTIFACT) == artifact_before
+    assert _sha256_of(MANIFEST) == manifest_before
+
+
+def test_an_upload_and_activation_never_train_or_replace_the_model(dataset_env):
+    before = {
+        name: _sha256_of(path) for name, path in (("artifact", ARTIFACT), ("manifest", MANIFEST))
+    }
+    mtimes = {path: path.stat().st_mtime_ns for path in (ARTIFACT, MANIFEST)}
+    models_before = sorted(p.name for p in MODELS_DIR.iterdir())
+
+    connection = _open(dataset_env)
+    try:
+        token = _admin_token_conn(connection)
+        data_manager.ensure_seed_version(connection)
+        staged = data_manager.stage_upload(
+            connection, token, _csv_bytes(_frame_from_seed(rows=300)), "subset_300.csv",
+            quarantine_dir=dataset_env["quarantine"],
+        )
+        data_manager.activate_version(connection, token, staged.version.id)
+        audit_rows = {
+            row["action"]: row["non_sensitive_details"]
+            for row in connection.execute(
+                "SELECT action, non_sensitive_details FROM audit_events "
+                "WHERE action IN ('dataset.staged', 'dataset.activated')"
+            )
+        }
+        comparison = data_manager.comparison(connection, token)
+    finally:
+        connection.close()
+
+    assert {name: _sha256_of(path) for name, path in
+            (("artifact", ARTIFACT), ("manifest", MANIFEST))} == before
+    assert {path: path.stat().st_mtime_ns for path in (ARTIFACT, MANIFEST)} == mtimes
+    assert sorted(p.name for p in MODELS_DIR.iterdir()) == models_before
+    assert '"retraining_triggered":false' in audit_rows["dataset.staged"]
+    assert '"retraining_triggered":false' in audit_rows["dataset.activated"]
+    # And the page's own verdict: the active pointer is no longer the deployed dataset.
+    assert comparison["active_built_the_model"] is False
+    assert comparison["deployed"]["dataset_sha256"] == SEED_SHA256
+
+    # There is no training entry point in the dataset manager at all: no import reaches the
+    # training or serialisation modules, and nothing here fits or saves a model.
+    source = (SRC_DIR / "data_manager.py").read_text(encoding="utf-8")
+    imports = [
+        line.strip()
+        for line in source.splitlines()
+        if line.startswith(("import ", "from "))
+    ]
+    assert not [line for line in imports if "ml.train" in line or "joblib" in line
+                or "pickle" in line], imports
+    for forbidden in ("fit(", "predict(", ".dump(", "train_model", "load_verified_pipeline"):
+        assert forbidden not in source, forbidden
+
+
+# --------------------------------------------------------- 4. exactly one active version
+def test_exactly_one_active_dataset_version_survives_every_activation(dataset_env):
+    connection = _open(dataset_env)
+    try:
+        token = _admin_token_conn(connection)
+        seed = data_manager.ensure_seed_version(connection)
+        staged = data_manager.stage_upload(
+            connection, token, _csv_bytes(_frame_from_seed(rows=120)), "subset_120.csv",
+            quarantine_dir=dataset_env["quarantine"],
+        )
+
+        active_ids = []
+
+        def _active_ids() -> list[int]:
+            return [
+                int(row["id"])
+                for row in connection.execute(
+                    "SELECT id FROM dataset_versions WHERE is_active = 1"
+                )
+            ]
+
+        data_manager.activate_version(connection, token, staged.version.id)
+        active_ids.append(_active_ids())
+        data_manager.activate_version(connection, token, seed.id)
+        active_ids.append(_active_ids())
+        data_manager.activate_version(connection, token, staged.version.id)
+        active_ids.append(_active_ids())
+        # Activating the already-active version is a no-op, not a second pointer.
+        data_manager.activate_version(connection, token, staged.version.id)
+        active_ids.append(_active_ids())
+
+        # The database refuses a second active row even if the service is bypassed.
+        with pytest.raises(sqlite3.IntegrityError):
+            connection.execute("UPDATE dataset_versions SET is_active = 1")
+    finally:
+        connection.close()
+
+    assert active_ids == [[staged.version.id], [seed.id], [staged.version.id],
+                          [staged.version.id]]
+
+
+def test_uploading_the_same_bytes_twice_does_not_create_a_second_version(dataset_env):
+    payload = _csv_bytes(_frame_from_seed(rows=80))
+    connection = _open(dataset_env)
+    try:
+        token = _admin_token_conn(connection)
+        first = data_manager.stage_upload(
+            connection, token, payload, "same.csv", quarantine_dir=dataset_env["quarantine"]
+        )
+        second = data_manager.stage_upload(
+            connection, token, payload, "same_again.csv",
+            quarantine_dir=dataset_env["quarantine"],
+        )
+        count = connection.execute("SELECT COUNT(*) AS n FROM dataset_versions").fetchone()["n"]
+        copies = list(Path(dataset_env["quarantine"]).glob("*.csv"))
+    finally:
+        connection.close()
+
+    assert first.duplicate is False
+    assert second.duplicate is True
+    assert second.version.id == first.version.id
+    assert count == 1
+    assert len(copies) == 1, "the redundant second copy is removed"
+
+
+# ------------------------------------------------------- 5. a user cannot reach any of it
+@pytest.mark.parametrize(
+    "call",
+    [
+        lambda conn, token: data_manager.list_versions(conn, token),
+        lambda conn, token: data_manager.active_version(conn, token),
+        lambda conn, token: data_manager.list_rejections(conn, token),
+        lambda conn, token: data_manager.comparison(conn, token),
+        lambda conn, token: data_manager.stage_upload(
+            conn, token, b"ID,LIMIT_BAL\n1,2\n", "tiny.csv"
+        ),
+        lambda conn, token: data_manager.activate_version(conn, token, 1),
+    ],
+    ids=[
+        "list_versions",
+        "active_version",
+        "list_rejections",
+        "comparison",
+        "stage_upload",
+        "activate_version",
+    ],
+)
+def test_a_user_calling_a_dataset_function_is_denied_and_the_attempt_is_audited(dataset_env, call):
+    connection = _open(dataset_env)
+    try:
+        _, token = security.login(connection, USER_USERNAME, USER_PASSWORD)
+        with pytest.raises(PermissionDenied):
+            call(connection, token)
+        denied = connection.execute(
+            "SELECT non_sensitive_details FROM audit_events WHERE action = 'auth.denied'"
+        ).fetchall()
+    finally:
+        connection.close()
+
+    assert denied, "a denied dataset call must be audited"
+    assert any('"required":"admin"' in row["non_sensitive_details"] for row in denied)
+
+
+def test_a_user_does_not_see_the_dataset_manager_entry(dataset_env):
+    signed_in = _sign_in(_app(), USER_USERNAME, USER_PASSWORD)
+    assert not signed_in.exception
+    options = [option for option in signed_in.sidebar.radio[0].options]
+    assert SECTION_DATASETS not in options
+    assert SECTION_DATASETS not in _rendered(signed_in)
+
+
+# ------------------------------------------------------------------------- 6. the page
+def test_the_page_separates_the_deployed_dataset_from_the_staged_one(dataset_env):
+    at = _dataset_page()
+    assert not at.exception
+    rendered = _rendered(at)
+
+    assert "### Dataset manager" in [m.value for m in at.markdown]
+    assert "Deployed model dataset vs active dataset" in rendered
+    assert "In service — the deployed model" in rendered
+    assert "Pointer — the active dataset version" in rendered
+    # The deployed model's own dataset checksum is on screen, and it matches the artifact.
+    assert SEED_SHA256 in rendered
+    assert "The active dataset version is the same bytes as the dataset that built the" in rendered
+    assert "Uploading does not retrain anything." in rendered
+    assert "A staged dataset is validated metadata" in rendered
+    assert "No upload has been rejected." in rendered
+    # The seed registered at startup is the active version and is listed as such.
+    assert "UCI_Credit_Card.csv" in rendered
+    assert "dataset.seeded" not in rendered
+
+
+def test_the_page_stages_an_upload_and_shows_counts_but_no_row(dataset_env):
+    frame = _frame_from_seed(rows=400)
+    payload = _csv_bytes(frame)
+    expected_ones = int((frame["default.payment.next.month"] == 1).sum())
+    expected_zeros = int((frame["default.payment.next.month"] == 0).sum())
+
+    at = _dataset_page()
+    at = _stage(at, "four_hundred.csv", payload)
+    assert not at.exception
+    rendered = _rendered(at)
+
+    assert "Staged as dataset version" in rendered
+    assert "class 0 (no default)" in rendered and str(expected_zeros) in rendered
+    assert "class 1 (default)" in rendered and str(expected_ones) in rendered
+    assert "Aggregate preview (no rows)" in rendered
+    assert "No row of the uploaded file is rendered" in rendered
+    assert expected_ones > 0 and expected_ones < len(frame)
+
+    # The table the page rendered for the preview is per-column aggregates, not records.
+    preview_columns = [
+        [str(column) for column in element.value.columns]
+        for element in at.dataframe
+        if "distinct values" in [str(column) for column in element.value.columns]
+    ]
+    assert preview_columns
+    assert [str(c) for c in preview_columns[0]] == [
+        "column", "role", "unit", "distinct values", "min", "max", "mean",
+    ]
+
+    connection = _open(dataset_env)
+    try:
+        stored = connection.execute(
+            "SELECT record_count, class_zero, class_one, is_active, status "
+            "FROM dataset_versions WHERE record_count = ?", (len(frame),)
+        ).fetchall()
+    finally:
+        connection.close()
+    assert len(stored) == 1
+    assert stored[0]["class_zero"] == expected_zeros and stored[0]["class_one"] == expected_ones
+    assert stored[0]["is_active"] == 0 and stored[0]["status"] == data_manager.STATUS_VALIDATED
+
+
+def test_the_page_activation_button_moves_the_pointer_and_says_the_model_is_unchanged(dataset_env):
+    # Stage a valid subset of the seed directly (the UI path is covered above).
+    connection = _open(dataset_env)
+    try:
+        token = _admin_token_conn(connection)
+        staged = data_manager.stage_upload(
+            connection, token, _csv_bytes(_frame_from_seed(rows=200)), "subset_200.csv",
+            quarantine_dir=dataset_env["quarantine"],
+        )
+        version_id = staged.version.id
+    finally:
+        connection.close()
+
+    at = _dataset_page()
+    labels = [button.label for button in at.button]
+    activation = [label for label in labels if label.startswith(f"Activate dataset #{version_id}")]
+    assert activation, f"no activation button for version {version_id}; labels were {labels}"
+    at = _click(at, activation[0])
+
+    assert not at.exception
+    rendered = _rendered(at)
+    assert f"Dataset version **#{version_id}** is now the active pointer" in rendered
+    assert "The deployed model is unchanged and was not retrained." in rendered
+    # The page now states the two datasets differ — which is the truth after an activation.
+    assert "is **not** the dataset that built the deployed model" in rendered
+
+    connection = _open(dataset_env)
+    try:
+        active = connection.execute(
+            "SELECT id FROM dataset_versions WHERE is_active = 1"
+        ).fetchall()
+        count = connection.execute("SELECT COUNT(*) AS n FROM dataset_versions").fetchone()["n"]
+    finally:
+        connection.close()
+    assert [row["id"] for row in active] == [version_id]
+    assert count == 2
+
+
+def test_the_page_lists_a_rejection_with_the_reason_it_was_refused(dataset_env):
+    frame = _frame_from_seed(rows=30).drop(columns=["PAY_6"])
+    connection = _open(dataset_env)
+    try:
+        token = _admin_token_conn(connection)
+        with pytest.raises(data_manager.DatasetRejected) as raised:
+            data_manager.stage_upload(
+                connection, token, _csv_bytes(frame), "missing_pay6.csv",
+                quarantine_dir=dataset_env["quarantine"],
+            )
+        reason = raised.value.reason
+    finally:
+        connection.close()
+
+    at = _dataset_page()
+    rendered = _rendered(at)
+    assert "Rejection log" in rendered
+    assert "missing_pay6.csv" in rendered
+    assert "missing_column" in rendered
+    assert "missing required column(s): PAY_6" in reason
+    assert "missing required column(s): PAY_6" in rendered
+
+
+def test_the_page_names_the_columns_it_accepts(dataset_env):
+    at = _dataset_page()
+    rendered = _rendered(at)
+    assert "The 25-column schema this application accepts" in [
+        expander.label for expander in at.expander
+    ]
+    schema_tables = [
+        element.value
+        for element in at.dataframe
+        if "documented codes" in [str(column) for column in element.value.columns]
+    ]
+    assert schema_tables
+    columns = [str(name) for name in schema_tables[0]["column"]]
+    assert columns[:4] == ["ID", "LIMIT_BAL", "SEX", "EDUCATION"]
+    assert "PAY_6" in columns and "default.payment.next.month" in columns
+    assert len(columns) == SEED_COLUMNS

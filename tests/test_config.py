@@ -15,6 +15,7 @@ def test_defaults_match_the_documented_contract():
     assert settings.retention_days == 30
     assert settings.app_env == "production"
     assert settings.is_production is True
+    assert settings.quarantine_dir == "data/quarantine"
 
 
 def test_environment_overrides_are_applied():

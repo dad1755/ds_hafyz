@@ -18,6 +18,9 @@ DEFAULT_PORT = 2026
 DEFAULT_DOMAIN = "www.aihubcampus.online"
 DEFAULT_DB_PATH = "/app/storage/aihubcampus.db"
 DEFAULT_RETENTION_DAYS = 30
+#: Where an uploaded CSV is parked under a generated name before and after validation. On the
+#: writable volume in the container; never the seed directory.
+DEFAULT_QUARANTINE_DIR = "data/quarantine"
 
 
 class ConfigError(ValueError):
@@ -31,6 +34,7 @@ class Settings:
     port: int
     db_path: str
     retention_days: int
+    quarantine_dir: str = DEFAULT_QUARANTINE_DIR
 
     @property
     def is_production(self) -> bool:
@@ -64,4 +68,5 @@ def load_settings(environ: Mapping[str, str] | None = None) -> Settings:
         port=_integer(env, "APP_PORT", DEFAULT_PORT, 1, 65535),
         db_path=_text(env, "APP_DB_PATH", DEFAULT_DB_PATH),
         retention_days=_integer(env, "DATA_RETENTION_DAYS", DEFAULT_RETENTION_DAYS, 0, 3650),
+        quarantine_dir=_text(env, "APP_QUARANTINE_DIR", DEFAULT_QUARANTINE_DIR),
     )

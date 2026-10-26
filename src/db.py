@@ -167,6 +167,33 @@ MIGRATIONS: tuple[tuple[str, tuple[str, ...]], ...] = (
             "CREATE INDEX login_attempts_lookup ON login_attempts (username_lower, attempted_at)",
         ),
     ),
+    (
+        "0003_dataset_staging",
+        (
+            # The generated quarantine name of a staged dataset, so an operator can find the
+            # copy that was actually validated. Never the uploaded name — that one is a label
+            # only (validation.sanitize_filename) and never builds a path.
+            "ALTER TABLE dataset_versions ADD COLUMN quarantined_filename TEXT",
+            # Rejected uploads are logged, not versioned: they have no counts and no columns,
+            # and their bytes must not block a corrected re-upload under the sha256 unique
+            # index. The reason is the same message the admin saw, which names columns and
+            # row counts but never a cell value.
+            """
+            CREATE TABLE dataset_rejections (
+                id                     INTEGER PRIMARY KEY AUTOINCREMENT,
+                original_filename_safe TEXT    NOT NULL,
+                quarantined_filename   TEXT,
+                sha256                 TEXT    NOT NULL,
+                size_bytes             INTEGER NOT NULL,
+                error_codes            TEXT    NOT NULL,
+                reason                 TEXT    NOT NULL,
+                uploaded_by            INTEGER REFERENCES users (id) ON DELETE SET NULL,
+                created_at             TEXT    NOT NULL
+            )
+            """,
+            "CREATE INDEX dataset_rejections_time ON dataset_rejections (created_at DESC)",
+        ),
+    ),
 )
 
 #: Table the ladder itself is recorded in. Created before any version is applied.

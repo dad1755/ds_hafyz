@@ -22,8 +22,16 @@ services:
     environment:
       APP_DB_PATH: /app/storage/aihubcampus.db
       APP_PORT: "2026"
+      # Uploads are quarantined under a generated name on the writable volume, never inside
+      # the image and never next to the seed.
+      APP_QUARANTINE_DIR: /app/storage/quarantine
     volumes:
       - app_storage:/app/storage
+      # The immutable seed dataset, read-only. The image carries no dataset, but the admin page
+      # has to quote the dataset that built the deployed model: at startup it hashes and counts
+      # this file once and records it as dataset version 1. Read-only, so the running app
+      # cannot alter the benchmark input.
+      - ./data/UCI_Credit_Card.csv:/app/data/UCI_Credit_Card.csv:ro,z
     expose:
       - "2026"
     networks:

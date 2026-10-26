@@ -1,14 +1,15 @@
 """AI Hub Campus — Credit Card Default Risk Prediction.
 
-Sprint 8 entry point. The page authenticates for real (S6), serves the prediction vertical
-slice (S7) and now carries the administrator's user management page (S8).
+Sprint 9 entry point. The page authenticates for real (S6), serves the prediction vertical
+slice (S7), carries the administrator's user management page (S8) and now the dataset manager
+(S9).
 
 Dispatch is deliberately boring: resolve the session from the database on every rerun, then
 render exactly one of sign-in, forced password change, or a signed-in page. Each page module
 re-checks the session itself, so the branch here is presentation rather than the control.
 
-What this page does *not* do: manage datasets (S9), show the model evaluation (S10). Those
-sections are named on screen so the demo is honest about the build it is running.
+What this page does *not* do: show the model evaluation (S10). That section is named on screen
+so the demo is honest about the build it is running.
 
 Security rules that shape the code below:
 
@@ -26,8 +27,10 @@ import streamlit as st
 from ml.verify_artifact import ArtifactError
 from src import (
     accounts,
+    data_manager,
     db,
     pages_admin,
+    pages_datasets,
     pages_history,
     pages_login,
     pages_prediction,
@@ -50,10 +53,17 @@ st.set_page_config(
 
 @st.cache_resource
 def _prepare_database(db_path: str) -> list[str]:
-    """Create the schema once per process. Idempotent, so a restart changes nothing."""
+    """Create the schema once per process. Idempotent, so a restart changes nothing.
+
+    The benchmark dataset is registered as a dataset version here, once, by checksum: it is the
+    dataset the shipped model was trained on, and the admin page has to be able to say so. The
+    call never reads or writes ``models/`` and never trains.
+    """
     conn = db.connect(db_path)
     try:
-        return db.migrate(conn)
+        versions = db.migrate(conn)
+        data_manager.ensure_seed_version(conn)
+        return versions
     finally:
         conn.close()
 
@@ -98,12 +108,13 @@ def _render_home(conn, principal, token: str, service) -> None:
         "every privileged function; the 23-feature prediction form, the verified model's "
         "result and your own prediction history"
         + (
-            "; administrator user management — create, edit, reset a password, deactivate.\n"
+            "; administrator user management — create, edit, reset a password, deactivate, "
+            "and the dataset manager — staged uploads with validation, class balance and an "
+            "explicit activation that never retrains the live model.\n"
             if principal.role == "admin"
             else ".\n"
         )
-        + "- **Sprint 9** — dataset manager.\n"
-        "- **Sprint 10** — model evaluation and EDA panels."
+        + "- **Sprint 10** — model evaluation and EDA panels."
     )
 
     st.markdown("**How to use it**")
@@ -113,7 +124,10 @@ def _render_home(conn, principal, token: str, service) -> None:
             "load the synthetic demonstrator example first), submit, and read the result. "
             "**My prediction history** lists only the predictions your own account requested. "
             "**User management** creates accounts, changes roles, resets a password and "
-            "deactivates an account; every action is audited."
+            "deactivates an account; every action is audited. **Dataset manager** shows which "
+            "dataset built the model in service, stages a validated upload with an aggregate "
+            "preview, and activates a version explicitly — an upload never retrains or "
+            "replaces the live model."
         )
     else:
         st.markdown(
@@ -197,7 +211,7 @@ def _navigation(principal) -> str:
     """
     options = ["Home", "Predict default risk", "My prediction history"]
     if principal.role == "admin":
-        options.append("User management")
+        options.extend(["User management", "Dataset manager"])
     with st.sidebar:
         st.markdown("**AI Hub Campus**")
         return st.radio(
@@ -243,6 +257,8 @@ try:
             pages_history.render(_connection, _token, _service)
         elif _section == "User management":
             pages_admin.render(_connection, _token)
+        elif _section == "Dataset manager":
+            pages_datasets.render(_connection, _token)
         else:
             _render_home(_connection, _principal, _token, _service)
 finally:
