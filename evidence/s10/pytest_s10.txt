@@ -1,0 +1,23 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.14, pytest-9.1.1, pluggy-1.7.0 -- /usr/local/bin/python
+rootdir: /app
+plugins: anyio-4.15.1
+collecting ... collected 15 items
+
+tests/test_evaluation.py::test_the_comparison_table_reports_every_recorded_metric PASSED [  6%]
+tests/test_evaluation.py::test_the_confusion_matrices_are_the_recorded_counts PASSED [ 13%]
+tests/test_evaluation.py::test_the_metadata_panel_names_the_deployed_model_dataset_and_versions PASSED [ 20%]
+tests/test_evaluation.py::test_the_limitations_state_the_low_recall_in_plain_language PASSED [ 26%]
+tests/test_evaluation.py::test_the_page_follows_the_record_when_the_record_changes PASSED [ 33%]
+tests/test_evaluation.py::test_no_draft_v3_statistic_appears_in_the_page_source PASSED [ 40%]
+tests/test_evaluation.py::test_the_page_modules_hold_no_metric_literal_at_all PASSED [ 46%]
+tests/test_evaluation.py::test_the_comparison_chart_labels_every_bar_with_the_recorded_value PASSED [ 53%]
+tests/test_evaluation.py::test_each_confusion_matrix_names_its_own_cells_and_counts PASSED [ 60%]
+tests/test_evaluation.py::test_each_confusion_matrix_puts_its_cells_on_the_row_and_column_they_belong_to PASSED [ 66%]
+tests/test_evaluation.py::test_the_six_eda_figures_exist_and_their_captions_quote_the_record PASSED [ 73%]
+tests/test_evaluation.py::test_the_rendered_page_shows_all_eleven_figures_and_no_warning PASSED [ 80%]
+tests/test_evaluation.py::test_a_user_role_does_not_see_the_evaluation_entry PASSED [ 86%]
+tests/test_evaluation.py::test_a_user_role_is_refused_when_the_page_is_forced PASSED [ 93%]
+tests/test_evaluation.py::test_an_anonymous_caller_is_refused_too PASSED [100%]
+
+============================= 15 passed in 43.45s ==============================

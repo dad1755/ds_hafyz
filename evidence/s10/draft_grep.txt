@@ -1,0 +1,27 @@
+1. The page's own code — app.py and src/ — searched for each draft statistic
+   $ grep -rnE '<number>' app.py src/
+   no match for any of the 20 draft statistics in app.py or src/
+
+2. Where the drafts' numbers do live — reference material, labelled as claimed
+   $ grep -nE '<number>' docs/report_evidence.md evidence/s0/draft_v3_extracted.txt
+   4432     docs/report_evidence.md: 0    evidence/s0/draft_v3_extracted.txt: 2
+   856      docs/report_evidence.md: 0    evidence/s0/draft_v3_extracted.txt: 6
+   471      docs/report_evidence.md: 0    evidence/s0/draft_v3_extracted.txt: 7
+   241      docs/report_evidence.md: 0    evidence/s0/draft_v3_extracted.txt: 6
+   81.72    docs/report_evidence.md: 1    evidence/s0/draft_v3_extracted.txt: 3
+   35.49    docs/report_evidence.md: 2    evidence/s0/draft_v3_extracted.txt: 8
+   46.20    docs/report_evidence.md: 0    evidence/s0/draft_v3_extracted.txt: 3
+   68.01    docs/report_evidence.md: 4    evidence/s0/draft_v3_extracted.txt: 3
+
+   The report-evidence file's own words on the drafts:
+     19:| 3 | `Credit_Card_Default_Prediction_Project.docx` | 39,784 B | `5c8c9a1e2a4afa95af131c462e368a69eebbab989c002a3d29b39966cb088cdc` | Word draft (v1) | Earlier draft, ~7.3k chars | Text extracted; **draft, not proof** |
+     20:| 4 | `Credit_Card_Default_Prediction_Project-v3.docx` | 1,291,939 B | `0680b8826b1352393d68a44c3a1720bbdd239286406849e28eb39f4290473f85` | Word draft (v3) | Detailed draft, ~63k chars, figures + tables | Text extracted; **draft, not proof** |
+
+3. The record the page actually reads — these are the real counts, and they differ
+   $ python -c '<read models/metrics.json>'
+   decision_tree        TN 4,431  FP 242  FN 855  TP 472
+   logistic_regression  TN 4,528  FP 145  FN 1,009  TP 318
+   random_forest        TN 4,491  FP 182  FN 945  TP 382
+   the v3 draft asserts TN 4,432  FP 241  FN 856  TP 471 for the decision tree
+
+RESULT: PASS — 0 draft-v3 statistics in app.py or src/; the page can only have read them

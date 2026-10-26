@@ -1,0 +1,124 @@
+S10 — trace every displayed number to models/metrics.json
+  metrics.json        sha256 80e44b98a69e32f7063b8d1f91dc8c6ec4cdabe7475eb76c2315c4258d7f90e4
+  model_manifest.json sha256 5f76cffb68c87f5f4b224999d523b290039a0f4679db44b8d4ce2737e969f2a7
+  best_pipeline.joblib sha256 48ce02563b2aad9fbf9397603c642b0319be617c57fde8e1fd26ec08d518ad7b
+  page modules        charts.py, evaluation.py, pages_evaluation.py
+
+--- comparison table: A = page, B = metrics.json ------------------------------------------
+no differences — 39 lines identical
+  Decision Tree        | test accuracy      | 0.817167
+  Decision Tree        | test precision     | 0.661064
+  Decision Tree        | test recall        | 0.355690
+  Decision Tree        | test F1            | 0.462518
+  Decision Tree        | test ROC-AUC       | 0.742324
+  Decision Tree        | CV F1 mean         | 0.464273
+  Decision Tree        | CV F1 std          | 0.013755
+  Decision Tree        | CV precision mean  | 0.686803
+  Decision Tree        | CV recall mean     | 0.351294
+  Decision Tree        | threshold          | 0.50
+  Decision Tree        | estimator          | DecisionTreeClassifier
+  Logistic Regression  | test accuracy      | 0.807667
+  Logistic Regression  | test precision     | 0.686825
+  Logistic Regression  | test recall        | 0.239638
+  Logistic Regression  | test F1            | 0.355307
+  Logistic Regression  | test ROC-AUC       | 0.707636
+  Logistic Regression  | CV F1 mean         | 0.364699
+  Logistic Regression  | CV F1 std          | 0.013903
+  Logistic Regression  | CV precision mean  | 0.711799
+  Logistic Regression  | CV recall mean     | 0.245244
+  Logistic Regression  | threshold          | 0.50
+  Logistic Regression  | estimator          | LogisticRegression
+  Random Forest        | test accuracy      | 0.812167
+  Random Forest        | test precision     | 0.677305
+  Random Forest        | test recall        | 0.287867
+  Random Forest        | test F1            | 0.404019
+  Random Forest        | test ROC-AUC       | 0.766483
+  Random Forest        | CV F1 mean         | 0.419124
+  Random Forest        | CV F1 std          | 0.015335
+  Random Forest        | CV precision mean  | 0.695916
+  Random Forest        | CV recall mean     | 0.300060
+  Random Forest        | threshold          | 0.50
+  Random Forest        | estimator          | RandomForestClassifier
+  Baseline — always pr | test accuracy      | 0.778833
+  Baseline — always pr | test precision     | 0.000000
+  Baseline — always pr | test recall        | 0.000000
+  Baseline — always pr | test F1            | 0.000000
+  Baseline — always pr | test ROC-AUC       | —
+  Baseline — always pr | threshold          | not applicable — no probability is produced
+
+--- confusion matrices: A = page, B = metrics.json ----------------------------------------
+no differences — 15 lines identical
+  Decision Tree        | TN |  4,431
+  Decision Tree        | FP |    242
+  Decision Tree        | FN |    855
+  Decision Tree        | TP |    472
+  Decision Tree        | total |  6,000
+  Logistic Regression  | TN |  4,528
+  Logistic Regression  | FP |    145
+  Logistic Regression  | FN |  1,009
+  Logistic Regression  | TP |    318
+  Logistic Regression  | total |  6,000
+  Random Forest        | TN |  4,491
+  Random Forest        | FP |    182
+  Random Forest        | FN |    945
+  Random Forest        | TP |    382
+  Random Forest        | total |  6,000
+
+--- metadata panel: every field against its source -------------------------
+  selected model                       | decision_tree                                                            | equal
+  selected estimator                   | DecisionTreeClassifier                                                   | equal
+  hyperparameters                      | {"max_depth": 5, "random_state": 42}                                     | (no single recorded source)
+  model version                        | aihubcampus-default-risk-1+48ce02563b2a                                  | equal
+  decision threshold                   | 0.5                                                                      | equal
+  positive class                       | 1                                                                        | (no single recorded source)
+  trained / manifest written (UTC)     | 2026-10-26T08:59:51+00:00                                                | equal
+  evaluation record generated (UTC)    | 2026-10-26T08:59:51+00:00                                                | equal
+  evaluation method                    | single stratified hold-out: 24000 training rows and 6000 test rows (trai | equal
+                                       | …n_test_split(test_size=0.2, stratify=y, random_state=42)); each candidate scored once on the test rows at threshold 0.5 with positive class 1; the test rows took no part in model selection (0 test rows used for selection)
+  held-out test rows                   | 6,000                                                                    | (no single recorded source)
+  scored exactly once                  | True                                                                     | (no single recorded source)
+  training rows                        | 24,000                                                                   | (no single recorded source)
+  split function                       | train_test_split(test_size=0.2, stratify=y, random_state=42)             | (no single recorded source)
+  dataset path                         | data/UCI_Credit_Card.csv                                                 | (no single recorded source)
+  dataset sha256                       | a0f0ab49d6326671d6cd83be5c88dcf18007025fe9a53ecd699119c871176ca1         | equal
+  dataset rows                         | 30000                                                                    | equal
+  dataset columns / features           | 25 / 23                                                                  | (no single recorded source)
+  dataset class counts                 | {"0": 23364, "1": 6636}                                                  | (no single recorded source)
+  deployed artifact                    | models/best_pipeline.joblib                                              | equal
+  artifact sha256 (manifest)           | 48ce02563b2aad9fbf9397603c642b0319be617c57fde8e1fd26ec08d518ad7b         | equal
+  artifact sha256 (on disk now)        | 48ce02563b2aad9fbf9397603c642b0319be617c57fde8e1fd26ec08d518ad7b         | equal
+  artifact matches its manifest        | True                                                                     | equal
+  artifact check                       | the shipped pipeline reproduces its candidate's test predictions         | (no single recorded source)
+  package versions                     | joblib 1.6.0, numpy 2.5.4, pandas 3.1.0, python 3.12.14, scikit-learn 1. | equal
+                                       | …9.1
+  manifest package versions            | joblib 1.6.0, numpy 2.5.4, pandas 3.1.0, python 3.12.14, scikit-learn 1. | (no single recorded source)
+  calibration                          | uncalibrated — no calibration test has been run                          | (no single recorded source)
+  evaluation record                    | models/metrics.json (sha256 80e44b98a69e32f7063b8d1f91dc8c6ec4cdabe7475e | equal
+  manifest evaluation note             | Copied from models/metrics.json so a result screen can state the model's | (no single recorded source)
+
+--- six EDA figures: artifact on disk, caption numbers from summary.json --------
+  01_target_class_distribution.png   | present  |  49,050 B | Class distribution
+    caption: Class 0 (no default) = 23,364 accounts (77.88%); class 1 (default) = 6,636 accounts (22.12%). The majority class outweighs the minority 3.52 to 1, so 
+  02_age_by_class.png                | present  |  37,386 B | Age by class
+    caption: Median age 34 years for class 0 and 34 for class 1; the middle half of each class spans 28–41 and 28–42 years. The two distributions nearly coincide, 
+  03_limit_bal_by_class.png          | present  |  37,584 B | Credit limit by class
+    caption: Median credit limit NT$150,000 for class 0 and NT$90,000 for class 1 (means NT$178,100 and NT$130,110). Accounts that defaulted hold smaller limits, b
+  04_default_rate_by_pay0.png        | present  |  55,088 B | Default rate by repayment status (
+    caption: PAY_0=-2: 13.23% (n=2,759); PAY_0=-1: 16.78% (n=5,686); PAY_0=0: 12.81% (n=14,737); PAY_0=1: 33.95% (n=3,688); PAY_0=2: 69.14% (n=2,667); PAY_0=3: 75.
+  05_default_rate_by_education.png   | present  |  43,507 B | Default rate by education code
+    caption: EDUCATION=0: 0.00% (n=14); EDUCATION=1: 19.23% (n=10,585); EDUCATION=2: 23.73% (n=14,030); EDUCATION=3: 25.16% (n=4,917); EDUCATION=4: 5.69% (n=123); 
+  06_correlation_heatmap.png         | present  |  55,133 B | Correlation between the financial 
+    caption: Pearson r between the credit limit, the six statement balances and the six payment amounts. The balances move together, which is why the model can lea
+  missing figures reported by src.evaluation: none
+
+--- feature importance: read from the verified artifact -----------------------
+  read from the verified artifact best_pipeline.joblib (sha256 48ce02563b2aad9f…); impurity-based importances for the selected decision tree
+  rows = 23; sum of importances = 1.000000 (normalised to 1)
+  PAY_0      | importance 0.680061 | share 68.0061%
+  PAY_2      | importance 0.137682 | share 13.7682%
+  PAY_AMT3   | importance 0.043952 | share 4.3952%
+  PAY_5      | importance 0.033120 | share 3.3120%
+  BILL_AMT1  | importance 0.031706 | share 3.1706%
+
+==============================================================================
+RESULT: PASS — every compared value on the page equals its entry in metrics.json; 0 mismatches

@@ -1,0 +1,271 @@
+throwaway container: aihubcampus-s10-ui (volume aihubcampus-s10-ui-storage, synthetic accounts, no secrets shown)
+$ docker exec <throwaway> python -c '<create a synthetic administrator and a synthetic user>'
+accounts: 1
+  - username=s10_browser_admin role=admin active=True must_change_password=False hash_prefix=$argon2id$
+synthetic user created (password not printed)
+metrics.json inside the image: sha256 80e44b98a69e32f7063b8d1f91dc8c6ec4cdabe7475eb76c2315c4258d7f90e4
+
+$ docker run --rm --network aihubcampus_internal -v "$PWD/evidence/s10:/work:z" -w /work \
+    -v <playwright modules>:/pw/node_modules:ro -e NODE_PATH=/pw/node_modules \
+    -e SYNTH_ADMIN_USER=<synthetic> -e SYNTH_ADMIN_PASSWORD=<synthetic> \
+    -e SYNTH_USER_USER=<synthetic> -e SYNTH_USER_PASSWORD=<synthetic> \
+    mcr.microsoft.com/playwright:v1.55.0-noble node ui_evaluation.js aihubcampus-s10-ui 2026
+{
+  "phone": {
+    "label": "375px",
+    "width": 375,
+    "height": 812,
+    "steps": {
+      "admin_sign_in": true,
+      "navigation_chosen": true,
+      "evaluation_page": true
+    },
+    "checks": {
+      "nav_offers_evaluation": true,
+      "provenance_caption": true,
+      "metrics_sha_shown": true,
+      "section_comparison": true,
+      "section_confusion": true,
+      "section_eda": true,
+      "section_importance": true,
+      "section_metadata": true,
+      "section_limitations": true,
+      "low_recall_stated": true,
+      "uncalibrated_stated": true,
+      "all_six_eda_titles": true,
+      "figure_count_is_eleven": true
+    },
+    "overflow": {
+      "top": {
+        "viewport": 375,
+        "scrollWidth": 375,
+        "overflowPx": 0
+      },
+      "confusion": {
+        "viewport": 375,
+        "scrollWidth": 375,
+        "overflowPx": 0
+      },
+      "metadata": {
+        "viewport": 375,
+        "scrollWidth": 375,
+        "overflowPx": 0
+      }
+    },
+    "screenshots": [
+      "evaluation_375px_top.png",
+      "evaluation_375px_confusion.png",
+      "evaluation_375px_metadata.png"
+    ],
+    "nav_labels": [
+      "Home",
+      "Predict default risk",
+      "My prediction history",
+      "User management",
+      "Dataset manager",
+      "Model evaluation"
+    ],
+    "says": "Skip to main content\n\nAI Hub Campus\n\nHome\n\nPredict default risk\n\nMy prediction history\n\nUser management\n\nDataset manager\n\nModel evaluation\n\nkeyboard_double_arrow_right\nAI Hub Campus\nCredit Card Default Risk Prediction\n\nAcademic decision-support demonstration · historical Taiwanese credit-card data (2005) · 23 account attributes · not a real credit decision\n\nModel evaluation\n\nEvery number below is read from the generated evaluation record at render time — nothing on this page is typed in. The comparison table, confusion matrices and metadata come from models/metrics.json; the EDA captions quote models/eda/summary.json; the feature-importance chart is computed from the deployed tree inside the verified artifact.\n\nRecord: metrics.json sha256 80e44b98a69e32f7063b8d1f91dc8c6ec4cdabe7475eb76c2315c4258d7f90e4, generated 2026-10-26T08:59:51+00:00. Artifact: models/best_pipeline.joblib sha256 48ce02563b2aad9fbf9397603c642b0319be617c57fde8e1fd26ec08d518ad7b, manifest written 2026-10-26T08:59:51+00:00.\n\nModel comparison\n\nCross-validation ran on the training rows only; the test columns are one score of each candidate on the same held-out rows. The deployed model is Decision Tree, chosen by cross-validated F1 before the test rows were touched.\n\nCV columns are the mean and standard deviation over the recorded folds; the test columns are single values, so a difference smaller than the CV spread is not a real difference between two models.\n\nkeyboard_arrow_right\n\nWhy this model was selected\n\nSame numbers as the table, drawn so the gap between the models is visible: the selected tree is ahead on F1, the random forest on ROC-AUC, and every model is far ahead of the constant-answer baseline on accuracy only because accuracy is dominated by the majority class.\n\nConfusion matrices — TN / FP / FN / TP\n\nEach cell is labelled with its own name and count, and the two hatches separate correct from incorrect answers, so the matrix does not rely on colour. Actual is the row: TN and FP are accounts that did not default, FN and TP are accounts that did. The percentage is each cell's share of its actual class.\n\nThe arithmetic check column is the record's own recomputation of accuracy, precision, recall and F1 from each matrix; a non-zero delta would mean the metrics and the matrix disagree.\n\nExploratory data analysis\n\nThese are the six figures ml/generate_eda.py produced for the report, read from the image as artifacts. Each caption quotes the aggregate record they were drawn from.\n\nClass distribution\n\nClass 0 (no default) = 23,364 accounts (77.88%); class 1 (default) = 6,636 accounts (22.12%). The majority class outweighs the minority 3.52 to 1, so a model that always answers no default already reaches 77.88% accuracy — accuracy alone cannot show learning. Source: UCI_Credit_Card.csv — 30,000 accounts, Taiwan, Apr–Sep 2005.\n\nAge by class\n\nMedian age 34 years for class 0 and 34 for class 1; the middle half of each class spans 28–41 and 28–42 years. The two distributions nearly coincide, so age on its own separates the classes poorly. Source: UCI_Credit_Card.csv — 30,000 accounts, Taiwan, Apr–Sep 2005.\n\nCredit limit by class\n\nMedian credit limit NT\n150\n,\n000\n𝑓\n𝑜\n𝑟\n𝑐\n𝑙\n𝑎\n𝑠\n𝑠\n0\n𝑎\n𝑛\n𝑑\n𝑁\n𝑇\n150,000forclass0andNT90,000 for class 1 (means NT\n178\n,\n100\n𝑎\n𝑛\n𝑑\n𝑁\n𝑇\n178,100andNT130,110). Accounts that defaulted hold smaller limits, but the ranges overlap heavily. Source: UCI_Credit_Card.csv — 30,000 accounts, Taiwan, Apr–Sep 2005.\n\nDefault rate by repayment status (PAY_0)\n\nPAY_0=-2: 13.23% (n=2,759); PAY_0=-1: 16.78% (n=5,686); PAY_0=0: 12.81% (n=14,737); PAY_0=1: 33.95% (n=3,688); PAY_0=2: 69.14% (n=2,667); PAY_0=3: 75.78% (n=322); PAY_0=4: 68.42% (n=76); PAY_0=5: 50.00% (n=26); PAY_0=6: 54.55% (n=11); PAY_0=7: 77.78% (n=9); PAY_0=8: 57.89% (n=19). Repayment status is the strongest single signal in the data: the rate climbs from the paid in full codes to the codes reporting months of delay Source: UCI_Credit_Card.csv — 30,000 accounts, Taiwan, Apr–Sep ",
+    "figures": 11,
+    "figure_sizes": [
+      {
+        "w": 1312,
+        "h": 600,
+        "alt": "Grouped bar chart of test accuracy, precision, recall, F1 and ROC-AUC for the logistic regression, decision tree and random forest, each bar labelled with its value."
+      },
+      {
+        "w": 785,
+        "h": 602,
+        "alt": "Confusion matrix for Decision Tree: TN 4,431, FP 242, FN 855, TP 472, out of 6,000 test accounts."
+      },
+      {
+        "w": 829,
+        "h": 602,
+        "alt": "Confusion matrix for Logistic Regression: TN 4,528, FP 145, FN 1,009, TP 318, out of 6,000 test accounts."
+      },
+      {
+        "w": 797,
+        "h": 602,
+        "alt": "Confusion matrix for Random Forest: TN 4,491, FP 182, FN 945, TP 382, out of 6,000 test accounts."
+      },
+      {
+        "w": 750,
+        "h": 610,
+        "alt": "Class 0 (no default) = 23,364 accounts (77.88%); class 1 (default) = 6,636 accounts (22.12%). The majority class outweighs the minority 3.52 to 1, so a model that always answers *no default* already reaches 77.88% accuracy — accuracy alone cannot show learning. Source: UCI_Credit_Card.csv — 30,000 accounts, Taiwan, Apr–Sep 2005."
+      },
+      {
+        "w": 750,
+        "h": 610,
+        "alt": "Median age 34 years for class 0 and 34 for class 1; the middle half of each class spans 28–41 and 28–42 years. The two distributions nearly coincide, so age on its own separates the classes poorly. Source: UCI_Credit_Card.csv — 30,000 accounts, Taiwan, Apr–Sep 2005."
+      },
+      {
+        "w": 750,
+        "h": 610,
+        "alt": "Median credit limit NT$150,000 for class 0 and NT$90,000 for class 1 (means NT$178,100 and NT$130,110). Accounts that defaulted hold smaller limits, but the ranges overlap heavily. Source: UCI_Credit_Card.csv — 30,000 accounts, Taiwan, Apr–Sep 2005."
+      },
+      {
+        "w": 750,
+        "h": 610,
+        "alt": "PAY_0=-2: 13.23% (n=2,759); PAY_0=-1: 16.78% (n=5,686); PAY_0=0: 12.81% (n=14,737); PAY_0=1: 33.95% (n=3,688); PAY_0=2: 69.14% (n=2,667); PAY_0=3: 75.78% (n=322); PAY_0=4: 68.42% (n=76); PAY_0=5: 50.00% (n=26); PAY_0=6: 54.55% (n=11); PAY_0=7: 77.78% (n=9); PAY_0=8: 57.89% (n=19). Repayment status is the strongest single signal in the data: the rate climbs from the *paid in full* codes to the codes reporting months of delay Source: UCI_Credit_Card.csv — 30,000 accounts, Taiwan, Apr–Sep 2005."
+      },
+      {
+        "w": 750,
+        "h": 610,
+        "alt": "EDUCATION=0: 0.00% (n=14); EDUCATION=1: 19.23% (n=10,585); EDUCATION=2: 23.73% (n=14,030); EDUCATION=3: 25.16% (n=4,917); EDUCATION=4: 5.69% (n=123); EDUCATION=5: 6.43% (n=280); EDUCATION=6: 15.69% (n=51). The education codes are broad and unevenly populated, so the differences are weaker and less reliable than the repayment-status pattern Source: UCI_Credit_Card.csv — 30,000 accounts, Taiwan, Apr–Sep 2005."
+      },
+      {
+        "w": 940,
+        "h": 820,
+        "alt": "Pearson r between the credit limit, the six statement balances and the six payment amounts. The balances move together, which is why the model can lean on one or two of them. Strongest pairs: BILL_AMT1–BILL_AMT2 r=0.9515; BILL_AMT5–BILL_AMT6 r=0.9462; BILL_AMT4–BILL_AMT5 r=0.9401; BILL_AMT2–BILL_AMT3 r=0.9283; BILL_AMT3–BILL_AMT4 r=0.9240. Source: UCI_Credit_Card.csv — 30,000 accounts, Taiwan, Apr–Sep 2005."
+      },
+      {
+        "w": 912,
+        "h": 712,
+        "alt": "Horizontal bar chart of the decision tree's feature importances as a share of total impurity reduction, each bar labelled with its percentage."
+      }
+    ],
+    "secret_sweep": {
+      "adminPassword": 0,
+      "userPassword": 0,
+      "argon2": 0
+    }
+  },
+  "desktop": {
+    "label": "desktop",
+    "width": 1280,
+    "height": 800,
+    "steps": {
+      "admin_sign_in": true,
+      "navigation_chosen": true,
+      "evaluation_page": true
+    },
+    "checks": {
+      "nav_offers_evaluation": true,
+      "provenance_caption": true,
+      "metrics_sha_shown": true,
+      "section_comparison": true,
+      "section_confusion": true,
+      "section_eda": true,
+      "section_importance": true,
+      "section_metadata": true,
+      "section_limitations": true,
+      "low_recall_stated": true,
+      "uncalibrated_stated": true,
+      "all_six_eda_titles": true,
+      "figure_count_is_eleven": true
+    },
+    "overflow": {
+      "top": {
+        "viewport": 1280,
+        "scrollWidth": 1280,
+        "overflowPx": 0
+      },
+      "confusion": {
+        "viewport": 1280,
+        "scrollWidth": 1280,
+        "overflowPx": 0
+      },
+      "metadata": {
+        "viewport": 1280,
+        "scrollWidth": 1280,
+        "overflowPx": 0
+      }
+    },
+    "screenshots": [
+      "evaluation_desktop_top.png",
+      "evaluation_desktop_confusion.png",
+      "evaluation_desktop_metadata.png"
+    ],
+    "nav_labels": [
+      "Home",
+      "Predict default risk",
+      "My prediction history",
+      "User management",
+      "Dataset manager",
+      "Model evaluation"
+    ],
+    "says": "Skip to main content\n\nAI Hub Campus\n\nHome\n\nPredict default risk\n\nMy prediction history\n\nUser management\n\nDataset manager\n\nModel evaluation\n\nAI Hub Campus\nCredit Card Default Risk Prediction\n\nAcademic decision-support demonstration · historical Taiwanese credit-card data (2005) · 23 account attributes · not a real credit decision\n\nModel evaluation\n\nEvery number below is read from the generated evaluation record at render time — nothing on this page is typed in. The comparison table, confusion matrices and metadata come from models/metrics.json; the EDA captions quote models/eda/summary.json; the feature-importance chart is computed from the deployed tree inside the verified artifact.\n\nRecord: metrics.json sha256 80e44b98a69e32f7063b8d1f91dc8c6ec4cdabe7475eb76c2315c4258d7f90e4, generated 2026-10-26T08:59:51+00:00. Artifact: models/best_pipeline.joblib sha256 48ce02563b2aad9fbf9397603c642b0319be617c57fde8e1fd26ec08d518ad7b, manifest written 2026-10-26T08:59:51+00:00.\n\nModel comparison\n\nCross-validation ran on the training rows only; the test columns are one score of each candidate on the same held-out rows. The deployed model is Decision Tree, chosen by cross-validated F1 before the test rows were touched.\n\nCV columns are the mean and standard deviation over the recorded folds; the test columns are single values, so a difference smaller than the CV spread is not a real difference between two models.\n\nkeyboard_arrow_right\n\nWhy this model was selected\n\nSame numbers as the table, drawn so the gap between the models is visible: the selected tree is ahead on F1, the random forest on ROC-AUC, and every model is far ahead of the constant-answer baseline on accuracy only because accuracy is dominated by the majority class.\n\nConfusion matrices — TN / FP / FN / TP\n\nEach cell is labelled with its own name and count, and the two hatches separate correct from incorrect answers, so the matrix does not rely on colour. Actual is the row: TN and FP are accounts that did not default, FN and TP are accounts that did. The percentage is each cell's share of its actual class.\n\nThe arithmetic check column is the record's own recomputation of accuracy, precision, recall and F1 from each matrix; a non-zero delta would mean the metrics and the matrix disagree.\n\nExploratory data analysis\n\nThese are the six figures ml/generate_eda.py produced for the report, read from the image as artifacts. Each caption quotes the aggregate record they were drawn from.\n\nClass distribution\n\nClass 0 (no default) = 23,364 accounts (77.88%); class 1 (default) = 6,636 accounts (22.12%). The majority class outweighs the minority 3.52 to 1, so a model that always answers no default already reaches 77.88% accuracy — accuracy alone cannot show learning. Source: UCI_Credit_Card.csv — 30,000 accounts, Taiwan, Apr–Sep 2005.\n\nAge by class\n\nMedian age 34 years for class 0 and 34 for class 1; the middle half of each class spans 28–41 and 28–42 years. The two distributions nearly coincide, so age on its own separates the classes poorly. Source: UCI_Credit_Card.csv — 30,000 accounts, Taiwan, Apr–Sep 2005.\n\nCredit limit by class\n\nMedian credit limit NT\n150\n,\n000\n𝑓\n𝑜\n𝑟\n𝑐\n𝑙\n𝑎\n𝑠\n𝑠\n0\n𝑎\n𝑛\n𝑑\n𝑁\n𝑇\n150,000forclass0andNT90,000 for class 1 (means NT\n178\n,\n100\n𝑎\n𝑛\n𝑑\n𝑁\n𝑇\n178,100andNT130,110). Accounts that defaulted hold smaller limits, but the ranges overlap heavily. Source: UCI_Credit_Card.csv — 30,000 accounts, Taiwan, Apr–Sep 2005.\n\nDefault rate by repayment status (PAY_0)\n\nPAY_0=-2: 13.23% (n=2,759); PAY_0=-1: 16.78% (n=5,686); PAY_0=0: 12.81% (n=14,737); PAY_0=1: 33.95% (n=3,688); PAY_0=2: 69.14% (n=2,667); PAY_0=3: 75.78% (n=322); PAY_0=4: 68.42% (n=76); PAY_0=5: 50.00% (n=26); PAY_0=6: 54.55% (n=11); PAY_0=7: 77.78% (n=9); PAY_0=8: 57.89% (n=19). Repayment status is the strongest single signal in the data: the rate climbs from the paid in full codes to the codes reporting months of delay Source: UCI_Credit_Card.csv — 30,000 accounts, Taiwan, Apr–Sep 2005.\n\nDefault rate by educa",
+    "figures": 11,
+    "figure_sizes": [
+      {
+        "w": 1312,
+        "h": 600,
+        "alt": "Grouped bar chart of test accuracy, precision, recall, F1 and ROC-AUC for the logistic regression, decision tree and random forest, each bar labelled with its value."
+      },
+      {
+        "w": 785,
+        "h": 602,
+        "alt": "Confusion matrix for Decision Tree: TN 4,431, FP 242, FN 855, TP 472, out of 6,000 test accounts."
+      },
+      {
+        "w": 829,
+        "h": 602,
+        "alt": "Confusion matrix for Logistic Regression: TN 4,528, FP 145, FN 1,009, TP 318, out of 6,000 test accounts."
+      },
+      {
+        "w": 797,
+        "h": 602,
+        "alt": "Confusion matrix for Random Forest: TN 4,491, FP 182, FN 945, TP 382, out of 6,000 test accounts."
+      },
+      {
+        "w": 750,
+        "h": 610,
+        "alt": "Class 0 (no default) = 23,364 accounts (77.88%); class 1 (default) = 6,636 accounts (22.12%). The majority class outweighs the minority 3.52 to 1, so a model that always answers *no default* already reaches 77.88% accuracy — accuracy alone cannot show learning. Source: UCI_Credit_Card.csv — 30,000 accounts, Taiwan, Apr–Sep 2005."
+      },
+      {
+        "w": 750,
+        "h": 610,
+        "alt": "Median age 34 years for class 0 and 34 for class 1; the middle half of each class spans 28–41 and 28–42 years. The two distributions nearly coincide, so age on its own separates the classes poorly. Source: UCI_Credit_Card.csv — 30,000 accounts, Taiwan, Apr–Sep 2005."
+      },
+      {
+        "w": 750,
+        "h": 610,
+        "alt": "Median credit limit NT$150,000 for class 0 and NT$90,000 for class 1 (means NT$178,100 and NT$130,110). Accounts that defaulted hold smaller limits, but the ranges overlap heavily. Source: UCI_Credit_Card.csv — 30,000 accounts, Taiwan, Apr–Sep 2005."
+      },
+      {
+        "w": 750,
+        "h": 610,
+        "alt": "PAY_0=-2: 13.23% (n=2,759); PAY_0=-1: 16.78% (n=5,686); PAY_0=0: 12.81% (n=14,737); PAY_0=1: 33.95% (n=3,688); PAY_0=2: 69.14% (n=2,667); PAY_0=3: 75.78% (n=322); PAY_0=4: 68.42% (n=76); PAY_0=5: 50.00% (n=26); PAY_0=6: 54.55% (n=11); PAY_0=7: 77.78% (n=9); PAY_0=8: 57.89% (n=19). Repayment status is the strongest single signal in the data: the rate climbs from the *paid in full* codes to the codes reporting months of delay Source: UCI_Credit_Card.csv — 30,000 accounts, Taiwan, Apr–Sep 2005."
+      },
+      {
+        "w": 750,
+        "h": 610,
+        "alt": "EDUCATION=0: 0.00% (n=14); EDUCATION=1: 19.23% (n=10,585); EDUCATION=2: 23.73% (n=14,030); EDUCATION=3: 25.16% (n=4,917); EDUCATION=4: 5.69% (n=123); EDUCATION=5: 6.43% (n=280); EDUCATION=6: 15.69% (n=51). The education codes are broad and unevenly populated, so the differences are weaker and less reliable than the repayment-status pattern Source: UCI_Credit_Card.csv — 30,000 accounts, Taiwan, Apr–Sep 2005."
+      },
+      {
+        "w": 940,
+        "h": 820,
+        "alt": "Pearson r between the credit limit, the six statement balances and the six payment amounts. The balances move together, which is why the model can lean on one or two of them. Strongest pairs: BILL_AMT1–BILL_AMT2 r=0.9515; BILL_AMT5–BILL_AMT6 r=0.9462; BILL_AMT4–BILL_AMT5 r=0.9401; BILL_AMT2–BILL_AMT3 r=0.9283; BILL_AMT3–BILL_AMT4 r=0.9240. Source: UCI_Credit_Card.csv — 30,000 accounts, Taiwan, Apr–Sep 2005."
+      },
+      {
+        "w": 912,
+        "h": 712,
+        "alt": "Horizontal bar chart of the decision tree's feature importances as a share of total impurity reduction, each bar labelled with its percentage."
+      }
+    ],
+    "secret_sweep": {
+      "adminPassword": 0,
+      "userPassword": 0,
+      "argon2": 0
+    }
+  },
+  "user": {
+    "label": "user",
+    "checks": {
+      "evaluation_offered": false,
+      "admin_offered": false,
+      "dataset_manager_offered": false,
+      "admin_surface_caption": true,
+      "no_evaluation_content": true
+    },
+    "nav_labels": [
+      "Home",
+      "Predict default risk",
+      "My prediction history"
+    ],
+    "screenshots": [
+      "evaluation_user_nav.png"
+    ]
+  }
+}
+node exit=0
