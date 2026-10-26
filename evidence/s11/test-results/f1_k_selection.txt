@@ -1,0 +1,3 @@
+$ docker run --rm -v "$PWD:/app:z" -w /app aihubcampus-web:local python -m pytest tests/test_adversarial.py -q -p no:cacheprovider -k "size_limit or exactly_the_limit or quarantine_holds" 2>&1 | tail -4
+...                                                                      [100%]
+3 passed, 15 deselected in 7.91s
