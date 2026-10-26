@@ -1,0 +1,35 @@
+# S8 — a real Chromium at 375x812 and 1280x800 driving a throwaway container of this image.
+# The script signs in as a synthetic administrator, opens User management, creates an account
+# through the form, then signs in as that new account in a fresh browser context.
+# Account passwords are synthetic fixtures generated for this check and are not printed.
+
+$ docker run --rm --network aihubcampus_internal -v "$PWD/evidence/s8:/work:z" -w /work \
+    -e SYNTH_ADMIN_USER=browser_admin -e SYNTH_ADMIN_PASSWORD=<synthetic> \
+    -e SYNTH_NEW_USER=browser_created -e SYNTH_NEW_PASSWORD=<synthetic> \
+    mcr.microsoft.com/playwright:v1.55.0-noble \
+    node ui_screenshots_admin.js aihubcampus-s8-ui 2026
+
+--- 375px (375x812) ---
+steps: {"admin_sign_in":true,"admin_page":true,"create_account":true,"new_user_sign_in":true}
+admin_overflow: {"viewport":375,"scrollWidth":375,"overflowPx":0}
+create_overflow: {"viewport":375,"scrollWidth":375,"overflowPx":0}
+new_user_overflow: {"viewport":375,"scrollWidth":375,"overflowPx":0}
+table headers: [""]
+grep: {"hashPrefix":0,"adminPassword":0,"newPassword":0,"userManagementForNewUser":false}
+new user navigation: ["Home","Predict default risk","My prediction history"]
+created text: AI Hub Campus | Section | Home | Predict default risk | My prediction history | User management | AI Hub Campus | Credit Card Default Risk Prediction | User management | Account browser_created_375 created with role user. Give the password to its owner out of band; it is not stored or shown anywhere in this application. | Account browser_created_375 created with role user. Give the password to its
+--- desktop (1280x800) ---
+steps: {"admin_sign_in":true,"admin_page":true,"create_account":true,"new_user_sign_in":true}
+admin_overflow: {"viewport":1280,"scrollWidth":1280,"overflowPx":0}
+create_overflow: {"viewport":1280,"scrollWidth":1280,"overflowPx":0}
+new_user_overflow: {"viewport":1280,"scrollWidth":1280,"overflowPx":0}
+table headers: [""]
+grep: {"hashPrefix":0,"adminPassword":0,"newPassword":0,"userManagementForNewUser":false}
+new user navigation: ["Home","Predict default risk","My prediction history"]
+created text: AI Hub Campus | Section | Home | Predict default risk | My prediction history | User management | AI Hub Campus | Credit Card Default Risk Prediction | User management | Account browser_created_1280 created with role user. Give the password to its owner out of band; it is not stored or shown anywhere in this application. | Account browser_created_1280 created with role user. Give the password to i
+
+RESULT: PASS
+
+screenshots: admin_375px.png, admin_desktop.png, created_375px.png, created_desktop.png,
+             home_375px.png, home_desktop.png, new_user_375px.png, new_user_desktop.png
+machine-readable: browser_check.json

@@ -1,0 +1,55 @@
+# S8 — the UI query: what the administration page and a user page actually render.
+# AppTest drives app.py against a throwaway database seeded with synthetic accounts.
+
+$ docker run --rm -v "$PWD:/app:z" -w /app aihubcampus-web:local python evidence/s8/ui_query.py
+== administrator: the navigation offers the section ==
+navigation options: ['Home', 'Predict default risk', 'My prediction history', 'User management']
+
+== administrator: the page text (markdown/captions only) ==
+  | ### User management
+  | #### Accounts
+  | #### Manage an account
+  | #### Create an account
+  | #### Recent audit events
+  | **AI Hub Campus**
+  | Academic decision-support demonstration · historical Taiwanese credit-card data (2005) · 23 account attributes · not a real credit decision
+  | Guardrails: there is no self-registration, no delete, and the last enabled administrator cannot be demoted or deactivated. Password hashes are never read by this page — the list has no hash column — and a temporary password you set is never shown again.
+  | 2 account(s). The list is read through a guarded function and has no password-hash column: a hash is never read into the page, so it cannot be rendered. On a phone, scroll the table sideways for the remaining columns.
+  | Change a display name or role, set a temporary password, or deactivate and reactivate an account. Each control writes one audited transaction.
+  | Account #1 · created 2026-10-26T14:04:55Z · last sign-in 2026-10-26T14:05:08Z
+  | A temporary password must be at least 12 characters. It is hashed before it is stored, it is never displayed or logged, and the account must change it at its next sign-in.
+  | Account #2 · created 2026-10-26T14:04:55Z · last sign-in never
+  | A temporary password must be at least 12 characters. It is hashed before it is stored, it is never displayed or logged, and the account must change it at its next sign-in.
+  | Accounts are never deleted. Deactivating an account blocks sign-in immediately, ends its open sessions and keeps its audit history and prediction rows readable to administrators.
+  | The password you type is hashed with Argon2id before it is stored and is not shown again. Passwords need at least 12 characters and must not be a common password.
+  | Who did what to which entity, and when. Details are filtered by key name before they are stored, so a password, a hash, a token or a submitted feature value cannot reach this table even if a caller passes one by mistake.
+  | Non-secret configuration only. Credentials, password hashes and the tunnel token are never read by this page and never rendered.
+  | Academic decision-support demonstration · historical data · not a bank credit decision
+  | **Disclaimer.** This is a student coursework artefact, not financial advice and not an automated credit decision. It is built on the public *Default of Credit Card Clients* dataset (UCI Machine Learning Repository, dataset 350): 30,000 pseudonymous clients of a Taiwanese bank, billing months April–September 2005, amounts in New Taiwan Dollars. The model is observational and its fairness is not established; demographic features are a known risk and are discussed in the report. Do not enter real customer data.
+
+== administrator: the accounts table as rendered ==
+  columns: ['username', 'display name', 'role', 'active', 'must change password', 'created (UTC)', 'last sign-in (UTC)']
+  row: {'username': 'probe_admin', 'display name': 'Probe Admin', 'role': 'admin', 'active': True, 'must change password': False, 'created (UTC)': '2026-10-26T14:04:55Z', 'last sign-in (UTC)': '2026-10-26T14:05:08Z'}
+  row: {'username': 'probe_user', 'display name': 'Probe User', 'role': 'user', 'active': True, 'must change password': False, 'created (UTC)': '2026-10-26T14:04:55Z', 'last sign-in (UTC)': 'never'}
+  columns: ['when (UTC)', 'action', 'actor', 'entity', 'details']
+  row: {'when (UTC)': '2026-10-26T14:05:08Z', 'action': 'session.created', 'actor': 1, 'entity': 'session:1', 'details': '{"expires_at":"2026-10-26T22:05:08Z"}'}
+  row: {'when (UTC)': '2026-10-26T14:05:08Z', 'action': 'login.succeeded', 'actor': 1, 'entity': 'user:1', 'details': '{"role":"admin"}'}
+
+== administrator: the controls on the page ==
+  text inputs : ['Display name', 'Temporary password', 'Confirm temporary password', 'Display name', 'Temporary password', 'Confirm temporary password', 'Username', 'Display name (optional)', 'Initial password', 'Confirm initial password']
+  selectboxes : ['Role', 'Role', 'Role']
+  buttons     : ['Save display name', 'Save role', 'Set temporary password', 'Deactivate account', 'Save display name', 'Save role', 'Set temporary password', 'Deactivate account', 'Create account']
+
+== grep of everything the administrator can see ==
+  '$argon2id$' occurrences : 0
+  admin plaintext occurrences: 0
+  user plaintext occurrences : 0
+  rendered characters        : 2953
+
+== ordinary user: the section is absent ==
+navigation options: ['Home', 'Predict default risk', 'My prediction history']
+'User management' on the user's navigation: False
+'User management' anywhere on the user's page: False
+user page says why: True
+
+RESULT: PASS

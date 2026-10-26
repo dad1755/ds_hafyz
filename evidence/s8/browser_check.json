@@ -1,0 +1,92 @@
+[
+  {
+    "label": "375px",
+    "width": 375,
+    "height": 812,
+    "newUser": "browser_created_375",
+    "steps": {
+      "admin_sign_in": true,
+      "admin_page": true,
+      "create_account": true,
+      "new_user_sign_in": true
+    },
+    "home_text": "AI Hub Campus | AI Hub Campus | Credit Card Default Risk Prediction | Signed in as Browser Check Admin\n\nRole admin · session ends 2026-10-26 21:57 UTC | Username | Password | Sign in | 🔐\n\nAuthentication is live: your session is a server-side record, and every privileged call re-checks your role against the database. | Authentication is live: your session is a server-side record, and every privileged call re-checks your role against the database. | What this build contains | Available now — sign-in, sign-out, session expiry and the role guard behind every privileged function; the 23-feature prediction form, the verified model's result and your own prediction history; administrator user management — create, edit, reset a password, deactivate.\nSprint 9 — dataset manager.\nSprint 10 — model evaluation and EDA panels.",
+    "admin_overflow": {
+      "viewport": 375,
+      "scrollWidth": 375,
+      "overflowPx": 0
+    },
+    "admin_text": "AI Hub Campus | Section | Home | Predict default risk | My prediction history | User management | AI Hub Campus | Credit Card Default Risk Prediction | User management | Accounts | Manage an account | browser_admin — Browser Check Admin · admin · active | browser_user — Browser Check User · user · active | Create an account | Username | Display name (optional) | Role | Initial password | Confirm initial password | Create account | Recent audit events | Build information",
+    "table_headers": [
+      ""
+    ],
+    "create_overflow": {
+      "viewport": 375,
+      "scrollWidth": 375,
+      "overflowPx": 0
+    },
+    "create_text": "AI Hub Campus | Section | Home | Predict default risk | My prediction history | User management | AI Hub Campus | Credit Card Default Risk Prediction | User management | Account browser_created_375 created with role user. Give the password to its owner out of band; it is not stored or shown anywhere in this application. | Account browser_created_375 created with role user. Give the password to its owner out of band; it is not stored or shown anywhere in this application. | Accounts | Manage an account | browser_admin — Browser Check Admin · admin · active | browser_created_375 — Created By Admin · user · active | browser_user — Browser Check User · user · active | Create an account | Username | Display name (optional) | Role | Initial password | Confirm initial password | Create account | Recent audit events | Build information",
+    "new_user_overflow": {
+      "viewport": 375,
+      "scrollWidth": 375,
+      "overflowPx": 0
+    },
+    "new_user_text": "AI Hub Campus | AI Hub Campus | Credit Card Default Risk Prediction | Signed in as Created By Admin\n\nRole user · session ends 2026-10-26 21:57 UTC | 🔐\n\nAuthentication is live: your session is a server-side record, and every privileged call re-checks your role against the database. | Authentication is live: your session is a server-side record, and every privileged call re-checks your role against the database. | What this build contains | Available now — sign-in, sign-out, session expiry and the role guard behind every privileged function; the 23-feature prediction form, the verified model's result and your own prediction history.\nSprint 9 — dataset manager.\nSprint 10 — model evaluation and EDA panels. | How to use it | Open Predict default risk in the sidebar, fill the four groups of the form (or load the synthetic demonstrator example first), submit, and read the result. My prediction history lists only the predictions your own account requested. | Build information",
+    "new_user_nav": [
+      "Home",
+      "Predict default risk",
+      "My prediction history"
+    ],
+    "grep": {
+      "hashPrefix": 0,
+      "adminPassword": 0,
+      "newPassword": 0,
+      "userManagementForNewUser": false
+    }
+  },
+  {
+    "label": "desktop",
+    "width": 1280,
+    "height": 800,
+    "newUser": "browser_created_1280",
+    "steps": {
+      "admin_sign_in": true,
+      "admin_page": true,
+      "create_account": true,
+      "new_user_sign_in": true
+    },
+    "home_text": "AI Hub Campus | Section | Home | Predict default risk | My prediction history | User management | AI Hub Campus | Credit Card Default Risk Prediction | Signed in as Browser Check Admin\n\nRole admin · session ends 2026-10-26 21:57 UTC | Sign out | 🔐\n\nAuthentication is live: your session is a server-side record, and every privileged call re-checks your role against the database. | Authentication is live: your session is a server-side record, and every privileged call re-checks your role against the database. | What this build contains | Available now — sign-in, sign-out, session expiry and the role guard behind every privileged function; the 23-feature prediction form, the verified model's result and your own prediction history; administrator user management — create, edit, reset a password, deactivate.\nSprint 9 — dataset manager.\nSprint 10 — model evaluation and EDA panels. | How to use it | Open Predict default risk in the sidebar, fill the four groups of the form (or load the synthetic demonstrator example first), submit, and read the result. My prediction history lists only the predictions your own account requested. User management creates accounts, changes roles, resets a password and deactivates an account; every action is audited. | Accounts | Recent audit events | Build information",
+    "admin_overflow": {
+      "viewport": 1280,
+      "scrollWidth": 1280,
+      "overflowPx": 0
+    },
+    "admin_text": "AI Hub Campus | Section | Home | Predict default risk | My prediction history | User management | AI Hub Campus | Credit Card Default Risk Prediction | User management | Accounts | Manage an account | browser_admin — Browser Check Admin · admin · active | browser_created_375 — Created By Admin · user · active | browser_user — Browser Check User · user · active | Create an account | Username | Display name (optional) | Role | Initial password | Confirm initial password | Create account | Recent audit events | Build information",
+    "table_headers": [
+      ""
+    ],
+    "create_overflow": {
+      "viewport": 1280,
+      "scrollWidth": 1280,
+      "overflowPx": 0
+    },
+    "create_text": "AI Hub Campus | Section | Home | Predict default risk | My prediction history | User management | AI Hub Campus | Credit Card Default Risk Prediction | User management | Account browser_created_1280 created with role user. Give the password to its owner out of band; it is not stored or shown anywhere in this application. | Account browser_created_1280 created with role user. Give the password to its owner out of band; it is not stored or shown anywhere in this application. | Accounts | Manage an account | browser_admin — Browser Check Admin · admin · active | browser_created_1280 — Created By Admin · user · active | browser_created_375 — Created By Admin · user · active | browser_user — Browser Check User · user · active | Create an account | Username | Display name (optional) | Role | Initial password | Confirm initial password | Create account | Recent audit events | Build information",
+    "new_user_overflow": {
+      "viewport": 1280,
+      "scrollWidth": 1280,
+      "overflowPx": 0
+    },
+    "new_user_text": "AI Hub Campus | Section | Home | Predict default risk | My prediction history | AI Hub Campus | Credit Card Default Risk Prediction | Signed in as Created By Admin\n\nRole user · session ends 2026-10-26 21:58 UTC | Sign out | 🔐\n\nAuthentication is live: your session is a server-side record, and every privileged call re-checks your role against the database. | Authentication is live: your session is a server-side record, and every privileged call re-checks your role against the database. | What this build contains | Available now — sign-in, sign-out, session expiry and the role guard behind every privileged function; the 23-feature prediction form, the verified model's result and your own prediction history.\nSprint 9 — dataset manager.\nSprint 10 — model evaluation and EDA panels. | How to use it | Open Predict default risk in the sidebar, fill the four groups of the form (or load the synthetic demonstrator example first), submit, and read the result. My prediction history lists only the predictions your own account requested. | Build information",
+    "new_user_nav": [
+      "Home",
+      "Predict default risk",
+      "My prediction history"
+    ],
+    "grep": {
+      "hashPrefix": 0,
+      "adminPassword": 0,
+      "newPassword": 0,
+      "userManagementForNewUser": false
+    }
+  }
+]

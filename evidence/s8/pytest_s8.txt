@@ -1,0 +1,37 @@
+# S8 gate tests only.
+# Produced at commit 4ce302b (working tree, uncommitted S8 changes)
+
+$ docker run --rm -v "$PWD:/app:z" -w /app aihubcampus-web:local python -m pytest tests/test_admin.py -v -p no:cacheprovider
+============================= test session starts ==============================
+platform linux -- Python 3.12.14, pytest-9.1.1, pluggy-1.7.0 -- /usr/local/bin/python
+rootdir: /app
+plugins: anyio-4.15.1
+collecting ... collected 25 items
+
+tests/test_admin.py::test_an_admin_creates_an_account_in_the_ui_and_that_user_then_signs_in PASSED [  4%]
+tests/test_admin.py::test_a_created_account_cannot_duplicate_an_existing_username PASSED [  8%]
+tests/test_admin.py::test_a_weak_or_mismatched_password_is_refused_without_echoing_it PASSED [ 12%]
+tests/test_admin.py::test_a_role_change_takes_effect_on_the_next_request PASSED [ 16%]
+tests/test_admin.py::test_the_ui_role_change_persists_and_is_audited PASSED [ 20%]
+tests/test_admin.py::test_a_display_name_edit_persists_and_is_audited PASSED [ 24%]
+tests/test_admin.py::test_a_user_calling_an_admin_function_is_denied_and_the_attempt_is_audited[create_user] PASSED [ 28%]
+tests/test_admin.py::test_a_user_calling_an_admin_function_is_denied_and_the_attempt_is_audited[get_user] PASSED [ 32%]
+tests/test_admin.py::test_a_user_calling_an_admin_function_is_denied_and_the_attempt_is_audited[list_users] PASSED [ 36%]
+tests/test_admin.py::test_a_user_calling_an_admin_function_is_denied_and_the_attempt_is_audited[recent_audit_events] PASSED [ 40%]
+tests/test_admin.py::test_a_user_calling_an_admin_function_is_denied_and_the_attempt_is_audited[reset_password] PASSED [ 44%]
+tests/test_admin.py::test_a_user_calling_an_admin_function_is_denied_and_the_attempt_is_audited[set_active] PASSED [ 48%]
+tests/test_admin.py::test_a_user_calling_an_admin_function_is_denied_and_the_attempt_is_audited[set_display_name] PASSED [ 52%]
+tests/test_admin.py::test_a_user_calling_an_admin_function_is_denied_and_the_attempt_is_audited[set_role] PASSED [ 56%]
+tests/test_admin.py::test_a_user_never_sees_the_user_management_section PASSED [ 60%]
+tests/test_admin.py::test_an_anonymous_visitor_gets_only_the_sign_in_form PASSED [ 64%]
+tests/test_admin.py::test_there_is_no_self_registration_anywhere_in_the_source PASSED [ 68%]
+tests/test_admin.py::test_the_last_enabled_admin_cannot_be_demoted_or_deactivated PASSED [ 72%]
+tests/test_admin.py::test_the_last_admin_guard_holds_from_the_ui_too PASSED [ 76%]
+tests/test_admin.py::test_the_guard_holds_when_a_second_admin_is_added_and_then_removed PASSED [ 80%]
+tests/test_admin.py::test_the_admin_page_renders_no_hash_and_no_plaintext PASSED [ 84%]
+tests/test_admin.py::test_a_temporary_password_is_never_echoed_and_forces_a_change PASSED [ 88%]
+tests/test_admin.py::test_no_audit_row_anywhere_holds_a_hash_or_a_password PASSED [ 92%]
+tests/test_admin.py::test_the_account_table_has_no_delete_path PASSED    [ 96%]
+tests/test_admin.py::test_deactivating_from_the_ui_ends_the_session_and_keeps_the_row PASSED [100%]
+
+============================= 25 passed in 42.09s ==============================

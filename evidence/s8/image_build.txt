@@ -1,0 +1,19 @@
+# S8 — the image built from this working tree.
+
+$ docker build -t aihubcampus-web:s8 .
+#12 [ 8/12] COPY src/ ./src/
+#13 [ 9/12] COPY scripts/ ./scripts/
+#14 [10/12] COPY ml/ ./ml/
+#15 [11/12] COPY models/best_pipeline.joblib models/model_manifest.json models/metrics.json ./models/
+#16 [12/12] RUN mkdir -p /app/storage && chown -R app:app /app/storage
+#17 naming to docker.io/library/aihubcampus-web:s8
+#17 naming to docker.io/library/aihubcampus-web:s8 0.0s done
+#17 DONE 11.1s
+
+$ docker images aihubcampus-web --format "{{.Repository}}:{{.Tag}} {{.CreatedAt}} {{.Size}} {{.ID}}"
+aihubcampus-web:s8 2026-10-26 21:39:23 +0800 +08 969MB 477d237fd8f5
+aihubcampus-web:s7 2026-10-26 20:00:34 +0800 +08 969MB 52f4a58879b9
+aihubcampus-web:local 2026-10-26 20:00:34 +0800 +08 969MB 342546e6f59f
+
+$ docker image inspect aihubcampus-web:s8 --format "{{json .Config.User}} {{json .Config.ExposedPorts}}"
+"app" {"2026/tcp":{}}

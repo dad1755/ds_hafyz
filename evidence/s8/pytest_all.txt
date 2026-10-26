@@ -1,0 +1,8 @@
+# The whole suite at this working tree, so S8 is shown not to have regressed S1–S7.
+
+$ docker run --rm -v "$PWD:/app:z" -w /app aihubcampus-web:local python -m pytest tests -q -p no:cacheprovider
+........................................................................ [ 31%]
+........................................................................ [ 63%]
+........................................................................ [ 94%]
+............                                                             [100%]
+228 passed in 188.70s (0:03:08)

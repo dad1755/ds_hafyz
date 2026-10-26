@@ -1,0 +1,66 @@
+# S8 — every admin write, then a sweep of audit_events and of the database file for credential material.
+# The passwords are synthetic fixtures created by the probe itself.
+
+$ docker run --rm -v "$PWD:/app:z" -w /app aihubcampus-web:local python evidence/s8/audit_probe.py
+== admin writes (each one transactional and audited) ==
+create_user           -> id=3 username=probe_created role=user must_change_password=False
+set_display_name      -> 'Probe Renamed'
+set_role (promote)    -> admin
+set_role (demote)     -> user
+reset_password        -> must_change_password=True
+set_active (deactivate)-> is_active=False
+set_active (reactivate)-> is_active=True
+
+== guardrails ==
+demote last admin     -> refused: PolicyViolation: The last enabled administrator cannot be demoted.
+deactivate last admin -> refused: PolicyViolation: The last enabled administrator cannot be deactivated.
+duplicate username    -> refused: PolicyViolation: That username is already taken.
+user calls admin fn   -> refused: PermissionDenied: You do not have permission to perform this action.
+delete path present   -> False
+
+== audit_events, newest last (details verbatim) ==
+  1 actor=1 login.succeeded            user:1 {"role":"admin"}
+  2 actor=1 session.created            session:1 {"expires_at":"2026-10-26T22:04:45Z"}
+  3 actor=2 login.succeeded            user:2 {"role":"user"}
+  4 actor=2 session.created            session:2 {"expires_at":"2026-10-26T22:04:45Z"}
+  5 actor=1 user.created               user:3 {"role":"user","username":"probe_created"}
+  6 actor=1 user.display_name_changed  user:2 {"from":"Probe_User","to":"Probe Renamed","username":"probe_user"}
+  7 actor=1 user.role_changed          user:2 {"from":"user","to":"admin"}
+  8 actor=1 user.role_changed          user:2 {"from":"admin","to":"user"}
+  9 actor=1 password.reset             user:2 {"forced_change":true,"username":"probe_user"}
+ 10 actor=1 user.deactivated           user:2 {"username":"probe_user"}
+ 11 actor=1 user.activated             user:2 {"username":"probe_user"}
+ 12 actor=3 login.succeeded            user:3 {"role":"user"}
+ 13 actor=3 session.created            session:3 {"expires_at":"2026-10-26T22:04:46Z"}
+ 14 actor=3 auth.denied                role:user {"attempted":"accounts.list_users","required":"admin"}
+total audit rows: 14
+
+== quoted denied row ==
+SELECT * FROM audit_events WHERE id = 14;
+  id = 14
+  actor_user_id = 3
+  action = 'auth.denied'
+  entity_type = 'role'
+  entity_id = 'user'
+  non_sensitive_details = '{"attempted":"accounts.list_users","required":"admin"}'
+
+== sweep: audit details must hold no credential ==
+grep '$argon2id$' in audit details: 0 match(es)
+grep synthetic passwords in audit details: 0 match(es)
+grep full password hashes in audit details: 0 match(es)
+
+== sweep: the whole database file ==
+file: s8_probe.db (86016 bytes)
+  plaintext syntheti… present: False
+  plaintext syntheti… present: False
+  plaintext syntheti… present: False
+  plaintext syntheti… present: False
+  Argon2id prefix present (expected — the users table stores hashes): True
+
+== what the admin API returns (no hash field) ==
+  UserView(id=1, username='probe_admin', display_name='Probe_Admin', role='admin', is_active=True, must_change_password=False, created_at='2026-10-26T14:04:45Z', updated_at='2026-10-26T14:04:45Z', last_login_at='2026-10-26T14:04:45Z')
+  UserView(id=3, username='probe_created', display_name='Probe Created', role='user', is_active=True, must_change_password=False, created_at='2026-10-26T14:04:46Z', updated_at='2026-10-26T14:04:46Z', last_login_at='2026-10-26T14:04:46Z')
+  UserView(id=2, username='probe_user', display_name='Probe Renamed', role='user', is_active=True, must_change_password=True, created_at='2026-10-26T14:04:45Z', updated_at='2026-10-26T14:04:46Z', last_login_at='2026-10-26T14:04:45Z')
+UserView fields: ['created_at', 'display_name', 'id', 'is_active', 'last_login_at', 'must_change_password', 'role', 'updated_at', 'username']
+
+RESULT: PASS — 14 audit rows inspected, 0 credential finding(s)

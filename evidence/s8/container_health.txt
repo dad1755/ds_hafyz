@@ -1,0 +1,18 @@
+# S8 — a throwaway container from this image, on the project network, with no host port.
+# The database is a disposable volume; the container is deleted after the check.
+
+$ docker run -d --name aihubcampus-s8-health --network aihubcampus_internal -v <throwaway volume>:/app/storage aihubcampus-web:s8
+82c2b618e7912ba53bec1cdbea27f6affb5d6cf89f1144a2f6e8456d6622b7fa
+
+$ docker inspect --format "{{json .State.Health.Status}} port_bindings={{json .HostConfig.PortBindings}} exposed={{json .Config.ExposedPorts}}" aihubcampus-s8-health
+"healthy" port_bindings={} exposed={"2026/tcp":{}}
+
+$ docker exec aihubcampus-s8-health python -c "urllib.request.urlopen(http://127.0.0.1:2026/_stcore/health)"
+health: ok
+
+$ docker exec aihubcampus-s8-health id
+uid=1001(app) gid=1001(app) groups=1001(app)
+
+$ docker port aihubcampus-s8-health
+
+# no published host port: the container is reachable only by name on aihubcampus_internal

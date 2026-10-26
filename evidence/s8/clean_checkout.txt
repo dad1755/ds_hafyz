@@ -1,0 +1,16 @@
+# S8 — the suite from a clean clone of the commit that carries this sprint.
+# No working-tree files, no untracked helpers, no .env: only what is committed.
+
+$ git clone -b s8/admin-user-management <repo> s8_clean_checkout && cd s8_clean_checkout
+$ git log --oneline -1
+ec0e938 S8: administrator user management — list, create, edit, reset, deactivate
+
+$ git status --porcelain | wc -l
+0
+
+$ docker run --rm -v <clean clone>:/app:z -w /app aihubcampus-web:local python -m pytest tests -q -p no:cacheprovider
+........................................................................ [ 31%]
+........................................................................ [ 63%]
+........................................................................ [ 94%]
+............                                                             [100%]
+228 passed in 190.64s (0:03:10)
