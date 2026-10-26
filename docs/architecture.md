@@ -270,6 +270,7 @@ in the image.
 | Health | `/_stcore/health` → `200 ok` from inside the container and from a peer container on the network | `health_inside.txt`, `ingress_target.txt` |
 | Image contents | `/app` = `.streamlit`, `app.py`, `requirements.txt`, `src/`, `storage`; no `.env`, no `.db`, no dataset | `image_contents.txt` |
 | Tests | 11 passed (settings + shell) | `pytest.txt` |
+| Clean checkout | `git archive` of the branch into an empty dir → `docker build --no-cache` succeeded (5m30s), `compose config --quiet` exit 0, 11 tests pass | `clean_checkout.txt` |
 | Shell behaviour | submitting the form produces a warning only: 0 success, 0 error, no credential echoed | `apptest.txt` |
 
 **Host constraint — the pinned subnet (D7).** On `ridergami2` the Docker daemon's predefined

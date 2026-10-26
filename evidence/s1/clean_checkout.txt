@@ -1,0 +1,21 @@
+# A clean checkout of branch s1/baseline-container, built with no layer cache.
+# 'clean' = `git archive s1/baseline-container | tar -x` into an empty directory:
+#           only committed files, no .env, no operator record, no local state.
+$ git archive s1/baseline-container | tar -x -C <empty dir>
+$ cp .env.example .env && chmod 600 .env     # placeholders only
+$ docker compose config --quiet
+exit=0
+
+$ docker build --no-cache --tag aihubcampus-web:s1-cleancheck-nocache .
+  (build succeeded; final layers)
+  #14 DONE 178.0s
+  naming to docker.io/library/aihubcampus-web:s1-cleancheck-nocache
+  real 5m30.622s   exit=0
+
+$ docker run --rm aihubcampus-web:s1-cleancheck-nocache python -c '<AppTest render>'
+exceptions: []
+title: ['AI Hub Campus']
+
+$ docker run --rm -v <clean>/tests:/app/tests:ro,z aihubcampus-web:s1-cleancheck-nocache python -m pytest tests -q -p no:cacheprovider
+...........                                                              [100%]
+11 passed in 8.48s
