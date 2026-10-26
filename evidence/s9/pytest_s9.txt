@@ -1,0 +1,28 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.14, pytest-9.1.1, pluggy-1.7.0 -- /usr/local/bin/python
+rootdir: /app
+plugins: anyio-4.15.1
+collecting ... collected 44 items / 24 deselected / 20 selected
+
+tests/test_admin.py::test_the_admin_page_renders_no_hash_and_no_plaintext PASSED [  5%]
+tests/test_admin.py::test_the_seed_csv_validates_and_stages_with_its_real_counts PASSED [ 10%]
+tests/test_admin.py::test_a_missing_column_upload_is_rejected_with_the_reason_recorded PASSED [ 15%]
+tests/test_admin.py::test_a_wrong_target_upload_is_rejected_with_the_reason_recorded PASSED [ 20%]
+tests/test_admin.py::test_the_active_pointer_persists_across_a_restart_and_the_artifact_is_unchanged PASSED [ 25%]
+tests/test_admin.py::test_an_upload_and_activation_never_train_or_replace_the_model PASSED [ 30%]
+tests/test_admin.py::test_exactly_one_active_dataset_version_survives_every_activation PASSED [ 35%]
+tests/test_admin.py::test_uploading_the_same_bytes_twice_does_not_create_a_second_version PASSED [ 40%]
+tests/test_admin.py::test_a_user_calling_a_dataset_function_is_denied_and_the_attempt_is_audited[list_versions] PASSED [ 45%]
+tests/test_admin.py::test_a_user_calling_a_dataset_function_is_denied_and_the_attempt_is_audited[active_version] PASSED [ 50%]
+tests/test_admin.py::test_a_user_calling_a_dataset_function_is_denied_and_the_attempt_is_audited[list_rejections] PASSED [ 55%]
+tests/test_admin.py::test_a_user_calling_a_dataset_function_is_denied_and_the_attempt_is_audited[comparison] PASSED [ 60%]
+tests/test_admin.py::test_a_user_calling_a_dataset_function_is_denied_and_the_attempt_is_audited[stage_upload] PASSED [ 65%]
+tests/test_admin.py::test_a_user_calling_a_dataset_function_is_denied_and_the_attempt_is_audited[activate_version] PASSED [ 70%]
+tests/test_admin.py::test_a_user_does_not_see_the_dataset_manager_entry PASSED [ 75%]
+tests/test_admin.py::test_the_page_separates_the_deployed_dataset_from_the_staged_one PASSED [ 80%]
+tests/test_admin.py::test_the_page_stages_an_upload_and_shows_counts_but_no_row PASSED [ 85%]
+tests/test_admin.py::test_the_page_activation_button_moves_the_pointer_and_says_the_model_is_unchanged PASSED [ 90%]
+tests/test_admin.py::test_the_page_lists_a_rejection_with_the_reason_it_was_refused PASSED [ 95%]
+tests/test_admin.py::test_the_page_names_the_columns_it_accepts PASSED   [100%]
+
+====================== 20 passed, 24 deselected in 55.52s ======================

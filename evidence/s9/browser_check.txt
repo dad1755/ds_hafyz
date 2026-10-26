@@ -1,0 +1,131 @@
+fixtures written: ['stage_missing_column.csv', 'stage_second.csv', 'stage_valid.csv']
+throwaway container: aihubcampus-s9-ui (volume aihubcampus-s9-ui-storage, synthetic administrator, no secrets shown)
+demo user: skipped (INITIAL_USER_USERNAME/INITIAL_USER_PASSWORD not set)
+accounts: 1
+  - username=s9_browser_admin role=admin active=True must_change_password=False hash_prefix=$argon2id$
+
+$ docker run --rm --network aihubcampus_internal -v "$PWD/evidence/s9:/work:z" -w /work \
+    -v <playwright modules>:/pw/node_modules:ro -e NODE_PATH=/pw/node_modules \
+    -e SYNTH_ADMIN_USER=<synthetic> -e SYNTH_ADMIN_PASSWORD=<synthetic> \
+    mcr.microsoft.com/playwright:v1.55.0-noble node ui_datasets.js aihubcampus-s9-ui 2026
+{
+  "phone": {
+    "label": "375px",
+    "width": 375,
+    "height": 812,
+    "steps": {
+      "admin_sign_in": true,
+      "navigation_chosen": true,
+      "dataset_page": true,
+      "activate_button_present": true
+    },
+    "says": {
+      "initial": "Skip to main content\n\nAI Hub Campus\n\nHome\n\nPredict default risk\n\nMy prediction history\n\nUser management\n\nDataset manager\n\nkeyboard_double_arrow_right\nAI Hub Campus\nCredit Card Default Risk Prediction\n\nAcademic decision-support demonstration · historical Taiwanese credit-card data (2005) · 23 account attributes · not a real credit decision\n\nDataset manager\n\nValidated uploads are staged with a checksum and an aggregate preview; nothing is retrained by an upload, and the deployed model keeps the dataset it was built on until an explicit rebuild.\n\nDeployed model dataset vs active dataset\n\nUploading does not retrain anything. The model answering predictions keeps the artifact and the dataset recorded in models/model_manifest.json until an operator runs a rebuild and the artifact is verified again.\n\nIn service — the deployed model\n\nThe artifact on disk still hashes to the value its manifest records, so the model in service is the model that was evaluated.\n\nPointer — the active dataset version\n✅\n\nThe active dataset version is the same bytes as the dataset that built the deployed model.\n\nActive dataset\n\nrecords\n\n30,000\n\nclass 0 · no default\n\n23,364\n\nclass 1 · default\n\n6,636\n\nColumn count 25. Class 1 share 22.12%. This imbalance is why the model is judged on F1 and recall, not accuracy alone.\n\nkeyboard_arrow_right\n\nThe 25-column schema this application accepts\n\nStage a new dataset version\n\nA staged dataset is validated metadata plus a quarantined copy of its bytes. It is not used for predictions and it does not become the training data until an administrator activates it and a retraining run is explicitly started outside this page.\n\nDataset CSV (25 columns, UTF-8, at most 10 MB)\n\nupload\n\nUpload\n\n200MB per file • CSV\n\nValidate and stage dataset\n\nDataset versions\n\nOne row per validated upload, newest first. Exactly one row can be active; the database enforces it with a partial unique index as well as inside the activation transaction.\n\nEvery registered version is the active one; there is nothing to activate.\n\nRejection log\n\nEvery refused upload with the reason the administrator saw. The reason names the column and how many rows offend, never a cell value, and nothing is repaired or partially loaded.\n\nNo upload has been rejected.\n\nStaged copies are kept under the quarantine directory (/app/storage/quarantine), git-ignored and on the writable volume. The seed data/UCI_Credit_Card.csv is never modified by this page.\n\nkeyboard_arrow_right\n\nBuild information\n\nAcademic decision-support demonstration · historical data · not a bank credit decision\n\nDisclaimer. This is a st",
+      "after_stage": "Skip to main content\n\nAI Hub Campus\n\nHome\n\nPredict default risk\n\nMy prediction history\n\nUser management\n\nDataset manager\n\nkeyboard_double_arrow_right\nAI Hub Campus\nCredit Card Default Risk Prediction\n\nAcademic decision-support demonstration · historical Taiwanese credit-card data (2005) · 23 account attributes · not a real credit decision\n\nDataset manager\n\nValidated uploads are staged with a checksum and an aggregate preview; nothing is retrained by an upload, and the deployed model keeps the dataset it was built on until an explicit rebuild.\n\nDeployed model dataset vs active dataset\n\nUploading does not retrain anything. The model answering predictions keeps the artifact and the dataset recorded in models/model_manifest.json until an operator runs a rebuild and the artifact is verified again.\n\nIn service — the deployed model\n\nThe artifact on disk still hashes to the value its manifest records, so the model in service is the model that was evaluated.\n\nPointer — the active dataset version\n✅\n\nThe active dataset version is the same bytes as the dataset that built the deployed model.\n\nActive dataset\n\nrecords\n\n30,000\n\nclass 0 · no default\n\n23,364\n\nclass 1 · default\n\n6,636\n\nColumn count 25. Class 1 share 22.12%. This imbalance is why the model is judged on F1 and recall, not accuracy alone.\n\nkeyboard_arrow_right\n\nThe 25-column schema this application accepts\n\nStage a new dataset version\n\nA staged dataset is validated metadata plus a quarantined copy of its bytes. It is not used for predictions and it does not become the training data until an administrator activates it and a retraining run is explicitly started outside this page.\n\nDataset CSV (25 columns, UTF-8, at most 10 MB)\n\nstage_valid.csv\n37.9KB\nadd icon\nadd\n\nValidate and stage dataset\n\nStaged as dataset version #2. It is validated and quarantined under a generated filename; it is not active and the deployed model has not changed.\n\nAggregate preview (no rows)\n\nThe preview shows aggregates only — counts, class balance and per-column ranges. No row of the uploaded file is rendered, so a demo never puts a customer record on screen.\n\nDataset versions\n\nOne row per validated upload, newest first. Exactly one row can be active; the database enforces it with a partial unique index as well as inside the activation transaction.\n\nActivate a version\n\nActivation moves the pointer a future retraining run would read. It does not train, does not reload the model and does not change the artifact — the panel at the top of this page will then show the two datasets as different, which is the truth.\n\nActivate dataset #2 · bf02",
+      "after_activate": "Skip to main content\n\nAI Hub Campus\n\nHome\n\nPredict default risk\n\nMy prediction history\n\nUser management\n\nDataset manager\n\nkeyboard_double_arrow_right\nAI Hub Campus\nCredit Card Default Risk Prediction\n\nAcademic decision-support demonstration · historical Taiwanese credit-card data (2005) · 23 account attributes · not a real credit decision\n\nDataset manager\n\nValidated uploads are staged with a checksum and an aggregate preview; nothing is retrained by an upload, and the deployed model keeps the dataset it was built on until an explicit rebuild.\n\nDataset version #2 is now the active pointer (bf0241304c9d…). The deployed model is unchanged and was not retrained.\n\nDeployed model dataset vs active dataset\n\nUploading does not retrain anything. The model answering predictions keeps the artifact and the dataset recorded in models/model_manifest.json until an operator runs a rebuild and the artifact is verified again.\n\nIn service — the deployed model\n\nThe artifact on disk still hashes to the value its manifest records, so the model in service is the model that was evaluated.\n\nPointer — the active dataset version\n⚠️\n\nThe active dataset version is not the dataset that built the deployed model. It would be used only by a future retraining run; predictions in service still come from the deployed artifact. This is the expected state after an activation.\n\nActive dataset\n\nrecords\n\n400\n\nclass 0 · no default\n\n306\n\nclass 1 · default\n\n94\n\nColumn count 25. Class 1 share 23.50%. This imbalance is why the model is judged on F1 and recall, not accuracy alone.\n\nkeyboard_arrow_right\n\nThe 25-column schema this application accepts\n\nStage a new dataset version\n\nA staged dataset is validated metadata plus a quarantined copy of its bytes. It is not used for predictions and it does not become the training data until an administrator activates it and a retraining run is explicitly started outside this page.\n\nDataset CSV (25 columns, UTF-8, at most 10 MB)\n\nstage_valid.csv\n37.9KB\nadd icon\nadd\n\nValidate and stage dataset\n\nDataset versions\n\nOne row per validated upload, newest first. Exactly one row can be active; the database enforces it with a partial unique index as well as inside the activation transaction.\n\nActivate a version\n\nActivation moves the pointer a future retraining run would read. It does not train, does not reload the model and does not change the artifact — the panel at the top of this page will then show the two datasets as different, which is the truth.\n\nActivate dataset #1 · a0f0ab49d632…\n\nRejection log\n\nEvery refused upload with the reason the administrator saw. The reas",
+      "after_rejection": "Skip to main content\n\nAI Hub Campus\n\nHome\n\nPredict default risk\n\nMy prediction history\n\nUser management\n\nDataset manager\n\nkeyboard_double_arrow_right\nAI Hub Campus\nCredit Card Default Risk Prediction\n\nAcademic decision-support demonstration · historical Taiwanese credit-card data (2005) · 23 account attributes · not a real credit decision\n\nDataset manager\n\nValidated uploads are staged with a checksum and an aggregate preview; nothing is retrained by an upload, and the deployed model keeps the dataset it was built on until an explicit rebuild.\n\nDeployed model dataset vs active dataset\n\nUploading does not retrain anything. The model answering predictions keeps the artifact and the dataset recorded in models/model_manifest.json until an operator runs a rebuild and the artifact is verified again.\n\nIn service — the deployed model\n\nThe artifact on disk still hashes to the value its manifest records, so the model in service is the model that was evaluated.\n\nPointer — the active dataset version\n⚠️\n\nThe active dataset version is not the dataset that built the deployed model. It would be used only by a future retraining run; predictions in service still come from the deployed artifact. This is the expected state after an activation.\n\nActive dataset\n\nrecords\n\n400\n\nclass 0 · no default\n\n306\n\nclass 1 · default\n\n94\n\nColumn count 25. Class 1 share 23.50%. This imbalance is why the model is judged on F1 and recall, not accuracy alone.\n\nkeyboard_arrow_right\n\nThe 25-column schema this application accepts\n\nStage a new dataset version\n\nA staged dataset is validated metadata plus a quarantined copy of its bytes. It is not used for predictions and it does not become the training data until an administrator activates it and a retraining run is explicitly started outside this page.\n\nDataset CSV (25 columns, UTF-8, at most 10 MB)\n\nstage_m...column.csv\n2.9KB\nadd icon\nadd\n\nValidate and stage dataset\n\nThe upload was rejected and recorded: missing required column(s): PAY_6; the file must contain all 25 documented columns (see docs/data_dictionary.md)\n\nRejection #1 is in the rejection log below with the stable error codes missing_column. The quarantined copy of a rejected file is deleted after the reason is recorded; nothing was cleaned, coerced or partially loaded.\n\nDataset versions\n\nOne row per validated upload, newest first. Exactly one row can be active; the database enforces it with a partial unique index as well as inside the activation transaction.\n\nActivate a version\n\nActivation moves the pointer a future retraining run would read. It does not train, does not reload the model"
+    },
+    "overflow": {
+      "initial": {
+        "viewport": 375,
+        "scrollWidth": 375,
+        "overflowPx": 0
+      },
+      "staged": {
+        "viewport": 375,
+        "scrollWidth": 375,
+        "overflowPx": 0
+      },
+      "activated": {
+        "viewport": 375,
+        "scrollWidth": 375,
+        "overflowPx": 0
+      },
+      "rejected": {
+        "viewport": 375,
+        "scrollWidth": 375,
+        "overflowPx": 0
+      }
+    },
+    "screenshots": [
+      "dataset_375px_initial.png",
+      "dataset_375px_staged.png",
+      "dataset_375px_activated.png",
+      "dataset_375px_rejected.png"
+    ],
+    "checks": {
+      "deployed_panel": true,
+      "deployed_dataset_sha_shown": false,
+      "seed_is_active": true,
+      "honest_panel_on_fresh_db": true,
+      "no_rejections_yet": true,
+      "never_retrains_notice": true,
+      "staged_is_not_deployed_warning": false,
+      "staged_version": true,
+      "staged_not_active": true,
+      "aggregate_preview": true,
+      "counts_quoted": false,
+      "activated_pointer": true,
+      "model_unchanged_stated": true,
+      "mismatch_now_shown": true,
+      "deployed_sha_still_shown": false,
+      "rejected": true,
+      "rejection_reason_quoted": true,
+      "rejection_log_row": true,
+      "rejection_in_log_table": false
+    },
+    "secret_sweep": {
+      "adminPassword": 0,
+      "argon2": 0
+    }
+  },
+  "desktop": {
+    "label": "desktop",
+    "width": 1280,
+    "height": 800,
+    "steps": {
+      "admin_sign_in": true,
+      "navigation_chosen": true,
+      "dataset_page": true
+    },
+    "says": {
+      "initial": "Skip to main content\n\nAI Hub Campus\n\nHome\n\nPredict default risk\n\nMy prediction history\n\nUser management\n\nDataset manager\n\nAI Hub Campus\nCredit Card Default Risk Prediction\n\nAcademic decision-support demonstration · historical Taiwanese credit-card data (2005) · 23 account attributes · not a real credit decision\n\nDataset manager\n\nValidated uploads are staged with a checksum and an aggregate preview; nothing is retrained by an upload, and the deployed model keeps the dataset it was built on until an explicit rebuild.\n\nDeployed model dataset vs active dataset\n\nUploading does not retrain anything. The model answering predictions keeps the artifact and the dataset recorded in models/model_manifest.json until an operator runs a rebuild and the artifact is verified again.\n\nIn service — the deployed model\n\nThe artifact on disk still hashes to the value its manifest records, so the model in service is the model that was evaluated.\n\nPointer — the active dataset version\n⚠️\n\nThe active dataset version is not the dataset that built the deployed model. It would be used only by a future retraining run; predictions in service still come from the deployed artifact. This is the expected state after an activation.\n\nActive dataset\n\nrecords\n\n400\n\nclass 0 · no default\n\n306\n\nclass 1 · default\n\n94\n\nColumn count 25. Class 1 share 23.50%. This imbalance is why the model is judged on F1 and recall, not accuracy alone.\n\nkeyboard_arrow_right\n\nThe 25-column schema this application accepts\n\nStage a new dataset version\n\nA staged dataset is validated metadata plus a quarantined copy of its bytes. It is not used for predictions and it does not become the training data until an administrator activates it and a retraining run is explicitly started outside this page.\n\nDataset CSV (25 columns, UTF-8, at most 10 MB)\n\nupload\n\nUpload\n\n200MB per file • CSV\n\nValidate and stage dataset\n\nDataset versions\n\nOne row per validated upload, newest first. Exactly one row can be active; the database enforces it with a partial unique index as well as inside the activation transaction.\n\nActivate a version\n\nActivation moves the pointer a future retraining run would read. It does not train, does not reload the model and does not change the artifact — the panel at the top of this page will then show the two datasets as different, which is the truth.\n\nActivate dataset #1 · a0f0ab49d632…\n\nRejection log\n\nEvery refused upload with the reason the administrator saw. The reason names the column and how many rows offend, never a cell value, and nothing is repaired or partially loaded.\n\nStaged copies are kept under the ",
+      "after_second_upload": "Skip to main content\n\nAI Hub Campus\n\nHome\n\nPredict default risk\n\nMy prediction history\n\nUser management\n\nDataset manager\n\nAI Hub Campus\nCredit Card Default Risk Prediction\n\nAcademic decision-support demonstration · historical Taiwanese credit-card data (2005) · 23 account attributes · not a real credit decision\n\nDataset manager\n\nValidated uploads are staged with a checksum and an aggregate preview; nothing is retrained by an upload, and the deployed model keeps the dataset it was built on until an explicit rebuild.\n\nDeployed model dataset vs active dataset\n\nUploading does not retrain anything. The model answering predictions keeps the artifact and the dataset recorded in models/model_manifest.json until an operator runs a rebuild and the artifact is verified again.\n\nIn service — the deployed model\n\nThe artifact on disk still hashes to the value its manifest records, so the model in service is the model that was evaluated.\n\nPointer — the active dataset version\n⚠️\n\nThe active dataset version is not the dataset that built the deployed model. It would be used only by a future retraining run; predictions in service still come from the deployed artifact. This is the expected state after an activation.\n\nActive dataset\n\nrecords\n\n400\n\nclass 0 · no default\n\n306\n\nclass 1 · default\n\n94\n\nColumn count 25. Class 1 share 23.50%. This imbalance is why the model is judged on F1 and recall, not accuracy alone.\n\nkeyboard_arrow_right\n\nThe 25-column schema this application accepts\n\nStage a new dataset version\n\nA staged dataset is validated metadata plus a quarantined copy of its bytes. It is not used for predictions and it does not become the training data until an administrator activates it and a retraining run is explicitly started outside this page.\n\nDataset CSV (25 columns, UTF-8, at most 10 MB)\n\nstage_second.csv\n47.1KB\nadd icon\nadd\n\nValidate and stage dataset\n\nStaged as dataset version #3. It is validated and quarantined under a generated filename; it is not active and the deployed "
+    },
+    "overflow": {
+      "initial": {
+        "viewport": 1280,
+        "scrollWidth": 1280,
+        "overflowPx": 0
+      }
+    },
+    "screenshots": [
+      "dataset_desktop_initial.png"
+    ],
+    "checks": {
+      "deployed_panel": true,
+      "deployed_dataset_sha_shown": false,
+      "seed_is_active": true,
+      "honest_panel_on_fresh_db": false,
+      "no_rejections_yet": false,
+      "never_retrains_notice": true,
+      "staged_is_not_deployed_warning": true,
+      "second_staged": true
+    },
+    "secret_sweep": {
+      "adminPassword": 0,
+      "argon2": 0
+    }
+  }
+}
+exit=0
+
+$ docker exec aihubcampus-s9-ui sha256sum /app/models/best_pipeline.joblib
+48ce02563b2aad9fbf9397603c642b0319be617c57fde8e1fd26ec08d518ad7b  /app/models/best_pipeline.joblib
+
+$ docker exec -i aihubcampus-s9-ui python -c '<dataset_versions after the browser run>'
+{'id': 1, 'record_count': 30000, 'class_zero': 23364, 'class_one': 6636, 'is_active': 0, 'status': 'activated'}
+{'id': 2, 'record_count': 400, 'class_zero': 306, 'class_one': 94, 'is_active': 1, 'status': 'activated'}
+{'id': 3, 'record_count': 500, 'class_zero': 404, 'class_one': 96, 'is_active': 0, 'status': 'validated'}
+active rows = 1
+rejection: {'error_codes': 'missing_column', 'reason': 'missing required column(s): PAY_6; the file must contain all 25 documented columns (see docs/data_dictionary.md)'}

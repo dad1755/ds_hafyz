@@ -1,0 +1,22 @@
+$ docker build -t aihubcampus-web:local -t aihubcampus-web:s9 .
+#17 unpacking to docker.io/library/aihubcampus-web:local 2.6s done
+#17 naming to docker.io/library/aihubcampus-web:s9 0.1s done
+#17 unpacking to docker.io/library/aihubcampus-web:s9 0.1s done
+#17 DONE 232.1s
+
+$ docker images | grep aihubcampus-web
+aihubcampus-web:local 6908282833ac 969MB 55 minutes ago
+aihubcampus-web:s9 6908282833ac 969MB 55 minutes ago
+aihubcampus-web:s8 477d237fd8f5 969MB 5 hours ago
+aihubcampus-web:s7 52f4a58879b9 969MB 6 hours ago
+
+$ docker compose config | grep -E "APP_|UCI_Credit|target: /app"   # no host ports; seed read-only; quarantine on the volume
+      APP_DB_PATH: /app/storage/aihubcampus.db
+      APP_PORT: "2026"
+      APP_QUARANTINE_DIR: /app/storage/quarantine
+        target: /app/storage
+        source: /home/ec-user/non_prod/hafyz_ds/data/UCI_Credit_Card.csv
+        target: /app/data/UCI_Credit_Card.csv
+
+$ docker compose config | grep -c "published"   # host port publications
+0

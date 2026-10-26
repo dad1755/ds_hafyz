@@ -1,0 +1,70 @@
+database:  /tmp/s9-probe-9w_bohn6/probe.db
+quarantine: /tmp/s9-probe-9w_bohn6/quarantine
+seed file: /app/data/UCI_Credit_Card.csv (2,862,995 bytes)
+migrations applied: ['0001_core_tables', '0002_auth_sessions', '0003_dataset_staging']
+signed in as: probe_admin (password generated in-process, not printed)
+
+==============================================================================
+A. the seed CSV: validate, stage, and what the preview exposes
+==============================================================================
+model artifact sha256 before: 48ce02563b2aad9fbf9397603c642b0319be617c57fde8e1fd26ec08d518ad7b
+manifest sha256 before:      5f76cffb68c87f5f4b224999d523b290039a0f4679db44b8d4ce2737e969f2a7
+seed registered as version: 1 | active: True | status: activated | records: 30000 | columns: 25 | class 0: 23364 | class 1: 6636
+stage_upload -> duplicate: True (the seed is already version 1)
+version row: {'id': 1, 'records': 30000, 'columns': 25, 'class_zero': 23364, 'class_one': 6636, 'sha256': 'a0f0ab49d6326671d6cd83be5c88dcf18007025fe9a53ecd699119c871176ca1', 'status': 'activated', 'is_active': True, 'validated_at': '2026-10-26T18:02:09Z'}
+sha256 equals the manifest's dataset sha256: True
+staged a 400-row subset as version 2 | records: 400 | class 0: 306 | class 1: 94 | status: validated | active: False
+quarantined under generated name: 20261026T180209Z-b6edcc52accc.csv
+file exists in quarantine: True
+original filename stored as a label only: first_400_rows.csv
+preview rows (one per column, no records): 25
+  AGE        min=22       max=75        mean=34.76      distinct=42
+  LIMIT_BAL  min=10000    max=630000    mean=166575.0   distinct=49
+  PAY_0      min=-2       max=4         mean=0.07       distinct=7
+preview has a raw-records attribute: False
+
+==============================================================================
+B. two malformed uploads, refused and recorded
+==============================================================================
+
+upload 'missing_pay6.csv' -> DatasetRejected #1
+  codes:  ['missing_column']
+  reason: missing required column(s): PAY_6; the file must contain all 25 documented columns (see docs/data_dictionary.md)
+
+upload 'wrong_target.csv' -> DatasetRejected #2
+  codes:  ['invalid_target_value']
+  reason: column 'default.payment.next.month' has 25 value(s) other than 0 or 1; 1 means default on next month's payment, 0 means no default
+
+rejection log rows:
+  {'id': 2, 'file': 'wrong_target.csv', 'codes': 'invalid_target_value', 'reason': "column 'default.payment.next.month' has 25 value(s) other than 0 or 1; 1 means default on next month's payment, 0 means no default", 'quarantined_copy': '20261026T180210Z-ebc4244d15c0.csv'}
+  {'id': 1, 'file': 'missing_pay6.csv', 'codes': 'missing_column', 'reason': 'missing required column(s): PAY_6; the file must contain all 25 documented columns (see docs/data_dictionary.md)', 'quarantined_copy': '20261026T180210Z-c0c72d8b3ac0.csv'}
+dataset_versions still holds only validated uploads: ['validated', 'activated']
+quarantine directory contents after rejections: ['20261026T180209Z-b6edcc52accc.csv']
+audit actions so far: ['login.succeeded', 'session.created', 'dataset.seeded', 'dataset.staged', 'dataset.rejected', 'dataset.rejected']
+
+==============================================================================
+C. activation, then a restart: pointer persists, artifact does not move
+==============================================================================
+activated version: 2 | is_active: True | activated_at: 2026-10-26T18:02:10Z | status: activated
+page verdict — active dataset built the deployed model: False
+deployed model dataset sha256: a0f0ab49d6326671d6cd83be5c88dcf18007025fe9a53ecd699119c871176ca1
+artifact sha256 recorded in manifest: 48ce02563b2aad9fbf9397603c642b0319be617c57fde8e1fd26ec08d518ad7b
+artifact sha256 on disk now:         48ce02563b2aad9fbf9397603c642b0319be617c57fde8e1fd26ec08d518ad7b
+
+-- restart: new connection to the same file --
+active version after restart: 2 | sha256: 530b7202f526ce09c5b0aa689c9667aa23d4dcc25948912d68631791c4efd04a | status: activated
+rows with is_active = 1: 1
+versions on disk: [(2, 'activated', True), (1, 'activated', False)]
+pointer after a second startup: 2 (unchanged)
+
+model artifact sha256 after:  48ce02563b2aad9fbf9397603c642b0319be617c57fde8e1fd26ec08d518ad7b
+manifest sha256 after:        5f76cffb68c87f5f4b224999d523b290039a0f4679db44b8d4ce2737e969f2a7
+artifact identical before/after upload+activation: True
+manifest identical before/after upload+activation: True
+
+audit rows for dataset actions:
+  {'action': 'dataset.seeded', 'actor_user_id': None, 'entity_type': 'dataset_version', 'entity_id': '1', 'non_sensitive_details': '{"is_active":true,"record_count":30000,"retraining_triggered":false,"sha256":"a0f0ab49d6326671d6cd83be5c88dcf18007025fe9a53ecd699119c871176ca1"}'}
+  {'action': 'dataset.staged', 'actor_user_id': 1, 'entity_type': 'dataset_version', 'entity_id': '2', 'non_sensitive_details': '{"class_one":94,"class_zero":306,"model_replaced":false,"quarantined_filename":"20261026T180209Z-b6edcc52accc.csv","record_count":400,"retraining_triggered":false,"sha256":"530b7202f526ce09c5b0aa689c9667aa23d4dcc25948912d68631791c4efd04a"}'}
+  {'action': 'dataset.rejected', 'actor_user_id': 1, 'entity_type': 'dataset_rejection', 'entity_id': '1', 'non_sensitive_details': '{"codes":"missing_column","model_replaced":false,"quarantined_filename":"20261026T180210Z-c0c72d8b3ac0.csv","retraining_triggered":false,"size_bytes":3049}'}
+  {'action': 'dataset.rejected', 'actor_user_id': 1, 'entity_type': 'dataset_rejection', 'entity_id': '2', 'non_sensitive_details': '{"codes":"invalid_target_value","model_replaced":false,"quarantined_filename":"20261026T180210Z-ebc4244d15c0.csv","retraining_triggered":false,"size_bytes":3116}'}
+  {'action': 'dataset.activated', 'actor_user_id': 1, 'entity_type': 'dataset_version', 'entity_id': '2', 'non_sensitive_details': '{"model_replaced":false,"previous_dataset_id":1,"previous_sha256":"a0f0ab49d6326671d6cd83be5c88dcf18007025fe9a53ecd699119c871176ca1","retraining_triggered":false,"sha256":"530b7202f526ce09c5b0aa689c9667aa23d4dcc25948912d68631791c4efd04a"}'}

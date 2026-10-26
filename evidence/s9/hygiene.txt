@@ -1,0 +1,23 @@
+$ docker run --rm -i -v "$PWD:/app:z" -w /app aihubcampus-web:s9 python - <<PY
+src/data_manager.py
+  imports: __future__, dataclasses, datetime, hashlib, io, json, ml.schema, pandas, pathlib, sqlite3, src, src.db, src.security, typing
+  methods called: BytesIO, ValidationReport, __init__, append, as_dict, dropna, execute, fail, fetchall, fetchone, get, hexdigest, ingest_upload, join, loads, max, mean, min, nunique, read_bytes, read_csv, read_text, require_role, sanitize_filename, sha256, sum, to_numeric, unlink, update, validate_csv_bytes
+  calls .fit(...): False
+  calls .predict(...): False
+  calls .dump(...): False
+  calls .load(...): False
+  calls .to_pickle(...): False
+src/pages_datasets.py
+  imports: __future__, pathlib, src, src.config, streamlit
+  methods called: activate_version, active_version, as_posix, button, caption, columns, comparison, container, dataframe, error, expander, file_uploader, get, getvalue, info, items, join, list_rejections, list_versions, markdown, metric, pop, require_role, rerun, schema_rows, stage_upload, success, warning
+  calls .fit(...): False
+  calls .predict(...): False
+  calls .dump(...): False
+  calls .load(...): False
+  calls .to_pickle(...): False
+
+$ python3 scripts/check_no_secrets.py   # on the host, where the operator's .env is readable
+scanned 203 file(s); 4 secret value(s) loaded from operator env
+
+PASS — no operator secret and no credential pattern in any tracked file.
+exit=0

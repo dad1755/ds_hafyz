@@ -1,0 +1,12 @@
+$ docker run --rm --network aihubcampus_internal -v "$PWD/evidence/s9:/work:z" -w /work -e NODE_PATH=/pw/node_modules mcr.microsoft.com/playwright:v1.55.0-noble node visit_deploy.js web 2026
+{
+  "url": "http://web:2026/",
+  "title": "AI Hub Campus — Credit Card Default Risk Prediction",
+  "firstLines": [
+    "Skip to main content",
+    "AI Hub Campus",
+    "Credit Card Default Risk Prediction",
+    "Academic decision-support demonstration · historical Taiwanese credit-card data (2005) · 23 account attributes · not a real credit decision"
+  ]
+}
+exit=0

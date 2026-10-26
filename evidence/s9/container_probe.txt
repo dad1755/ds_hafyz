@@ -1,0 +1,55 @@
+$ docker ps --filter label=com.docker.compose.project=aihubcampus
+aihubcampus-web-1	aihubcampus-web:local	Up 51 minutes (healthy)
+
+$ docker inspect aihubcampus-web-1 --format 'health={{.State.Health.Status}} image={{.Image}}'
+health=healthy image=sha256:6908282833aca5e0653cee853e23f2657a14e6ca4b995c42e3a52650e284085d
+
+$ docker exec aihubcampus-web-1 ls /app/src
+__init__.py
+__pycache__
+accounts.py
+audit.py
+config.py
+data_manager.py
+db.py
+inference.py
+pages_admin.py
+pages_datasets.py
+pages_history.py
+pages_login.py
+pages_prediction.py
+predictions.py
+recommendations.py
+security.py
+validation.py
+
+$ sha256sum src/data_manager.py src/pages_datasets.py   # the tree on the host
+e4af6503906325a64b7a36324fd514d9402c47dc3746bed9906e718bfbbbe8f3  src/data_manager.py
+a02e15f3705e2ed0e6de6ab404eb097def66528f825da962a82d72daded523ee  src/pages_datasets.py
+
+$ docker exec aihubcampus-web-1 sha256sum /app/src/data_manager.py /app/src/pages_datasets.py
+e4af6503906325a64b7a36324fd514d9402c47dc3746bed9906e718bfbbbe8f3  /app/src/data_manager.py
+a02e15f3705e2ed0e6de6ab404eb097def66528f825da962a82d72daded523ee  /app/src/pages_datasets.py
+
+$ docker exec aihubcampus-web-1 python -c '<print dataset_versions>'
+dataset_versions:
+{'id': 1, 'original_filename_safe': 'UCI_Credit_Card.csv', 'sha256': 'a0f0ab49d6326671d6cd83be5c88dcf18007025fe9a53ecd699119c871176ca1', 'record_count': 30000, 'column_count': 25, 'class_zero': 23364, 'class_one': 6636, 'is_active': 1, 'status': 'activated', 'quarantined_filename': None}
+active_rows = 1
+dataset_rejections rows = 0
+migrations: ['0001_core_tables', '0002_auth_sessions', '0003_dataset_staging']
+
+$ docker exec aihubcampus-web-1 python -c '<model manifest dataset sha>'
+manifest dataset sha256 = a0f0ab49d6326671d6cd83be5c88dcf18007025fe9a53ecd699119c871176ca1
+manifest artifact sha256 = 48ce02563b2aad9fbf9397603c642b0319be617c57fde8e1fd26ec08d518ad7b
+manifest model version  = aihubcampus-default-risk-1+48ce02563b2a
+
+$ docker exec aihubcampus-web-1 python -c '<quarantine writable>'
+wrote and read back: probe at /app/storage/quarantine/s9-probe.csv
+removed: True
+seed read-only mount present: True
+
+$ docker exec aihubcampus-web-1 python -c '<health endpoint>'
+ok
+
+$ docker compose config   # published host ports (expect none)
+no published host ports
