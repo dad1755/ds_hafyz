@@ -71,6 +71,9 @@ Produced by `python3 ml/inspect_dataset.py` (full output: `evidence/s0/inspect_d
 ├── src/pages_login.py         # sign-in and forced password change (S7)
 ├── src/pages_prediction.py    # the 23-input form, validation, result panel (S7)
 ├── src/pages_history.py       # the signed-in account's own prediction history (S7)
+├── src/pages_evaluation.py    # admin model evaluation and insight panels (S10)
+├── src/evaluation.py          # reads metrics.json, the manifest and the EDA summary (S10)
+├── src/charts.py              # accessible figures drawn from the record at render time (S10)
 ├── scripts/init_admin.py      # one-time operator seeding from the environment (S6)
 ├── ml/schema.py               # the 25-column / 23-feature contract, single source (S2)
 ├── ml/generate_eda.py         # six EDA figures + descriptive summary from the CSV (S3)
@@ -87,18 +90,18 @@ Produced by `python3 ml/inspect_dataset.py` (full output: `evidence/s0/inspect_d
 ├── data/UCI_Credit_Card.csv   # immutable benchmark seed
 ├── docs/                      # architecture, data dictionary, source of truth, rubric matrix,
 │                              #   report evidence, preprocessing + inference contracts
-├── evidence/s0/ … evidence/s9/ # captured command output
+├── evidence/s0/ … evidence/s10/ # captured command output
 ├── ml/                        # schema.py, inspect_dataset.py, verify_draft_claims.py
 ├── tests/                     # pytest: settings (S1), schema/validation (S2), model contract
 │                              #   + prediction (S5), security + app auth (S6), prediction log
 │                              #   + prediction UI (S7), admin user management (S8),
-│                              #   dataset manager staged-vs-deployed (S9)
+│                              #   dataset manager staged-vs-deployed (S9), evaluation
+│                              #   panels vs metrics.json (S10)
 └── models/                    # best_pipeline.joblib, metrics.json, model_manifest.json (S4/S5),
                                #   figures/ and eda/ committed evidence (S3/S4), candidates/
 ```
 
 Modules are added when the sprint that implements them runs — no dead placeholder files.
-The evaluation panels arrive with S10.
 
 ## Sprint 0 commands (run today, no dependencies)
 
@@ -424,10 +427,68 @@ docker run --rm -v "$PWD:/app:z" -w /app aihubcampus-web:s9 python -m pytest tes
 | `docs/preprocessing_contract.md` | The split, transform and artifact contract S4 implements (S3) |
 | `docs/inference_contract.md` | The artifact gate, the prediction service, the risk bands and the wording every result must carry (S5) |
 
+## Sprint 10 — admin model evaluation and insight panels
+
+```bash
+# the trace: every value the page shows, diffed against models/metrics.json
+docker run --rm -e PYTHONPATH=/app -v "$PWD:/app:z" -w /app aihubcampus-web:s10 \
+    python evidence/s10/trace_metrics.py
+
+# no v3 draft statistic is hard-coded in app.py or src/
+bash evidence/s10/draft_grep.sh
+
+# deploy, restart, and render the page inside the restarted container
+bash evidence/s10/restart.sh
+
+# the gate tests (15 of them) and the whole suite
+docker run --rm -e PYTHONPATH=/app -v "$PWD:/app:z" -w /app aihubcampus-web:s10 \
+    python -m pytest tests/test_evaluation.py -q
+docker run --rm -e PYTHONPATH=/app -v "$PWD:/app:z" -w /app aihubcampus-web:s10 \
+    python -m pytest tests -q
+```
+
+- **The page owns no statistic.** `src/pages_evaluation.py` renders only what
+  `src/evaluation.py` reads from `models/metrics.json`, `models/model_manifest.json` and
+  `models/eda/summary.json`; `src/charts.py` draws its figures from those same rows. The proof
+  is `evidence/s10/trace_metrics.txt`: two independent renderings of the same facts, diffed —
+  `0 mismatches`. The stronger test rewrites a *copy* of `metrics.json` and re-renders the page,
+  which then shows the sentinel values.
+- **Three models beside their baseline.** One row per candidate plus the constant-answer
+  baseline, with the cross-validated mean/std and the single held-out test score, the rank, the
+  estimator, the threshold and which model is selected. The caption says plainly that a
+  difference smaller than the CV spread is not a real difference.
+- **Three confusion matrices, and a detail view.** Each 2×2 carries TN/FP/FN/TP with its count
+  and its share of the actual class, on the row and column the axis labels name. A second table
+  repeats the counts with the record's own arithmetic check (`max_abs_delta` against the
+  metrics) so a reader can see the matrix and the metrics agree.
+- **Six EDA figures, read from the image.** The PNGs `ml/generate_eda.py` wrote, each captioned
+  with numbers quoted from `models/eda/summary.json`; the correlation heatmap also lists its
+  strongest pairs as numbers, because colour alone cannot carry them. `.dockerignore` used to
+  exclude `models/eda/` and `models/figures/`, so this sprint ships them.
+- **Feature importance from the artifact.** The deployed tree's 23 impurity-based importances,
+  computed from the checksum-verified pipeline; if the selected model were not a tree the page
+  says so and names the documented alternative instead of drawing an empty chart.
+- **Metadata and limits in plain language.** Selected and deployed model, version, training
+  timestamp, dataset SHA-256 and row/class counts, package versions, threshold, evaluation
+  method, the artifact digest recomputed on every render — then the low-recall limitation
+  (`missed 855 of the 1,327 accounts that defaulted`, `recall 0.356`), the uncalibrated
+  probability and the "not a credit decision" statement, all read from the record.
+- **Accessible by construction.** Okabe–Ito palette, a different hatch per model and per
+  correct/error cell, every mark labelled with its own value, dark ink on pale fills, and alt
+  text that carries the caption. Zero horizontal overflow at 375 px.
+- **A user cannot reach it.** No sidebar entry for the role, and `pages_evaluation.render`
+  calls `security.require_role` itself: a forced call renders a refusal, returns no dataframe
+  and no figure, and writes an audited `auth.denied` row naming `pages_evaluation.render`.
+- Evidence: `evidence/s10/` — `trace_metrics.txt` (the diff-style comparison, 0 mismatches),
+  `pytest_s10.txt` (15 tests), `pytest_all.txt` (262 tests), `restart.txt` (recreated
+  container, `healthy`, ten figure artifacts listed inside it, then `11 figures, 6 tables, 0
+  errors` rendered there), `draft_grep.txt` (20 draft statistics, none in `app.py` or `src/`),
+  `browser_check.txt` with `evaluation_375px_top.png`, `_confusion.png`, `_metadata.png`, the
+  desktop trio and `evaluation_user_nav.png`, and `build.txt`.
+
 ## Next sprint
 
-**S10** — administrator model evaluation and insight panels: model comparison, metrics, the three
-confusion matrices and the six EDA plots read from the committed artifacts (not hard-coded
-numbers), with an accessible colour scheme and a TP/TN/FP/FN detail view. The artifacts and
-`models/metrics.json` already exist; S10 adds the panels and the tests that the page quotes them
-exactly.
+**S11** — the documented test matrix: `docs/test_matrix.md` with expected, observed, timestamp
+and evidence path for the twelve core tests (T01–T12), plus the expanded security and
+integration cases (CSRF/websocket behaviour, role enforcement, file-size limit, password
+storage, no secrets in logs, artifact verification, upload quarantine).

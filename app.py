@@ -1,15 +1,16 @@
 """AI Hub Campus — Credit Card Default Risk Prediction.
 
-Sprint 9 entry point. The page authenticates for real (S6), serves the prediction vertical
-slice (S7), carries the administrator's user management page (S8) and now the dataset manager
-(S9).
+Sprint 10 entry point. The page authenticates for real (S6), serves the prediction vertical
+slice (S7), carries the administrator's user management page (S8), the dataset manager (S9)
+and now the model evaluation and insight panels (S10).
 
 Dispatch is deliberately boring: resolve the session from the database on every rerun, then
 render exactly one of sign-in, forced password change, or a signed-in page. Each page module
 re-checks the session itself, so the branch here is presentation rather than the control.
 
-What this page does *not* do: show the model evaluation (S10). That section is named on screen
-so the demo is honest about the build it is running.
+The evaluation page reads ``models/metrics.json``, ``models/model_manifest.json`` and the
+figure artifacts at render time; it holds no statistic of its own, so it cannot drift from the
+record that ``ml/evaluate.py`` wrote.
 
 Security rules that shape the code below:
 
@@ -31,6 +32,7 @@ from src import (
     db,
     pages_admin,
     pages_datasets,
+    pages_evaluation,
     pages_history,
     pages_login,
     pages_prediction,
@@ -109,12 +111,14 @@ def _render_home(conn, principal, token: str, service) -> None:
         "result and your own prediction history"
         + (
             "; administrator user management — create, edit, reset a password, deactivate, "
-            "and the dataset manager — staged uploads with validation, class balance and an "
-            "explicit activation that never retrains the live model.\n"
+            "the dataset manager — staged uploads with validation, class balance and an "
+            "explicit activation that never retrains the live model — and the model evaluation "
+            "panels: the three-model comparison, the three confusion matrices, the six EDA "
+            "figures, feature importance and the model's metadata and limits.\n"
             if principal.role == "admin"
             else ".\n"
         )
-        + "- **Sprint 10** — model evaluation and EDA panels."
+        + "- **Sprint 11** — the documented test matrix and its recorded results."
     )
 
     st.markdown("**How to use it**")
@@ -127,7 +131,11 @@ def _render_home(conn, principal, token: str, service) -> None:
             "deactivates an account; every action is audited. **Dataset manager** shows which "
             "dataset built the model in service, stages a validated upload with an aggregate "
             "preview, and activates a version explicitly — an upload never retrains or "
-            "replaces the live model."
+            "replaces the live model. **Model evaluation** shows what the deployed model "
+            "actually did on the held-out rows: the three-candidate comparison read from "
+            "`metrics.json`, one confusion matrix per candidate with its TN/FP/FN/TP counts, the "
+            "six EDA figures, the tree's feature importances, and the metadata and limitations "
+            "in plain language."
         )
     else:
         st.markdown(
@@ -206,12 +214,13 @@ def _render_home(conn, principal, token: str, service) -> None:
 def _navigation(principal) -> str:
     """Sidebar navigation. Not a security boundary — every page guards itself.
 
-    The administrator's extra entry is a convenience: ``pages_admin.render`` calls
-    ``require_role`` itself, so a user who forced this option would get a refusal, not the page.
+    The administrator's extra entries are a convenience: ``pages_admin.render``,
+    ``pages_datasets.render`` and ``pages_evaluation.render`` each call ``require_role``
+    themselves, so a user who forced one of these options would get a refusal, not the page.
     """
     options = ["Home", "Predict default risk", "My prediction history"]
     if principal.role == "admin":
-        options.extend(["User management", "Dataset manager"])
+        options.extend(["User management", "Dataset manager", "Model evaluation"])
     with st.sidebar:
         st.markdown("**AI Hub Campus**")
         return st.radio(
@@ -259,6 +268,8 @@ try:
             pages_admin.render(_connection, _token)
         elif _section == "Dataset manager":
             pages_datasets.render(_connection, _token)
+        elif _section == "Model evaluation":
+            pages_evaluation.render(_connection, _token)
         else:
             _render_home(_connection, _principal, _token, _service)
 finally:

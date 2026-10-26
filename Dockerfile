@@ -42,6 +42,12 @@ COPY ml/ ./ml/
 # as `app`, so the runtime can read them and cannot rewrite them. src/inference.py verifies
 # the checksum against the manifest before it unpickles anything.
 COPY models/best_pipeline.joblib models/model_manifest.json models/metrics.json ./models/
+# The generated figures the admin evaluation page (S10) shows: the six EDA plots and the
+# aggregate record their captions quote, plus the confusion-matrix and importance PNGs that
+# ml/evaluate.py wrote. Read-only artifacts, not redrawn at runtime, so the page cannot show a
+# figure that disagrees with models/metrics.json.
+COPY models/eda/ ./models/eda/
+COPY models/figures/ ./models/figures/
 
 # Writable storage for the SQLite database (mounted as a named volume in compose).
 RUN mkdir -p /app/storage && chown -R app:app /app/storage
