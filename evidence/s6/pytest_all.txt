@@ -1,0 +1,9 @@
+# S6 — the whole suite inside the application image, with the repository mounted read-write.
+# Produced at commit c555881 (git status --porcelain empty at the time of the run).
+
+$ docker run --rm --network none -v "$PWD":/app -w /app -u 1001:1001 aihubcampus-web:local python -m pytest tests -q
+........................................................................ [ 39%]
+........................................................................ [ 79%]
+......................................                                   [100%]
+182 passed in 154.00s (0:02:34)
+exit=0

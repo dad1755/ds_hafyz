@@ -1,0 +1,34 @@
+# S6 — the running container is built from the committed tree: every application file in the
+# image has the same SHA-256 as the file at commit c555881.
+
+$ docker compose exec -T web sha256sum app.py src/*.py scripts/init_admin.py
+5d74af43b8ce762ab2f08f42155317cb8db9ea73ca3e632a8fefcc3da6096143  app.py
+0bf09db9adbf884db93e56f6a336ea862c74f8385aa291368ac2c594f8a98f98  src/accounts.py
+b3eb4bae0393fbf9826f2fc6a81ae7c703ba01e3776081e7b68689046d9fa33e  src/audit.py
+eb5ff0cf11adbd2628edad164e901c421be4978e67f8c99627110ed09083e223  src/config.py
+e0e1d9cb1bf1c95b8a6d43dc12232a7377adea624bd926f46a4b93d1f5671e0e  src/db.py
+f2e5a41396a003a64dd4c0a55130f594d41bbc26e6269a63eeb09b095ae75210  src/inference.py
+99a30d518496ec97f0b4d997802f5d518977b347f9d7bc02bef6e72655dcf3ea  src/__init__.py
+10371d4cfeeb10faceffbccf88af2b93c8544ae6caa18152e6c630dfefaf833f  src/recommendations.py
+e9a2f2613af6e20ca5fbebb839735085e1e2b8f5342d5a9dcc073899e0f1d1ec  src/security.py
+45b815d28138998b303b2922b7235f6a99a1bdd8d11289a3a91863106062d4f6  src/validation.py
+1993750e85ab78222933d4c4019d829280b1a3b3b3fd609b6dc195af9f31a40b  scripts/init_admin.py
+
+$ sha256sum app.py src/*.py scripts/init_admin.py   # the working tree, clean at c555881
+5d74af43b8ce762ab2f08f42155317cb8db9ea73ca3e632a8fefcc3da6096143  app.py
+0bf09db9adbf884db93e56f6a336ea862c74f8385aa291368ac2c594f8a98f98  src/accounts.py
+b3eb4bae0393fbf9826f2fc6a81ae7c703ba01e3776081e7b68689046d9fa33e  src/audit.py
+eb5ff0cf11adbd2628edad164e901c421be4978e67f8c99627110ed09083e223  src/config.py
+e0e1d9cb1bf1c95b8a6d43dc12232a7377adea624bd926f46a4b93d1f5671e0e  src/db.py
+f2e5a41396a003a64dd4c0a55130f594d41bbc26e6269a63eeb09b095ae75210  src/inference.py
+99a30d518496ec97f0b4d997802f5d518977b347f9d7bc02bef6e72655dcf3ea  src/__init__.py
+10371d4cfeeb10faceffbccf88af2b93c8544ae6caa18152e6c630dfefaf833f  src/recommendations.py
+e9a2f2613af6e20ca5fbebb839735085e1e2b8f5342d5a9dcc073899e0f1d1ec  src/security.py
+45b815d28138998b303b2922b7235f6a99a1bdd8d11289a3a91863106062d4f6  src/validation.py
+1993750e85ab78222933d4c4019d829280b1a3b3b3fd609b6dc195af9f31a40b  scripts/init_admin.py
+
+$ diff <(docker compose exec -T web sha256sum app.py src/*.py scripts/init_admin.py) <(sha256sum app.py src/*.py scripts/init_admin.py)
+(identical: the image runs the committed code)
+
+$ docker inspect --format "{{.State.Health.Status}}" aihubcampus-web-1
+healthy

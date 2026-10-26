@@ -1,0 +1,26 @@
+# S6 — clean-checkout check: extract the code commit with no .git, no .env and no untracked
+# files, then run the S6 gate there. Nothing is copied in from the working tree, so this
+# proves the sprint does not depend on local state.
+# Produced at commit c555881.
+
+$ docker compose exec -T web sh -c "rm -rf /tmp/s6clean && mkdir -p /tmp/s6clean"
+
+$ git archive c555881 | docker compose exec -T web tar -x -C /tmp/s6clean
+exit=0
+
+$ docker compose exec -T web sh -c "cd /tmp/s6clean && ls -a | head -8 && (test -d .git && echo HAS_GIT || echo NO_GIT) && (test -e .env && echo HAS_ENV || echo NO_ENV)"
+.
+..
+.dockerignore
+.env.cloudflared.example
+.env.example
+.gitignore
+.streamlit
+Credit_Card_Default_Prediction_Project-v3.docx
+NO_GIT
+NO_ENV
+
+$ docker compose exec -T -w /tmp/s6clean web python -m pytest tests/test_security.py tests/test_app_auth.py -q -p no:cacheprovider
+.......................................................                  [100%]
+55 passed in 67.81s (0:01:07)
+exit=0

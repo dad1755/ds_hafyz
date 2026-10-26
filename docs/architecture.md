@@ -509,7 +509,8 @@ authenticated) is deleted, because the property it asserted no longer holds.
 | Survives a container restart | identical usernames, hash digests and row counts before/after `docker compose restart web` | `restart_persistence.txt` |
 | Gate suite | `tests/test_security.py` + `tests/test_app_auth.py` + the rest: 181 passed in the image | `pytest_all.txt` |
 | Clean checkout | `git archive` of the code commit; the S6 modules pass with no untracked files | `clean_checkout.txt` |
-| Secret hygiene | no operator secret or credential pattern in any tracked file | `check_no_secrets.txt` |
+| Secret hygiene | no operator secret or credential pattern in any tracked file (after redacting two literal passwords quoted in the S1 gate record — see the S6 card) | `check_no_secrets.txt` |
+| The running image is the committed tree | identical SHA-256 for `app.py`, `src/*.py`, `scripts/init_admin.py` | `image_matches_head.txt` |
 
 **Not done in S6, by design.** No prediction page or personal history (S7 — the table exists,
 nothing writes it), no admin user-management screens (S8 — the guarded functions are the API
