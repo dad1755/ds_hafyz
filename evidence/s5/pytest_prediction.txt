@@ -1,0 +1,61 @@
+# S5 gate — the prediction service, the bands, the boundaries and the disclosures.
+# Produced at commit b53b089.
+
+$ python -m pytest tests/test_prediction.py -v
+============================= test session starts ==============================
+platform linux -- Python 3.12.14, pytest-9.1.1, pluggy-1.7.0 -- /usr/local/bin/python
+cachedir: .pytest_cache
+rootdir: /app
+plugins: anyio-4.15.1
+collecting ... collected 47 items
+
+tests/test_prediction.py::test_service_matches_the_direct_pipeline_exactly[input-1] PASSED [  2%]
+tests/test_prediction.py::test_service_matches_the_direct_pipeline_exactly[input-2] PASSED [  4%]
+tests/test_prediction.py::test_service_matches_the_direct_pipeline_exactly[input-3] PASSED [  6%]
+tests/test_prediction.py::test_service_matches_the_direct_pipeline_exactly[input-4] PASSED [  8%]
+tests/test_prediction.py::test_service_matches_the_direct_pipeline_exactly[input-5] PASSED [ 10%]
+tests/test_prediction.py::test_service_matches_the_direct_pipeline_exactly[input-6] PASSED [ 12%]
+tests/test_prediction.py::test_at_least_five_distinct_inputs_are_compared PASSED [ 14%]
+tests/test_prediction.py::test_the_cli_agrees_with_the_direct_pipeline PASSED [ 17%]
+tests/test_prediction.py::test_the_three_documented_cutoffs_belong_to_the_band_above[0.25-watch] PASSED [ 19%]
+tests/test_prediction.py::test_the_three_documented_cutoffs_belong_to_the_band_above[0.5-high] PASSED [ 21%]
+tests/test_prediction.py::test_the_three_documented_cutoffs_belong_to_the_band_above[0.75-critical] PASSED [ 23%]
+tests/test_prediction.py::test_bands_are_continuous_at_every_documented_edge[0.0-low] PASSED [ 25%]
+tests/test_prediction.py::test_bands_are_continuous_at_every_documented_edge[0.2499-low] PASSED [ 27%]
+tests/test_prediction.py::test_bands_are_continuous_at_every_documented_edge[0.25-watch] PASSED [ 29%]
+tests/test_prediction.py::test_bands_are_continuous_at_every_documented_edge[0.4999-watch] PASSED [ 31%]
+tests/test_prediction.py::test_bands_are_continuous_at_every_documented_edge[0.5-high] PASSED [ 34%]
+tests/test_prediction.py::test_bands_are_continuous_at_every_documented_edge[0.7499-high] PASSED [ 36%]
+tests/test_prediction.py::test_bands_are_continuous_at_every_documented_edge[0.75-critical] PASSED [ 38%]
+tests/test_prediction.py::test_bands_are_continuous_at_every_documented_edge[0.9999-critical] PASSED [ 40%]
+tests/test_prediction.py::test_bands_are_continuous_at_every_documented_edge[1.0-critical] PASSED [ 42%]
+tests/test_prediction.py::test_no_probability_falls_between_two_bands PASSED [ 44%]
+tests/test_prediction.py::test_the_top_band_includes_exactly_one PASSED  [ 46%]
+tests/test_prediction.py::test_an_impossible_probability_is_refused[-0.0001] PASSED [ 48%]
+tests/test_prediction.py::test_an_impossible_probability_is_refused[1.0001] PASSED [ 51%]
+tests/test_prediction.py::test_an_impossible_probability_is_refused[nan] PASSED [ 53%]
+tests/test_prediction.py::test_an_impossible_probability_is_refused[inf] PASSED [ 55%]
+tests/test_prediction.py::test_an_impossible_probability_is_refused[-inf] PASSED [ 57%]
+tests/test_prediction.py::test_an_impossible_probability_is_refused[True] PASSED [ 59%]
+tests/test_prediction.py::test_an_impossible_probability_is_refused[0.5] PASSED [ 61%]
+tests/test_prediction.py::test_an_impossible_probability_is_refused[None] PASSED [ 63%]
+tests/test_prediction.py::test_class_threshold_is_exactly_one_half PASSED [ 65%]
+tests/test_prediction.py::test_every_result_path_carries_the_disclosures[0.0-low] PASSED [ 68%]
+tests/test_prediction.py::test_every_result_path_carries_the_disclosures[0.2499-low] PASSED [ 70%]
+tests/test_prediction.py::test_every_result_path_carries_the_disclosures[0.25-watch] PASSED [ 72%]
+tests/test_prediction.py::test_every_result_path_carries_the_disclosures[0.4999-watch] PASSED [ 74%]
+tests/test_prediction.py::test_every_result_path_carries_the_disclosures[0.5-high] PASSED [ 76%]
+tests/test_prediction.py::test_every_result_path_carries_the_disclosures[0.7499-high] PASSED [ 78%]
+tests/test_prediction.py::test_every_result_path_carries_the_disclosures[0.75-critical] PASSED [ 80%]
+tests/test_prediction.py::test_every_result_path_carries_the_disclosures[1.0-critical] PASSED [ 82%]
+tests/test_prediction.py::test_both_classes_use_the_documented_wording PASSED [ 85%]
+tests/test_prediction.py::test_real_service_result_is_a_frozen_record PASSED [ 87%]
+tests/test_prediction.py::test_prediction_never_fits_the_pipeline PASSED [ 89%]
+tests/test_prediction.py::test_prediction_does_not_reload_or_reverify_the_artifact PASSED [ 91%]
+tests/test_prediction.py::test_the_service_is_loaded_once_and_reused PASSED [ 93%]
+tests/test_prediction.py::test_invalid_input_never_reaches_the_model PASSED [ 95%]
+tests/test_prediction.py::test_a_negative_statement_balance_is_accepted PASSED [ 97%]
+tests/test_prediction.py::test_the_service_takes_no_path_from_a_request PASSED [100%]
+
+======================== 47 passed in 69.23s (0:01:09) =========================
+exit=0

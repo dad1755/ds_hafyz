@@ -1,0 +1,8 @@
+# S5 — the whole suite, inside the application image with the repository mounted.
+# Produced at commit b53b089.
+
+$ python -m pytest tests -q
+........................................................................ [ 55%]
+..........................................................               [100%]
+130 passed in 91.37s (0:01:31)
+exit=0

@@ -1,0 +1,31 @@
+# S5 — the four documented risk bands: the cutoffs 0.25 / 0.50 / 0.75 and a gaplessness sweep.
+# Produced at commit b53b089.
+
+$ python evidence/s5/boundary_demo.py
+# the bands as the service applies them
+band      lower (incl)  upper       upper inclusive  advice
+Low       0.00          0.25        False            Continue routine repayment reminders and periodic review.
+Watch     0.25          0.50        False            Review payment schedule and contact customer proactively with a neutral reminder.
+High      0.50          0.75        False            Offer supportive contact and discuss potential payment arrangements.
+Critical  0.75          1.00        True             Recommend human risk/support specialist review before any action.
+
+cutoffs: (0.25, 0.5, 0.75)
+
+# tier_for() at the documented cutoffs and either side of them
+  tier_for(0.0    ) -> Low
+  tier_for(0.2499 ) -> Low
+  tier_for(0.25   ) -> Watch
+  tier_for(0.4999 ) -> Watch
+  tier_for(0.5    ) -> High
+  tier_for(0.7499 ) -> High
+  tier_for(0.75   ) -> Critical
+  tier_for(0.9999 ) -> Critical
+  tier_for(1.0    ) -> Critical
+
+# gaplessness sweep: every probability in [0, 1] at 0.0001 resolution
+  values checked            : 10,001
+  unclassified (gaps)       : 0
+  matched more than one band: 0
+  skipped a band            : 0
+  RESULT: PASS — continuous and gapless
+exit=0

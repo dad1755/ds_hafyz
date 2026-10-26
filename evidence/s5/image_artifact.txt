@@ -1,0 +1,39 @@
+# S5 — the image ships the three model files read-only and can verify them with no mounts.
+# Produced at commit b53b089. No host directory is mounted in any command below, so everything
+# printed comes from the image itself.
+
+$ docker compose build web
+#9 [10/11] COPY models/best_pipeline.joblib models/model_manifest.json models/metrics.json ./models/
+#17 naming to docker.io/library/aihubcampus-web:local
+#17 naming to docker.io/library/aihubcampus-web:local 0.1s done
+ Image aihubcampus-web:local Built 
+exit=0
+
+$ docker run --rm aihubcampus-web:local sh -c 'id; ls -l /app/models'
+uid=1001(app) gid=1001(app) groups=1001(app)
+total 32
+-rw-r--r--. 1 root root  8187 Oct 26 08:59 best_pipeline.joblib
+-rw-r--r--. 1 root root 15287 Oct 26 08:59 metrics.json
+-rw-r--r--. 1 root root  4475 Oct 26 08:59 model_manifest.json
+
+$ docker run --rm aihubcampus-web:local python -m ml.verify_artifact --models-dir models
+verify_artifact: models
+  [PASS] files_present: model_manifest.json and best_pipeline.joblib are regular files
+  [PASS] manifest_schema: schema_version 1; every required section present
+  [PASS] artifact_checksum: sha256 48ce02563b2aad9f… and 8,187 bytes match the manifest
+  [PASS] artifact_provenance: creation path is ml/train.py → ml/evaluate.py and the file is an uncompressed joblib pickle
+  [PASS] dataset_identity: manifest records the immutable seed sha256 a0f0ab49d6326671…; data/UCI_Credit_Card.csv is not on disk, so the file itself was not re-hashed
+  [PASS] feature_contract: ordered features are ml.schema.FEATURES (23), dropped ['ID', 'default.payment.next.month']
+  [PASS] class_semantics: class labels and caveats are the documented wording; threshold 0.5; positive class 1; version aihubcampus-default-risk-1+48ce02563b2a
+  [PASS] pickle_allowlist: 11 class reference(s), all inside the allowlisted stack (builtins, joblib.numpy_pickle, numpy, numpy._core.multiarray, sklearn.compose._column_transformer, sklearn.pipeline, sklearn.preprocessing._function_transformer, sklearn.tree._classes, sklearn.tree._tree)
+  [PASS] pipeline_schema: a fitted Pipeline(transform=ColumnTransformer, model=estimator) selecting the manifest's 23 features, with predict_proba over classes [0, 1]
+  [PASS] deterministic_self_check: probe row scored 0.166092 twice with the same value; class 0 agrees with threshold 0.5
+  [PASS] metrics_consistency: metrics.json names the same artifact, selected model and threshold
+RESULT: PASS — the artifact is the one trusted code produced and it scores a contract frame deterministically
+
+# The runtime user cannot rewrite the artifact it loaded:
+$ docker run --rm aihubcampus-web:local python -c "open('/app/models/best_pipeline.joblib','ab')"
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+PermissionError: [Errno 13] Permission denied: '/app/models/best_pipeline.joblib'
+exit=1

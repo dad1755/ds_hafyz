@@ -1,0 +1,37 @@
+# S5 — the artifact gate. Produced at commit b53b089, inside the application image with the
+# repository mounted (data/ is needed for the dataset re-hash). Nothing here is hand-written:
+# every line below is command output.
+
+$ git rev-parse HEAD
+b53b0896c0d215214f27cce5b4b32f1694266985
+
+$ python -m ml.verify_artifact --models-dir models
+verify_artifact: models
+  [PASS] files_present: model_manifest.json and best_pipeline.joblib are regular files
+  [PASS] manifest_schema: schema_version 1; every required section present
+  [PASS] artifact_checksum: sha256 48ce02563b2aad9f… and 8,187 bytes match the manifest
+  [PASS] artifact_provenance: creation path is ml/train.py → ml/evaluate.py and the file is an uncompressed joblib pickle
+  [PASS] dataset_identity: data/UCI_Credit_Card.csv hashes to the immutable seed sha256 a0f0ab49d6326671…
+  [PASS] feature_contract: ordered features are ml.schema.FEATURES (23), dropped ['ID', 'default.payment.next.month']
+  [PASS] class_semantics: class labels and caveats are the documented wording; threshold 0.5; positive class 1; version aihubcampus-default-risk-1+48ce02563b2a
+  [PASS] pickle_allowlist: 11 class reference(s), all inside the allowlisted stack (builtins, joblib.numpy_pickle, numpy, numpy._core.multiarray, sklearn.compose._column_transformer, sklearn.pipeline, sklearn.preprocessing._function_transformer, sklearn.tree._classes, sklearn.tree._tree)
+  [PASS] pipeline_schema: a fitted Pipeline(transform=ColumnTransformer, model=estimator) selecting the manifest's 23 features, with predict_proba over classes [0, 1]
+  [PASS] deterministic_self_check: probe row scored 0.166092 twice with the same value; class 0 agrees with threshold 0.5
+  [PASS] metrics_consistency: metrics.json names the same artifact, selected model and threshold
+  recorded:
+    artifact_bytes: 8187
+    artifact_sha256: 48ce02563b2aad9fbf9397603c642b0319be617c57fde8e1fd26ec08d518ad7b
+    model_version: aihubcampus-default-risk-1+48ce02563b2a
+    pickle_references: ['builtins.slice', 'joblib.numpy_pickle.NumpyArrayWrapper', 'numpy._core.multiarray._reconstruct', 'numpy._core.multiarray.scalar', 'numpy.dtype', 'numpy.ndarray', 'sklearn.compose._column_transformer.ColumnTransformer', 'sklearn.pipeline.Pipeline', 'sklearn.preprocessing._function_transformer.FunctionTransformer', 'sklearn.tree._classes.DecisionTreeClassifier', 'sklearn.tree._tree.Tree']
+RESULT: PASS — the artifact is the one trusted code produced and it scores a contract frame deterministically
+exit=0
+
+# The same check twice, hashed: the gate is deterministic and writes nothing.
+$ python -m ml.verify_artifact --models-dir models --json | sha256sum     (run 1)
+3d96adb09f61155206f75af1f51a9965321fe767fe18be1579380fc0efa2864e  -
+$ python -m ml.verify_artifact --models-dir models --json | sha256sum     (run 2)
+3d96adb09f61155206f75af1f51a9965321fe767fe18be1579380fc0efa2864e  -
+
+$ sha256sum models/best_pipeline.joblib models/model_manifest.json
+48ce02563b2aad9fbf9397603c642b0319be617c57fde8e1fd26ec08d518ad7b  models/best_pipeline.joblib
+5f76cffb68c87f5f4b224999d523b290039a0f4679db44b8d4ce2737e969f2a7  models/model_manifest.json

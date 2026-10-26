@@ -1,0 +1,29 @@
+# S5 — the application loads the verified pipeline. The S1 shell calls load_service() at
+# import time and reports the version it loaded, so a rendered page proves the load.
+# Produced at commit b53b089.
+
+$ docker run --rm aihubcampus-web:local python -c "from src.inference import load_service; ..."
+model_version: aihubcampus-default-risk-1+48ce02563b2a
+artifact sha256: 48ce02563b2aad9fbf9397603c642b0319be617c57fde8e1fd26ec08d518ad7b
+threshold: 0.5
+feature order: LIMIT_BAL,SEX,EDUCATION,MARRIAGE,AGE,PAY_0,PAY_2,PAY_3,PAY_4,PAY_5,PAY_6,BILL_AMT1,BILL_AMT2,BILL_AMT3,BILL_AMT4,BILL_AMT5,BILL_AMT6,PAY_AMT1,PAY_AMT2,PAY_AMT3,PAY_AMT4,PAY_AMT5,PAY_AMT6
+
+$ docker run --rm -v "$PWD/tests:/app/tests:ro,z" aihubcampus-web:local python /probe/apptest.py
+# AppTest renders app.py exactly as Streamlit would; the "Model" row is the value the page
+# printed after verifying and loading the artifact.
+exception: ElementList()
+json elements: 1
+value: {"Environment": "production", "Public domain": "www.aihubcampus.online", "Service port": 2026, "Database path": "/app/storage/aihubcampus.db", "Log retention (days)": 30, "Model": "aihubcampus-default-risk-1+48ce02563b2a (artifact sha256 48ce02563b2a\u2026, verified)"}
+captions: ['Academic decision-support demonstration · historical Taiwane', 'Administrator and user accounts are created in Sprint 6.', 'Non-secret configuration only. Credentials and the tunnel to']
+
+# ... and the S1 shell test still passes against that page:
+$ python -m pytest tests/test_login_shell.py -q
+...                                                                      [100%]
+=============================== warnings summary ===============================
+../usr/local/lib/python3.12/site-packages/_pytest/cacheprovider.py:469
+  /usr/local/lib/python3.12/site-packages/_pytest/cacheprovider.py:469: PytestCacheWarning: could not create cache path /app/.pytest_cache/v/cache/nodeids: [Errno 13] Permission denied: '/app/pytest-cache-files-fmbbfg22'
+    config.cache.set("cache/nodeids", sorted(self.cached_nodeids))
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+3 passed, 1 warning in 11.43s
+exit=0

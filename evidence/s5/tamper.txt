@@ -1,0 +1,32 @@
+# S5 — the gate refusing four untrustworthy artifacts. Each case is the shipped models/
+# directory with exactly one thing changed, so the failure is attributable.
+# Produced at commit b53b089.
+
+$ python evidence/s5/tamper_demo.py
+# (a) one byte of the artifact changed
+$ python -m ml.verify_artifact --models-dir a-flipped-byte
+  [FAIL] artifact_checksum: artifact sha256 fab9337d6151ca5f… / 8,187 bytes does not match the manifest's 48ce02563b2aad9f… / 8187 bytes
+RESULT: FAIL — 1 check(s) failed; do not load this artifact
+exit=1
+
+# (b) the manifest reorders the 23 features
+$ python -m ml.verify_artifact --models-dir b-reordered-features
+  [FAIL] feature_contract: the manifest's ordered features, count or dropped columns disagree with ml.schema (expected the 23 features in ml.schema.FEATURES order, dropping ['ID', 'default.payment.next.month']; got count=23, 23 names, dropped=['ID', 'default.payment.next.month'])
+RESULT: FAIL — 1 check(s) failed; do not load this artifact
+exit=1
+
+# (c) the manifest moves the threshold from 0.5 to 0.7
+$ python -m ml.verify_artifact --models-dir c-moved-threshold
+  [FAIL] class_semantics: threshold is 0.7, expected 0.5
+RESULT: FAIL — 1 check(s) failed; do not load this artifact
+exit=1
+
+# (d) a hostile pickle whose checksum the manifest was rewritten to accept
+$ python -m ml.verify_artifact --models-dir d-hostile-pickle
+  [FAIL] pickle_allowlist: the artifact could not be unpickled safely: artifact references builtins.getattr, which is outside the allowlisted scientific stack — this pickle was not produced by ml/train.py
+RESULT: FAIL — 1 check(s) failed; do not load this artifact
+exit=1
+
+# the pickle's payload would have written executed.txt beside it; the file does not exist: True
+
+exit=0

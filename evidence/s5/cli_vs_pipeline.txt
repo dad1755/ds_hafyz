@@ -1,0 +1,37 @@
+# S5 acceptance — direct joblib load vs the loaded service vs the CLI, on the six synthetic
+# inputs of tests/test_prediction.py. Values are compared with repr(), i.e. exactly.
+# Produced at commit b53b089.
+
+$ python evidence/s5/compare_cli_vs_pipeline.py
+input direct joblib (repr)      service (repr)            CLI (repr)                class d/s/c   identical
+-----------------------------------------------------------------------------------------------------------
+1     0.2578616352201258        0.2578616352201258        0.2578616352201258        0/0/0         yes
+2     0.09102730819245773       0.09102730819245773       0.09102730819245773       0/0/0         yes
+3     0.7195348837209302        0.7195348837209302        0.7195348837209302        1/1/1         yes
+4     0.2578616352201258        0.2578616352201258        0.2578616352201258        0/0/0         yes
+5     0.09102730819245773       0.09102730819245773       0.09102730819245773       0/0/0         yes
+6     0.7142857142857143        0.7142857142857143        0.7142857142857143        1/1/1         yes
+
+all six inputs: class and probability byte-identical across all three paths: True
+exit=0
+
+# One full CLI result, so the disclosures are on the record too.
+$ python -m src.inference --input /probe/req3.json      # input 3 of the six
+{
+  "artifact_sha256": "48ce02563b2aad9fbf9397603c642b0319be617c57fde8e1fd26ec08d518ad7b",
+  "calibration_note": "The probability is uncalibrated \u2014 no calibration test has been run \u2014 so read it as the model's own score, not as a real-world risk percentage.",
+  "class_caveat": "This is not a confirmed delinquency.",
+  "class_label": "Predicted default next month",
+  "disclaimer": "Academic decision-support demonstration built on the public 2005 Taiwanese credit-card dataset. It is not financial advice, not a credit decision and not an automated sanction: no limit is frozen, no application is rejected and nothing is reported about a person without a human decision. Do not enter real customer data.",
+  "false_negative_note": "False negatives are real: on the 6,000 held-out test accounts the model missed 64.4% of the 1,327 that actually defaulted (recall 0.36 at threshold 0.50). A non-default prediction therefore does not rule out default.",
+  "model_version": "aihubcampus-default-risk-1+48ce02563b2a",
+  "predicted_class": 1,
+  "probability": 0.7195348837209302,
+  "probability_label": "Estimated model probability of next-month default",
+  "risk_tier": "high",
+  "threshold": 0.5,
+  "tier_advice": "Offer supportive contact and discuss potential payment arrangements.",
+  "tier_label": "High",
+  "tier_note": "Risk bands are illustrative UI cutoffs on the model's estimated probability. They are not validated banking thresholds and not regulatory credit grades. The band never triggers an automated decision: no limit is frozen, no application is rejected and no customer is sanctioned without a human review."
+}
+exit=0

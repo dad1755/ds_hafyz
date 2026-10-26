@@ -1,0 +1,31 @@
+# S5 — clean-checkout check: extract the code commit with no .git and no untracked files, then
+# run the artifact gate and the two S5 test modules there. Nothing is copied in from the
+# working tree, so this proves the sprint does not depend on local state.
+# Produced at commit b53b089.
+
+$ git archive b53b089 | tar -x -C /tmp/s5clean
+$ ls /tmp/s5clean | head -3
+app.py
+blueprint.md
+compose.yaml
+
+$ python -m ml.verify_artifact --models-dir models      # cwd=/app = the clean tree
+verify_artifact: models
+  [PASS] files_present: model_manifest.json and best_pipeline.joblib are regular files
+  [PASS] manifest_schema: schema_version 1; every required section present
+  [PASS] artifact_checksum: sha256 48ce02563b2aad9f… and 8,187 bytes match the manifest
+  [PASS] artifact_provenance: creation path is ml/train.py → ml/evaluate.py and the file is an uncompressed joblib pickle
+  [PASS] dataset_identity: data/UCI_Credit_Card.csv hashes to the immutable seed sha256 a0f0ab49d6326671…
+  [PASS] feature_contract: ordered features are ml.schema.FEATURES (23), dropped ['ID', 'default.payment.next.month']
+  [PASS] class_semantics: class labels and caveats are the documented wording; threshold 0.5; positive class 1; version aihubcampus-default-risk-1+48ce02563b2a
+  [PASS] pickle_allowlist: 11 class reference(s), all inside the allowlisted stack (builtins, joblib.numpy_pickle, numpy, numpy._core.multiarray, sklearn.compose._column_transformer, sklearn.pipeline, sklearn.preprocessing._function_transformer, sklearn.tree._classes, sklearn.tree._tree)
+  [PASS] pipeline_schema: a fitted Pipeline(transform=ColumnTransformer, model=estimator) selecting the manifest's 23 features, with predict_proba over classes [0, 1]
+  [PASS] deterministic_self_check: probe row scored 0.166092 twice with the same value; class 0 agrees with threshold 0.5
+  [PASS] metrics_consistency: metrics.json names the same artifact, selected model and threshold
+RESULT: PASS — the artifact is the one trusted code produced and it scores a contract frame deterministically
+exit=0
+
+$ python -m pytest tests/test_model.py tests/test_prediction.py -q
+..................................................................       [100%]
+66 passed in 101.19s (0:01:41)
+exit=0
