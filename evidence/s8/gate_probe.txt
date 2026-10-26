@@ -1,0 +1,94 @@
+==============================================================================
+S8 GATE PROBE — independent re-run by the reviewing agent
+==============================================================================
+
+1. A non-admin session calling each privileged function (direct import, no UI)
+  [PASS] list_users refused for a user session — audited as auth.denied
+  [PASS] get_user refused for a user session — audited as auth.denied
+  [PASS] create_user refused for a user session — audited as auth.denied
+  [PASS] set_display_name refused for a user session — audited as auth.denied
+  [PASS] set_role refused for a user session — audited as auth.denied
+  [PASS] set_active refused for a user session — audited as auth.denied
+  [PASS] reset_password refused for a user session — audited as auth.denied
+  [PASS] recent_audit_events refused for a user session — audited as auth.denied
+  [PASS] a denied call changes no account
+
+   Quoted audit_events row for a denied attempt:
+     id                     = 10
+     actor_user_id          = 2
+     action                 = 'auth.denied'
+     entity_type            = 'role'
+     entity_id              = 'user'
+     created_at             = '2026-10-26T15:11:45Z'
+     non_sensitive_details  = '{"attempted":"accounts.recent_audit_events","required":"admin"}'
+
+2. Last enabled administrator cannot be orphaned
+  [PASS] demote last admin — refused: The last enabled administrator cannot be demoted.
+  [PASS] deactivate last admin — refused: The last enabled administrator cannot be deactivated.
+  [PASS] admin still admin and active
+
+3. Admin writes through the service layer
+  [PASS] created account exists
+  [PASS] no delete path on the accounts module
+
+   audit_events written by the admin actions:
+       1 actor=2 login.succeeded            user:2 {"role":"user"}
+       2 actor=2 session.created            session:2 {"expires_at":"2026-10-26T23:11:44Z"}
+       3 actor=2 auth.denied                role:user {"attempted":"accounts.list_users","required":"admin"}
+       4 actor=2 auth.denied                role:user {"attempted":"accounts.get_user","required":"admin"}
+       5 actor=2 auth.denied                role:user {"attempted":"accounts.create_user","required":"admin"}
+       6 actor=2 auth.denied                role:user {"attempted":"accounts.set_display_name","required":"admin"}
+       7 actor=2 auth.denied                role:user {"attempted":"accounts.set_role","required":"admin"}
+       8 actor=2 auth.denied                role:user {"attempted":"accounts.set_active","required":"admin"}
+       9 actor=2 auth.denied                role:user {"attempted":"accounts.reset_password","required":"admin"}
+      10 actor=2 auth.denied                role:user {"attempted":"accounts.recent_audit_events","required":"admin"}
+      11 actor=1 login.succeeded            user:1 {"role":"admin"}
+      12 actor=1 session.created            session:1 {"expires_at":"2026-10-26T23:11:45Z"}
+      13 actor=1 user.created               user:3 {"role":"user","username":"gate_created"}
+      14 actor=1 user.display_name_changed  user:2 {"from":"gate_user","to":"Renamed By Gate","username":"gate_user"}
+      15 actor=1 user.role_changed          user:2 {"from":"user","to":"admin"}
+      16 actor=1 user.role_changed          user:2 {"from":"admin","to":"user"}
+      17 actor=1 password.reset             user:2 {"forced_change":true,"username":"gate_user"}
+      18 actor=1 user.deactivated           user:2 {"username":"gate_user"}
+      19 actor=1 user.activated             user:2 {"username":"gate_user"}
+
+4. Credential sweep
+  [PASS] no '$argon2' prefix in audit_events
+  [PASS] no plaintext password in audit_events
+  [PASS] no stored hash in audit_events
+  [PASS] no plaintext password anywhere in the SQL dump
+  [PASS] hash appears only in users.password_hash — 3 hash literal(s) for 3 account(s)
+
+5. The page's own output, rendered through AppTest against this database
+2026-10-26 15:11:46.759 WARNING streamlit.runtime.scriptrunner_utils.script_run_context: Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+  [PASS] admin page rendered without exception — ElementList()
+  [PASS] accounts table present
+   table columns: ['username', 'display name', 'role', 'active', 'must change password', 'created (UTC)', 'last sign-in (UTC)']
+  [PASS] no hash column
+  [PASS] no '$argon2' in anything on screen
+  [PASS] no plaintext password on screen
+  [PASS] no stored hash on screen
+  [PASS] no delete button on screen
+   rendered characters: 4998
+
+6. Acceptance clause: an admin provisions a user in the page, who then signs in
+  [PASS] the page offers a Create account button
+  [PASS] no exception after creating an account in the page — ElementList()
+  [PASS] the page confirms the account was created
+  [PASS] the typed password is not echoed back
+  [PASS] no hash in the confirmation
+  [PASS] the account created in the page signs in
+  [PASS] the new account starts as a plain user
+  [PASS] the new account cannot reach admin functions — refused
+   user.created row: user.created {"role":"user","username":"gate_ui_user"}
+  [PASS] the creation is audited without a credential
+
+7. Final credential sweep over the finished database
+  [PASS] no plaintext in audit_events
+  [PASS] no plaintext anywhere in the SQL dump
+  [PASS] no hash in audit_events
+  [PASS] each account's hash appears exactly once in the dump — 4 accounts
+  [PASS] every write produced an audit row
+
+==============================================================================
+RESULT: PASS — every gate check passed

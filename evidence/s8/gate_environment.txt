@@ -1,0 +1,32 @@
+# S8 gate — environment state at review time (2026-10-26T15:2xZ), read-only
+
+$ docker ps --filter label=com.docker.compose.project=aihubcampus
+aihubcampus-web-1	aihubcampus-web:local	Up 2 hours (healthy)	2026/tcp
+
+$ docker inspect aihubcampus-web-1 --format "image={{.Image}} started={{.State.StartedAt}} health={{.State.Health.Status}}"
+image=sha256:342546e6f59f3e2bb5b4c8078acb5d523fc9e0f97028014ea4e3fe35d27e4bff started=2026-10-26T13:26:52.554769054Z health=healthy
+
+$ docker exec aihubcampus-web-1 ls /app/src
+__init__.py __pycache__ accounts.py audit.py config.py db.py inference.py pages_history.py pages_login.py pages_prediction.py predictions.py recommendations.py security.py validation.py 
+
+  pages_admin.py present in the running container: NO
+
+$ docker run --rm --entrypoint sh aihubcampus-web:s8 -c "sha256sum /app/src/pages_admin.py /app/src/accounts.py"
+12e67f6205c5adfc295b4eb6bc1980310e3faeb1130a6cce9965410f2ab2d218  /app/src/pages_admin.py
+7d2281af7d2a7476b8cf9517505f383c408c49b21022b4f6f75d33ced9fb084c  /app/src/accounts.py
+$ sha256sum src/pages_admin.py src/accounts.py   # the tree at e79da40
+12e67f6205c5adfc295b4eb6bc1980310e3faeb1130a6cce9965410f2ab2d218  src/pages_admin.py
+7d2281af7d2a7476b8cf9517505f383c408c49b21022b4f6f75d33ced9fb084c  src/accounts.py
+
+$ docker exec aihubcampus-web-1 python -c ".../_stcore/health"
+ok
+
+$ curl -sS -o /dev/null -w "%{http_code}" https://www.aihubcampus.online/   (x3)
+502 502 502 
+$ docker ps --filter label=com.docker.compose.service=cloudflared  (none)
+hermes-tunnel Up 4 days
+bigprint4u-master-cloudflared-1 Up 4 days
+
+$ docker compose config --quiet   # no host ports published
+compose valid
+35:    expose:

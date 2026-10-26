@@ -1,0 +1,21 @@
+# S8 gate — runtime logs of the S8 image after a real sign-in, an account creation and a denied admin call
+# throwaway container on no network, disposable DB in /tmp; removed afterwards
+$ docker run -d --name aihubcampus-s8-gatelog --network none -e APP_DB_PATH=/tmp/gate.db aihubcampus-web:s8
+3e8150a45c436dd733fa14e25a15868e8c3e4e3cc29b7e406bce1d47e1eaaca8
+
+$ docker exec -i aihubcampus-s8-gatelog python - <<PY   # login, create_user, denied list_users
+denied as expected: You do not have permission to perform this action.
+audit rows: 6
+
+$ docker logs aihubcampus-s8-gatelog | grep -cE "argon2|kestrel-marble"
+0
+$ docker logs aihubcampus-s8-gatelog   # all output
+2026-10-26 15:45:37.030 Uvicorn server started on 0.0.0.0:2026
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://www.aihubcampus.online:443
+
+
+$ docker rm -f aihubcampus-s8-gatelog
+removed

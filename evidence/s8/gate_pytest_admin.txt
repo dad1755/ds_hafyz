@@ -1,0 +1,14 @@
+# S8 gate — re-run by the reviewing agent, image aihubcampus-web:local (sha256:342546e6f59f…), tree at e79da40
+
+## (a) the S8 suite alone, network-isolated, uid 1001, no cache
+$ docker run --rm --network none -v "$PWD":/app -w /app -u 1001:1001 -e PYTHONPATH=/app aihubcampus-web:local python -m pytest tests/test_admin.py -q -p no:cacheprovider
+.........................                                                [100%]
+25 passed in 39.83s
+
+## (b) a clean extract of e79da40 — no .git, no .env
+$ git archive e79da40 | tar -x -C /var/tmp/s8gate-tree   # then chmod -R a+rX
+$ ls /var/tmp/s8gate-tree/.git /var/tmp/s8gate-tree/.env
+ls: cannot access '/var/tmp/s8gate-tree/.git': No such file or directory
+ls: cannot access '/var/tmp/s8gate-tree/.env': No such file or directory
+.........................                                                [100%]
+25 passed in 40.23s
