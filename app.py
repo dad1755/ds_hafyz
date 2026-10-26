@@ -1,16 +1,14 @@
 """AI Hub Campus — Credit Card Default Risk Prediction.
 
-Sprint 7 entry point. The page authenticates for real (S6) and now serves the prediction
-vertical slice: a 23-input form, the verified model's answer, and the signed-in account's own
-prediction history.
+Sprint 8 entry point. The page authenticates for real (S6), serves the prediction vertical
+slice (S7) and now carries the administrator's user management page (S8).
 
 Dispatch is deliberately boring: resolve the session from the database on every rerun, then
 render exactly one of sign-in, forced password change, or a signed-in page. Each page module
 re-checks the session itself, so the branch here is presentation rather than the control.
 
-What this page does *not* do: manage users (S8), manage datasets (S9), show the model
-evaluation (S10). Those sections are named on screen so the demo is honest about the build it
-is running.
+What this page does *not* do: manage datasets (S9), show the model evaluation (S10). Those
+sections are named on screen so the demo is honest about the build it is running.
 
 Security rules that shape the code below:
 
@@ -26,7 +24,15 @@ from __future__ import annotations
 import streamlit as st
 
 from ml.verify_artifact import ArtifactError
-from src import accounts, db, pages_history, pages_login, pages_prediction, security
+from src import (
+    accounts,
+    db,
+    pages_admin,
+    pages_history,
+    pages_login,
+    pages_prediction,
+    security,
+)
 from src.config import load_settings
 from src.inference import load_service
 
@@ -90,18 +96,31 @@ def _render_home(conn, principal, token: str, service) -> None:
     st.markdown(
         "- **Available now** — sign-in, sign-out, session expiry and the role guard behind "
         "every privileged function; the 23-feature prediction form, the verified model's "
-        "result and your own prediction history.\n"
-        "- **Sprint 8** — administrator user management (create, deactivate, reset password).\n"
-        "- **Sprint 9** — dataset manager.\n"
+        "result and your own prediction history"
+        + (
+            "; administrator user management — create, edit, reset a password, deactivate.\n"
+            if principal.role == "admin"
+            else ".\n"
+        )
+        + "- **Sprint 9** — dataset manager.\n"
         "- **Sprint 10** — model evaluation and EDA panels."
     )
 
     st.markdown("**How to use it**")
-    st.markdown(
-        "Open **Predict default risk** in the sidebar, fill the four groups of the form (or "
-        "load the synthetic demonstrator example first), submit, and read the result. "
-        "**My prediction history** lists only the predictions your own account requested."
-    )
+    if principal.role == "admin":
+        st.markdown(
+            "Open **Predict default risk** in the sidebar, fill the four groups of the form (or "
+            "load the synthetic demonstrator example first), submit, and read the result. "
+            "**My prediction history** lists only the predictions your own account requested. "
+            "**User management** creates accounts, changes roles, resets a password and "
+            "deactivates an account; every action is audited."
+        )
+    else:
+        st.markdown(
+            "Open **Predict default risk** in the sidebar, fill the four groups of the form (or "
+            "load the synthetic demonstrator example first), submit, and read the result. "
+            "**My prediction history** lists only the predictions your own account requested."
+        )
     st.caption(
         "The model is a decision-tree pipeline trained on the historical UCI credit-card "
         "sample. It estimates the probability of default next month; it is not a credit "
@@ -139,8 +158,9 @@ def _render_home(conn, principal, token: str, service) -> None:
                     hide_index=True,
                 )
                 st.caption(
-                    "Password hashes are never read into the page. Creating, deactivating and "
-                    "resetting accounts arrives in Sprint 8."
+                    "Password hashes are never read into the page. Creating accounts, editing "
+                    "roles and display names, resetting a password and deactivating an account "
+                    "live in **User management** in the sidebar; this panel is the overview."
                 )
 
             st.markdown("##### Recent audit events")
@@ -169,13 +189,20 @@ def _render_home(conn, principal, token: str, service) -> None:
         )
 
 
-def _navigation() -> str:
-    """Sidebar navigation. Not a security boundary — every page guards itself."""
+def _navigation(principal) -> str:
+    """Sidebar navigation. Not a security boundary — every page guards itself.
+
+    The administrator's extra entry is a convenience: ``pages_admin.render`` calls
+    ``require_role`` itself, so a user who forced this option would get a refusal, not the page.
+    """
+    options = ["Home", "Predict default risk", "My prediction history"]
+    if principal.role == "admin":
+        options.append("User management")
     with st.sidebar:
         st.markdown("**AI Hub Campus**")
         return st.radio(
             "Section",
-            options=("Home", "Predict default risk", "My prediction history"),
+            options=tuple(options),
             key="nav",
             label_visibility="collapsed",
         )
@@ -209,11 +236,13 @@ try:
     elif _principal.must_change_password:
         pages_login.render_change_password(_connection, _principal, _token)
     else:
-        _section = _navigation()
+        _section = _navigation(_principal)
         if _section == "Predict default risk":
             pages_prediction.render(_connection, _token, _service)
         elif _section == "My prediction history":
             pages_history.render(_connection, _token, _service)
+        elif _section == "User management":
+            pages_admin.render(_connection, _token)
         else:
             _render_home(_connection, _principal, _token, _service)
 finally:

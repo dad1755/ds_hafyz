@@ -87,17 +87,17 @@ Produced by `python3 ml/inspect_dataset.py` (full output: `evidence/s0/inspect_d
 ├── data/UCI_Credit_Card.csv   # immutable benchmark seed
 ├── docs/                      # architecture, data dictionary, source of truth, rubric matrix,
 │                              #   report evidence, preprocessing + inference contracts
-├── evidence/s0/ … evidence/s6/ # captured command output
+├── evidence/s0/ … evidence/s8/ # captured command output
 ├── ml/                        # schema.py, inspect_dataset.py, verify_draft_claims.py
 ├── tests/                     # pytest: settings (S1), schema/validation (S2), model contract
 │                              #   + prediction (S5), security + app auth (S6), prediction log
-│                              #   + prediction UI (S7)
+│                              #   + prediction UI (S7), admin user management (S8)
 └── models/                    # best_pipeline.joblib, metrics.json, model_manifest.json (S4/S5),
                                #   figures/ and eda/ committed evidence (S3/S4), candidates/
 ```
 
 Modules are added when the sprint that implements them runs — no dead placeholder files.
-The admin screens arrive with S8–S10.
+The dataset manager and the evaluation panels arrive with S9–S10.
 
 ## Sprint 0 commands (run today, no dependencies)
 
@@ -323,6 +323,47 @@ python evidence/s7/ui_vs_pipeline.py
   `form_desktop.png`, `result_desktop.png`, `history_desktop.png` (a real Chromium at 375×812
   and 1280×800, zero horizontal overflow on every page), `clean_checkout.txt`,
   `check_no_secrets.txt`, `image_build.txt`, `container_health.txt`.
+
+## Sprint 8 — administrator user management
+
+```bash
+# the S8 gate
+python -m pytest tests/test_admin.py -q
+
+# the two probes: what the page renders, and what the audit trail holds
+python evidence/s8/ui_query.py
+python evidence/s8/audit_probe.py
+```
+
+- **The page is a view, not the control.** `src/pages_admin.py` calls
+  `accounts.*` for every read and every write, and each of those functions re-checks the admin
+  role against the database before it does anything. A user who reached the page — or who
+  called `accounts.create_user` with their own token — gets `PermissionDenied` and an
+  `auth.denied` audit row naming the attempted function.
+- **List, create, edit, reset, deactivate.** The account table has no hash column because
+  `accounts.UserView` has no hash field: a hash is never read into the page, so it cannot be
+  rendered. Creating an account, changing a display name or role, setting a temporary password
+  and deactivating/reactivating each write exactly one audited transaction
+  (`user.created`, `user.display_name_changed`, `user.role_changed`, `password.reset`,
+  `user.deactivated`, `user.activated`).
+- **A temporary password is never echoed.** The reset form takes it twice, hashes it, sets
+  `must_change_password = 1` and ends the account's open sessions; the success message names the
+  account and the fact, never the value. The audit row records
+  `{"forced_change": true, "username": …}`.
+- **No delete, and no way to orphan the installation.** There is no `delete_user` anywhere and
+  no `DELETE FROM users` in `src/`; an account is deactivated instead, which keeps its audit
+  history and prediction rows. The last enabled administrator cannot be demoted or
+  deactivated — refused inside the write transaction, from the UI as well as the service.
+- **A role change applies to the next request, not the next sign-in**, because
+  `require_role` re-reads the user row on every call. `tests/test_admin.py` asserts exactly
+  that with one unchanged session token.
+- Evidence: `evidence/s8/` — `pytest_s8.txt` (25 tests), `pytest_all.txt` (228 tests),
+  `ui_query.txt` (the page's own text and table, grepped for `$argon2id$` and both synthetic
+  passwords: 0 matches), `audit_probe.txt` (every admin write, the quoted `auth.denied` row,
+  and a sweep of all audit details for plaintext and hashes: 0 findings), `browser_check.txt`
+  with `admin_375px.png`, `created_375px.png`, `new_user_375px.png` and the desktop set (a real
+  Chromium creates an account through the form, then signs in as it, zero horizontal overflow),
+  `image_build.txt`, `container_health.txt`, `check_no_secrets.txt`, `clean_checkout.txt`.
 
 ## Documentation index
 

@@ -32,7 +32,7 @@ grouping under chapters **only if** all 26 stay findable via headings or this cr
 | 12 | Model Evaluation | S4 → S14 | `models/metrics.json`, 3 confusion matrices | pending |
 | 13 | Model Comparison | S4 → S14 | `models/metrics.json` comparison table + majority-class baseline | pending |
 | 14 | System Architecture and Design | **S0** → S1 → S14 | `docs/architecture.md` (this sprint) + `compose.yaml` (S1) | **verified** (design) |
-| 15 | Admin Module | S8 → S9 → S14 | `evidence/screenshots/admin_*.png` from a running stack | pending |
+| 15 | Admin Module | S8 → S9 → S14 | `src/pages_admin.py`, `evidence/s8/` (`admin_375px.png`, `admin_desktop.png`, `created_*.png`, `ui_query.txt`, `audit_probe.txt`) | built (S8) — gate pending; dataset manager still S9 |
 | 16 | User Module | S7 → S14 | `src/pages_prediction.py`, `src/pages_history.py`, `evidence/s7/` (screen-vs-pipeline, 375 px + desktop screenshots) | built (S7) — gate pending |
 | 17 | Predictive Model Integration | S5 → S14 | `models/model_manifest.json`, `ml/verify_artifact.py` output | pending |
 | 18 | System Testing | S11 → S14 | `docs/test_matrix.md` with T01–T12 observed results | pending |

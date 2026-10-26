@@ -286,6 +286,42 @@ def set_active(
     return _view(_require_user(conn, user_id))
 
 
+def set_display_name(
+    conn: sqlite3.Connection,
+    token: str | None,
+    user_id: int,
+    display_name: str,
+    *,
+    now: datetime | None = None,
+) -> UserView:
+    """Change the name shown on screen. Admin only; an empty value falls back to username."""
+    actor = _admin(conn, token, now=now, action="accounts.set_display_name")
+    moment = now or utcnow()
+    if not isinstance(display_name, str):
+        raise PolicyViolation("Display name must be text.")
+    name = display_name.strip()
+    if len(name) > MAX_DISPLAY_NAME:
+        raise PolicyViolation(f"Display name must be at most {MAX_DISPLAY_NAME} characters.")
+    target = _require_user(conn, user_id)
+    previous = target["display_name"] or ""
+
+    with transaction(conn):
+        conn.execute(
+            "UPDATE users SET display_name = ?, updated_at = ? WHERE id = ?",
+            (name, to_iso(moment), int(user_id)),
+        )
+        audit.append(
+            conn,
+            action="user.display_name_changed",
+            actor_user_id=actor.user_id,
+            entity_type="user",
+            entity_id=int(user_id),
+            details={"username": target["username"], "from": previous, "to": name},
+            now=moment,
+        )
+    return _view(_require_user(conn, user_id))
+
+
 def reset_password(
     conn: sqlite3.Connection,
     token: str | None,
@@ -332,5 +368,6 @@ __all__ = [
     "recent_audit_events",
     "reset_password",
     "set_active",
+    "set_display_name",
     "set_role",
 ]
