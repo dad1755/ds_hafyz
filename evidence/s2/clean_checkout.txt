@@ -1,0 +1,33 @@
+# Clean-checkout verification: git archive HEAD extracted into an empty directory
+$ git archive HEAD | tar -x -C /var/tmp/s2-clean-KpxW5r
+$ ls /var/tmp/s2-clean-KpxW5r
+app.py
+blueprint.md
+compose.yaml
+Credit_Card_Default_Prediction_Project.docx
+Credit_Card_Default_Prediction_Project-v3.docx
+data
+Dockerfile
+docs
+evidence
+Group Project 40%.md
+ml
+README.md
+requirements.in
+requirements.txt
+scripts
+src
+tests
+
+$ docker run --rm -v "$CLEAN:/app:ro,z" -w /app aihubcampus-web:local python -m pytest tests -q -p no:cacheprovider
+..................................................                       [100%]
+50 passed in 13.84s
+exit=0
+
+$ docker run --rm -v "$CLEAN:/app:ro,z" -w /app aihubcampus-web:local python -m ml.inspect_dataset --csv data/UCI_Credit_Card.csv | tail -3
+  [PASS] fractional_values_in_monetary_columns
+
+RESULT: ALL CHECKS PASS
+
+$ sha256sum data/UCI_Credit_Card.csv   (in the clean checkout)
+a0f0ab49d6326671d6cd83be5c88dcf18007025fe9a53ecd699119c871176ca1  /var/tmp/s2-clean-KpxW5r/data/UCI_Credit_Card.csv
