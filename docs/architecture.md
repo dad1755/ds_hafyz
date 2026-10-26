@@ -173,7 +173,9 @@ two `[browser]` keys is the whole fix.
 ## 6. Data flow and storage
 
 - `users(id, username UNIQUE, display_name, password_hash, role CHECK(admin|user),
-  is_active, created_at, updated_at, last_login_at)`
+  is_active, created_at, updated_at, last_login_at)` — plus `must_change_password` (S6):
+  a temporary password cannot be used for anything except setting a new one. Username
+  uniqueness is case-insensitive, via a unique index on `lower(username)`.
 - `prediction_logs(id, user_id, predicted_class, default_probability, risk_tier,
   model_version, created_at)` — **no raw feature snapshot** by default; history is
   pseudonymous by user ID.
@@ -182,8 +184,14 @@ two `[browser]` keys is the whole fix.
   uploaded_by, status)` — exactly one active row, enforced in a transaction.
 - `audit_events(id, actor_user_id, action, entity_type, entity_id, created_at,
   non_sensitive_details)`
+- `sessions(token_hash PRIMARY KEY, user_id, created_at, expires_at, last_seen_at,
+  revoked_at)` — the server-side session (S6). The key is the SHA-256 of the bearer token,
+  so the table cannot be replayed as a credential; sign-out and deactivation are UPDATEs.
+- `login_attempts(id, username_lower, attempted_at, succeeded)` — the brute-force counter
+  (S6). Rows age out of the window, so a lock expires without a reset job.
 - `schema_migrations(version, applied_at)`
-- DB at `/app/storage/aihubcampus.db` on the `app_storage` volume; WAL + busy timeout.
+- DB at `/app/storage/aihubcampus.db` on the `app_storage` volume; WAL + 5 s busy timeout,
+  `foreign_keys=ON`, `BEGIN IMMEDIATE` for writes (§14).
 - Model artifacts are baked read-only; the app never writes `models/`.
 
 ## 7. Data sensitivity and threat model
@@ -244,15 +252,23 @@ project other than `aihubcampus`.
 | D9 | §4: "avoid over-restricting to observed min/max without documenting choice" | Dataset validation enforces hard floors/ceilings only (`PAY_AMT* >= 0`, `LIMIT_BAL >= 1`, `18 <= AGE <= 100`); the UI form uses the documented bands `LIMIT_BAL` 10,000–1,000,000 and `AGE` 18–100 | The observed range is descriptive, not a contract; a legitimate future upload must not be rejected for being outside 2005's sample (§12) |
 | D10 | §4: "validate against actual observed data and accepted source semantics" for `PAY_*` | Legal set is −2…9, i.e. the observed −2…8 plus code 9 ("nine months or more") from the source's documented scale | Rejecting 9 would reject a value the source scale defines; accepting it changes nothing in the seed (§12) |
 | D11 | §3 layout: `ml/` is tooling beside the app; the Dockerfile copied only `app.py` and `src/` | The image also copies `ml/` (contract module only) | `src/validation.py` imports the contract from `ml/schema.py`; one definition of the schema beats two copies (§12) |
+| D12 | §6 lists five tables | Two more: `sessions` and `login_attempts` | A server-side session with expiry/revocation and a throttle that survives a process restart need storage. Redis is a no-go (§0), and a signed cookie alone cannot be revoked on deactivation (§14) |
+| D13 | §2/§6: password policy "8–12+ characters"; the operator password is operator-chosen | Policy is 12 characters for *new* passwords; the seeded operator admin is created with `must_change_password = 1` because the supplied password is 7 characters | The weak operator password is a fact of the brief, not something to hide: the account works once, then can do nothing but set a compliant password. Silently accepting it, or rewriting the operator's `.env`, would both be worse (§14) |
+| D14 | §3 layout: `scripts/` is tooling; the image copies only app code | `scripts/` is copied into the image | `scripts/init_admin.py` must run inside the container (`docker compose exec web python scripts/init_admin.py`) to reach the SQLite file on the volume; it reads credentials from the environment and prints none (§14) |
 
 ## 10. Open decisions deferred to later sprints
 
 - ~~Exact Streamlit/sklearn pins (S1)~~ — resolved in S1: `requirements.in` (direct) →
   `requirements.txt` (fully pinned lock, 54 entries) on Python 3.12; see §11.
+- ~~Session lifetime and expiry policy~~ — resolved in S6: an absolute 8-hour server-side
+  session, revoked on sign-out and on deactivation; no sliding renewal (§14).
+- ~~The weak operator password~~ — resolved in S6 (D13): seeded with
+  `must_change_password = 1` rather than accepted silently (§14).
 - Whether the optional `127.0.0.1:2026` troubleshooting bind is enabled (S12, off by default).
 - Model selection if reproduction differs from the draft's Decision Tree (S4) — decided on
   F1 and default-class recall, never accuracy alone.
-- Backup/restore drill mechanics (S12).
+- Retention purge for `audit_events` / `prediction_logs` beyond the throttle's own pruning
+  (S12), and the backup/restore drill mechanics (S12).
 
 ## 11. S1 implementation record — container skeleton
 
@@ -403,3 +419,101 @@ anywhere in the sprint; `models/` holds plots and statistics, not a model.
 **Not done in S3, by design.** No train/test split executed, no model, no metrics, no
 `joblib`, no SQLite, no UI wiring of the charts (S10), no tunnel, no deployment. Nothing in
 the sprint changes how the running app behaves.
+
+## 14. S6 implementation record — SQLite, authentication, sessions and role guards
+
+*(The S4 and S5 records live with the artefacts they describe — `docs/inference_contract.md`
+§5 and `docs/acceptance/S04.md` / `S05.md` — so this record resumes the numbering at S6.)*
+
+**What exists now.** `src/db.py` (connection policy and the migration ladder),
+`src/security.py` (Argon2id hashing, the password policy, the login throttle, server-side
+sessions and `require_role`), `src/audit.py` (append-only, non-sensitive events),
+`src/accounts.py` (guarded account administration), `scripts/init_admin.py` (one-time seeding
+from the environment) and a real sign-in in `app.py`. The database file is
+`/app/storage/aihubcampus.db` on the `app_storage` volume. `tests/test_security.py` and
+`tests/test_app_auth.py` are the gate; `tests/test_login_shell.py` (S1's proof that nothing
+authenticated) is deleted, because the property it asserted no longer holds.
+
+**Design decisions.**
+
+- **Argon2id with explicit parameters.** `time_cost=3`, `memory_cost=64 MiB`,
+  `parallelism=4`, 32-byte hash, 16-byte random salt, stored as a PHC string
+  (`$argon2id$v=19$m=65536,t=3,p=4$…`, 97 characters). OWASP's Argon2id floor is m=19 MiB,
+  t=2, p=1; this is above it and costs ~0.1 s per verification on the deployment host.
+  There is no SHA-256 code path: a stored SHA-256 hex digest simply fails to verify, which
+  the tests assert. Parameters are constants, so changing them is a code change and would
+  need a rehash-on-login path — deliberately not built, because nothing needs it yet.
+- **A session is a row, not a cookie and not Streamlit state.** `sessions.token_hash` is the
+  SHA-256 of a 43-character `secrets.token_urlsafe(32)` token; the raw token exists only in
+  the browser's session state. Every request re-reads the row and the user's `is_active`, so
+  sign-out, expiry and deactivation take effect immediately, and the table itself cannot be
+  replayed as a credential. Lifetime is an **absolute** 8 hours: a session cannot be kept
+  alive by clicking around, and an unattended demo laptop does not stay signed in.
+  `last_seen_at` is refreshed at most once a minute so a rerun does not write every time.
+- **The guard is inside the function that does the work.** Every privileged function in
+  `src.accounts` starts with `require_role(conn, token, ("admin",))`; the UI's `if role ==
+  "admin"` is presentation only. A denied call raises `PermissionDenied` *and* writes an
+  `auth.denied` audit row, so a user poking at admin data is visible even though nothing
+  changed. `tests/test_security.py` calls all seven admin functions directly with a user
+  token and asserts both the exception and that no account row changed.
+- **One error for a wrong username and a wrong password**, and a dummy Argon2 verification
+  when the username does not exist, so the form neither says nor times which half was wrong.
+  `AccountInactive` is the one deliberate exception: it is raised only *after* a correct
+  password, so it tells an attacker nothing they did not already have.
+- **The throttle is per username, not per IP.** The app sits behind a tunnel and sees no
+  trustworthy client address, so 5 failures in 15 minutes lock that username for 15 minutes.
+  The lock expires because the attempt rows age out of the window — no flag to reset, no job
+  to run. Accepted trade-off: an attacker who knows a username can lock it for 15 minutes
+  (a small denial-of-service) — the alternative, no throttle, is worse for a public login.
+- **A temporary password is a one-way door.** `must_change_password = 1` makes every
+  function except `change_password` raise `PasswordChangeRequired`, including
+  `require_role`, so an admin-set password cannot be used to browse. Changing the password
+  revokes the account's other sessions and requires the current password.
+- **The operator's weak password is documented, not hidden** (D13). The supplied admin
+  password is 7 characters and fails the 12-character policy. It is seeded with
+  `must_change_password = 1`: the account signs in once and can do nothing but set a
+  compliant password. The script does not rewrite `.env`, does not generate a password and
+  does not print one.
+- **Seeding is idempotent and never overwrites.** `scripts/init_admin.py` creates the admin
+  only when no `role='admin'` row exists; a second run reports the existing username and
+  leaves the hash alone, so a rotated password survives a restart. The optional demo user
+  (`INITIAL_USER_USERNAME` / `INITIAL_USER_PASSWORD`) is seeded the same way.
+- **Audit rows are filtered by key, not by trust in the caller.** `audit.sanitise_details`
+  drops any key matching a credential pattern, keeps `must_change_password` through an
+  explicit allowlist, truncates strings to 120 characters and replaces non-scalars with their
+  type name. No 23-feature submission is ever written: `prediction_logs` stores the class,
+  the probability, the band and the model version only.
+- **Migrations are code, not `.sql` files.** Two ordered versions in `src/db.py`
+  (`0001_core_tables`, `0002_auth_sessions`), each applied once inside `BEGIN IMMEDIATE` and
+  recorded in `schema_migrations`. Nothing needs a filesystem path or a migration CLI, and
+  `migrate()` on an up-to-date database returns `[]` — which is what makes a container
+  restart safe and is asserted in the tests.
+- **Storage defaults.** `journal_mode=WAL`, `busy_timeout=5000`, `foreign_keys=ON`,
+  `synchronous=NORMAL`, `isolation_level=None` with explicit `BEGIN IMMEDIATE` for writes:
+  a reader never blocks the writer, and a writer waits rather than failing late.
+- **The last enabled admin is protected in the transaction.** `set_role` and `set_active`
+  re-count enabled admins inside the write transaction, so two concurrent demotions cannot
+  both pass and leave the installation with no administrator.
+
+**Facts, each captured in `evidence/s6/`.**
+
+| Fact | Value | Evidence |
+|---|---|---|
+| Migrations applied once, in order | `0001_core_tables`, `0002_auth_sessions`; a second run applies 0 | `init_admin.txt`, `schema_and_storage.txt` |
+| Storage format | `$argon2id$`, hash length 97, one digest per account | `schema_and_storage.txt` |
+| Storage pragmas | `journal_mode=wal`, `busy_timeout=5000`, `foreign_keys=1` | `schema_and_storage.txt` |
+| Accounts seeded from `.env` | `ds_hafyz` (admin, must change password), `demo_user` (user) | `init_admin.txt` |
+| Seeding is idempotent | second run: "already exists … password left unchanged"; same hash digests | `init_admin.txt`, `schema_and_storage.txt` |
+| Every control fires | wrong password, unknown user, injection attempt, direct-call role bypass (3 functions), no token, deactivation, last-admin protection, expiry, logout, throttle, forced change | `security_smoke.txt` |
+| No plaintext anywhere | search across every column of `users`, `sessions`, `login_attempts`, `audit_events` → none found | `security_smoke.txt` |
+| Survives a container restart | identical usernames, hash digests and row counts before/after `docker compose restart web` | `restart_persistence.txt` |
+| Gate suite | `tests/test_security.py` + `tests/test_app_auth.py` + the rest: 181 passed in the image | `pytest_all.txt` |
+| Clean checkout | `git archive` of the code commit; the S6 modules pass with no untracked files | `clean_checkout.txt` |
+| Secret hygiene | no operator secret or credential pattern in any tracked file | `check_no_secrets.txt` |
+
+**Not done in S6, by design.** No prediction page or personal history (S7 — the table exists,
+nothing writes it), no admin user-management screens (S8 — the guarded functions are the API
+those screens will call), no dataset manager (S9), no evaluation panels (S10), no rehash-on-
+login, no MFA, no IP-based rate limiting, no retention purge beyond the throttle's own
+pruning (S12), no tunnel or deployment change (S13). The running app authenticates; it still
+predicts nothing.

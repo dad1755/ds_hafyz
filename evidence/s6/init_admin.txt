@@ -1,0 +1,23 @@
+# S6 — seeding the operator accounts inside the running container (fresh app_storage volume).
+# Credentials come from the compose env_file (.env). This transcript contains no password,
+# no hash and no token — only usernames, roles, flags and the hash PREFIX.
+
+$ docker compose exec -T web python scripts/init_admin.py
+db: /app/storage/aihubcampus.db (migrations applied by this run: 2 — 0001_core_tables, 0002_auth_sessions)
+admin: created (username=ds_hafyz, role=admin, hash_prefix=$argon2id$, must_change_password=yes)
+admin: the supplied password fails the policy (at least 12 characters); the account must set a new password at first sign-in
+demo user: created (username=demo_user, role=user, hash_prefix=$argon2id$, must_change_password=no)
+accounts: 2
+  - username=ds_hafyz role=admin active=True must_change_password=True hash_prefix=$argon2id$
+  - username=demo_user role=user active=True must_change_password=False hash_prefix=$argon2id$
+exit=0
+
+# Second run, same container, same volume: nothing is created and no password is rewritten.
+$ docker compose exec -T web python scripts/init_admin.py
+db: /app/storage/aihubcampus.db (migrations applied by this run: 0)
+admin: already exists (username=ds_hafyz) — password left unchanged
+demo user: already exists (username=demo_user, role=user, active=True) — left unchanged
+accounts: 2
+  - username=ds_hafyz role=admin active=True must_change_password=True hash_prefix=$argon2id$
+  - username=demo_user role=user active=True must_change_password=False hash_prefix=$argon2id$
+exit=0

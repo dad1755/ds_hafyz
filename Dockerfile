@@ -29,6 +29,10 @@ RUN pip install --no-cache-dir --no-compile -r requirements.txt
 COPY .streamlit/config.toml ./.streamlit/config.toml
 COPY app.py ./
 COPY src/ ./src/
+# The setup script that seeds the operator accounts (S6) runs inside the container:
+#   docker compose exec web python scripts/init_admin.py
+# It reads credentials from the environment and prints none of them.
+COPY scripts/ ./scripts/
 # The data contract lives in ml/schema.py and src/validation.py imports it, so the
 # package must ship with the image. No dataset is copied.
 COPY ml/ ./ml/

@@ -1,0 +1,97 @@
+# S6 — each control firing in the real runtime, against a throwaway database inside the
+# application image (/tmp/s6_smoke.db). No password and no session token is printed.
+
+$ docker compose exec -T web python - < evidence/s6/security_smoke.py
+database: /tmp/s6_smoke.db (throwaway)
+migrations applied: ['0001_core_tables', '0002_auth_sessions']
+seeded: admin id=1, user id=2, plus one deactivated user
+stored hash for smoke_admin: prefix=$argon2id$ length=97 (the password itself is not stored anywhere)
+
+--- 1. correct and incorrect credentials
+[admin sign-in] OK -> user_id=1 username=smoke_admin role=admin must_change_password=False session_expires_at=None
+    session token: 43 chars, stored only as a 64-character sha256 digest
+[wrong password] InvalidCredentials: Invalid username or password.
+[unknown username] InvalidCredentials: Invalid username or password.
+[SQL injection attempt] InvalidCredentials: Invalid username or password.
+
+--- 2. role guard, called directly (not through the UI)
+[user sign-in] OK -> username=smoke_user role=user
+[user -> accounts.list_users] PermissionDenied: You do not have permission to perform this action.
+[user -> accounts.create_user(role=admin)] PermissionDenied: You do not have permission to perform this action.
+[user -> accounts.set_active(admin, False)] PermissionDenied: You do not have permission to perform this action.
+[no token -> accounts.list_users] SessionInvalid: Your session has ended. Sign in again.
+[admin -> accounts.list_users] OK -> ['smoke_admin', 'smoke_off', 'smoke_user']
+    after the denied calls, the target account's role is still 'admin'
+
+--- 3. deactivation blocks sign-in and ends the live session
+[deactivated user sign-in] AccountInactive: This account is not active. Contact the administrator.
+[deactivated user's existing token] SessionInvalid: Your session has ended. Sign in again.
+[reactivated user sign-in] OK -> smoke_user
+
+--- 4. the last enabled admin cannot be removed
+[deactivate the last admin] PolicyViolation: The last enabled administrator cannot be deactivated.
+[demote the last admin] PolicyViolation: The last enabled administrator cannot be demoted.
+[create a second admin, then demote the first] OK -> ('smoke_admin2', 'user')
+
+--- 5. session expiry and logout
+[token 30 s after issue] OK -> smoke_admin
+[token 2 min after issue (expired)] SessionInvalid: Your session has ended. Sign in again.
+[token after logout] SessionInvalid: Your session has ended. Sign in again.
+
+--- 6. login throttle (5 failures, then the right password)
+[failure 1] InvalidCredentials
+[failure 2] InvalidCredentials
+[failure 3] InvalidCredentials
+[failure 4] InvalidCredentials
+[failure 5] InvalidCredentials
+[correct password while locked] Throttled: Too many failed sign-in attempts. Try again in 15 minutes.
+[correct password after the lock expires] OK -> smoke_user
+
+--- 7. an admin-set temporary password forces a change
+[forced account -> privileged call] PasswordChangeRequired: A password change is required before this account can continue.
+[forced account -> weak new password] WeakPassword: Password does not meet the policy: at least 12 characters
+[forced account -> compliant new password] OK -> False
+[forced account -> after the change] OK -> smoke_forced
+
+--- 8. audit trail (no credentials in it)
+  #1 login.succeeded actor=1 {"role":"admin"}
+  #2 session.created actor=1 {"expires_at":"2026-10-26T18:58:47Z"}
+  #3 login.failed actor=1 {"reason":"bad_password"}
+  #4 login.failed actor=None {"reason":"unknown_user"}
+  #5 login.failed actor=None {"reason":"unknown_user"}
+  #6 login.succeeded actor=2 {"role":"user"}
+  #7 session.created actor=2 {"expires_at":"2026-10-26T18:58:48Z"}
+  #8 auth.denied actor=2 {"attempted":"accounts.list_users","required":"admin"}
+  #9 auth.denied actor=2 {"attempted":"accounts.create_user","required":"admin"}
+  #10 auth.denied actor=2 {"attempted":"accounts.set_active","required":"admin"}
+  #11 user.deactivated actor=1 {"username":"smoke_user"}
+  #12 login.failed actor=2 {"reason":"inactive"}
+  #13 user.activated actor=1 {"username":"smoke_user"}
+  #14 login.succeeded actor=2 {"role":"user"}
+  #15 session.created actor=2 {"expires_at":"2026-10-26T18:58:48Z"}
+  #16 user.created actor=1 {"role":"admin","username":"smoke_admin2"}
+  #17 user.role_changed actor=1 {"from":"admin","to":"user"}
+  #18 login.succeeded actor=4 {"role":"admin"}
+  #19 session.created actor=4 {"expires_at":"2026-10-26T18:58:49Z"}
+  #20 user.role_changed actor=4 {"from":"user","to":"admin"}
+  #21 login.succeeded actor=1 {"role":"admin"}
+  #22 session.created actor=1 {"expires_at":"2026-10-26T10:59:49Z"}
+  #23 session.revoked actor=1 {"reason":"logout"}
+  #24 login.failed actor=2 {"reason":"bad_password"}
+  #25 login.failed actor=2 {"reason":"bad_password"}
+  #26 login.failed actor=2 {"reason":"bad_password"}
+  #27 login.failed actor=2 {"reason":"bad_password"}
+  #28 login.failed actor=2 {"reason":"bad_password"}
+  #29 login.throttled actor=None {"retry_after_seconds":893}
+  #30 login.succeeded actor=2 {"role":"user"}
+  #31 session.created actor=2 {"expires_at":"2026-10-26T19:13:50Z"}
+  #32 login.succeeded actor=4 {"role":"admin"}
+  #33 session.created actor=4 {"expires_at":"2026-10-26T18:58:51Z"}
+  #34 user.created actor=4 {"role":"user","username":"smoke_forced"}
+  #35 password.reset actor=4 {"forced_change":true,"username":"smoke_forced"}
+  #36 login.succeeded actor=5 {"role":"user"}
+  #37 session.created actor=5 {"expires_at":"2026-10-26T18:58:51Z"}
+  #38 password.changed actor=5 {"self_service":true}
+
+plaintext search across every column of every table: none found
+exit=0

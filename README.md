@@ -57,12 +57,17 @@ Produced by `python3 ml/inspect_dataset.py` (full output: `evidence/s0/inspect_d
 ├── README.md                  # this file
 ├── blueprint.md               # implementation specification, S0–S16
 ├── Group Project 40%.md       # assessment authority (report + presentation rubric)
-├── app.py                     # Streamlit entry point — branded shell + inert sign-in (S1);
-│                              #   loads and reports the verified model (S5)
+├── app.py                     # Streamlit entry point — real sign-in, session, role-aware page
+│                              #   (S6); loads and reports the verified model (S5)
 ├── src/config.py              # typed, non-secret environment settings (S1)
 ├── src/validation.py          # CSV + 23-feature validation, quarantine (S2)
 ├── src/inference.py           # verified, cached, read-only prediction service (S5)
 ├── src/recommendations.py     # the four documented risk bands (S5)
+├── src/db.py                  # SQLite connection policy + idempotent migrations (S6)
+├── src/security.py            # Argon2id, password policy, throttle, sessions, role guard (S6)
+├── src/audit.py               # append-only, non-sensitive audit events (S6)
+├── src/accounts.py            # guarded account administration + last-admin rule (S6)
+├── scripts/init_admin.py      # one-time operator seeding from the environment (S6)
 ├── ml/schema.py               # the 25-column / 23-feature contract, single source (S2)
 ├── ml/generate_eda.py         # six EDA figures + descriptive summary from the CSV (S3)
 ├── ml/train.py, ml/evaluate.py # three-model training, fair evaluation, artifact (S4)
@@ -78,16 +83,16 @@ Produced by `python3 ml/inspect_dataset.py` (full output: `evidence/s0/inspect_d
 ├── data/UCI_Credit_Card.csv   # immutable benchmark seed
 ├── docs/                      # architecture, data dictionary, source of truth, rubric matrix,
 │                              #   report evidence, preprocessing + inference contracts
-├── evidence/s0/ … evidence/s5/ # captured command output
+├── evidence/s0/ … evidence/s6/ # captured command output
 ├── ml/                        # schema.py, inspect_dataset.py, verify_draft_claims.py
-├── tests/                     # pytest: settings, login shell (S1), schema/validation (S2),
-│                              #   model contract + prediction (S5)
+├── tests/                     # pytest: settings (S1), schema/validation (S2), model contract
+│                              #   + prediction (S5), security + app auth (S6)
 └── models/                    # best_pipeline.joblib, metrics.json, model_manifest.json (S4/S5),
                                #   figures/ and eda/ committed evidence (S3/S4), candidates/
 ```
 
 Modules are added when the sprint that implements them runs — no dead placeholder files.
-`db.py`, `security.py` and the page modules arrive with S6–S9.
+The prediction page and history modules arrive with S7, the admin screens with S8–S10.
 
 ## Sprint 0 commands (run today, no dependencies)
 
@@ -229,6 +234,47 @@ python -m pytest tests/test_model.py tests/test_prediction.py -q   # the S5 gate
   CLI, six inputs, byte-identical class and probability), `boundaries.txt`, `verify_artifact.txt`,
   `tamper.txt`, `image_artifact.txt`, `app_loads_model.txt`.
 
+## Sprint 6 — SQLite, real authentication, session and role guards
+
+```bash
+# once per installation, inside the running container (credentials come from .env):
+docker compose exec web python scripts/init_admin.py
+
+# the S6 gate
+python -m pytest tests/test_security.py tests/test_app_auth.py -q
+```
+
+- `src/db.py` owns the connection policy (WAL, 5 s busy timeout, `foreign_keys=ON`,
+  `BEGIN IMMEDIATE` for writes) and the migration ladder — `0001_core_tables`,
+  `0002_auth_sessions` — applied once each and recorded in `schema_migrations`. The database
+  is `/app/storage/aihubcampus.db` on the `app_storage` volume, so it survives a restart; a
+  second `migrate()` applies nothing.
+- `src/security.py` hashes with **Argon2id** (`$argon2id$v=19$m=65536,t=3,p=4$…`, random
+  16-byte salt per hash) and verifies in constant time; there is no SHA-256 path. Passwords
+  for new accounts need 12 characters and must not be on a short denylist. Five failures in
+  fifteen minutes lock a username for fifteen minutes, and the lock expires by itself.
+- A **session is a row**: `sessions.token_hash` is the SHA-256 of the token, with an absolute
+  8-hour expiry and a revocation timestamp. Every privileged call re-reads it, so sign-out,
+  expiry and deactivation take effect immediately. Deactivating an account revokes its
+  sessions in the same transaction.
+- `src/accounts.py` is the admin API (list, get, create, set role, activate/deactivate, reset
+  password, read audit). Each function calls `require_role(...)` **first**, so a user session
+  calling it directly gets `PermissionDenied` and an `auth.denied` audit row — hiding the
+  page is presentation, not the control. The last enabled admin cannot be demoted or
+  deactivated.
+- `scripts/init_admin.py` seeds `ds_hafyz` (admin) and `demo_user` from `.env`, only when no
+  admin exists, never overwriting a password, never printing one. The operator's supplied
+  admin password is 7 characters, so that account is seeded with `must_change_password = 1`:
+  it can sign in once and do nothing but set a compliant password (architecture §14, D13).
+- `app.py` now signs in for real: generic error text, an Argon2 verification even for an
+  unknown username (so the form does not time-enumerate), a forced-change screen, a role-aware
+  page, sign-out, and an admin section that is itself a guarded read. Nothing typed into a
+  form is echoed back.
+- Evidence: `evidence/s6/` — `init_admin.txt` (seeded, then idempotent), `schema_and_storage.txt`
+  (pragmas, tables, hash prefix and a digest of each hash), `security_smoke.txt` (every control
+  firing in the runtime), `restart_persistence.txt` (identical hashes after a container
+  restart), `pytest_all.txt`, `clean_checkout.txt`, `check_no_secrets.txt`.
+
 ## Documentation index
 
 | Doc | Read it for |
@@ -243,8 +289,9 @@ python -m pytest tests/test_model.py tests/test_prediction.py -q   # the S5 gate
 
 ## Next sprint
 
-**S6** — SQLite, real authentication and role guards: schema migrations, Argon2 password
-hash/verify, the seeded admin creator (username `web`, password from the environment only),
-login/logout/session handling and role-guard tests. `src/inference.py` is the boundary S7
-builds its prediction page on: the page may only call `load_service().predict(features)` and
-must render `PredictionResult` — including the disclaimer and the model version — unchanged.
+**S7** — the user prediction page and *My History*: the 23-field form calling
+`load_service().predict(features)` and rendering `PredictionResult` unchanged (disclaimer,
+model version and all), a `prediction_logs` write per request, and a history list filtered by
+the session's user id server-side. The S6 guard is what S7 builds on: `require_authenticated`
+gives the page its principal, and the history query takes the user id from that principal —
+never from the request.

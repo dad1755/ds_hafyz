@@ -1,0 +1,35 @@
+# S6 — the storage layer as the running container sees it, using the application's own
+# connection helper (so the pragmas are the ones the app sets).
+# Only derived facts: pragmas, table names, counts, hash prefix/length and a digest of the
+# hash. No password, no full hash and no session token appears below.
+
+$ docker compose exec -T web python - < evidence/s6/inspect_db.py
+db_path            : /app/storage/aihubcampus.db
+db_size_bytes      : 86016
+journal_mode       : wal
+busy_timeout_ms    : 5000
+foreign_keys       : 1
+
+schema_migrations:
+  0001_core_tables  applied_at=2026-10-26T10:58:32Z
+  0002_auth_sessions  applied_at=2026-10-26T10:58:32Z
+
+tables (rows):
+  audit_events       2
+  dataset_versions   0
+  login_attempts     0
+  prediction_logs    0
+  schema_migrations  2
+  sessions           0
+  users              2
+
+accounts (no hash, no password — prefix, length and a digest of the hash only):
+  username=ds_hafyz     role=admin active=True  must_change_password=True  hash_prefix=$argon2id$ hash_len=97 sha256(hash)=099df628da970849 last_login_at=None
+  username=demo_user    role=user  active=True  must_change_password=False hash_prefix=$argon2id$ hash_len=97 sha256(hash)=91a4dec891295704 last_login_at=None
+
+audit_events (last 8):
+  #2 2026-10-26T10:58:32Z action=user.seeded actor=None details={"must_change_password":false,"role":"user","username":"demo_user"}
+  #1 2026-10-26T10:58:32Z action=user.seeded actor=None details={"must_change_password":true,"role":"admin","username":"ds_hafyz"}
+
+sessions:
+exit=0
