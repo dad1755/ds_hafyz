@@ -1,0 +1,22 @@
+$ python3 evidence/s11/extract_matrix.py
+2026-10-27T07:23:23+08:00
+raw run: evidence/s11/test-results/pytest_all_verbose.txt
+summary: 285 passed in 598.66s (0:09:58)
+
+| Test | Requirement | Cited node ids | Observed |
+|---|---|---|---|
+| T01 | Valid admin and user login, distinct views | `test_t01_an_admin_and_a_user_sign_in_to_different_navigation`<br>`test_an_admin_signs_in_and_sees_the_admin_section`<br>`test_a_regular_user_never_sees_the_admin_section` | **PASSED** |
+| T02 | Incorrect credentials rejected / throttled | `test_wrong_password_is_rejected_with_a_generic_message`<br>`test_five_failures_lock_the_username_even_for_the_right_password`<br>`test_the_lock_expires_by_itself`<br>`test_a_wrong_password_shows_one_generic_error_and_opens_no_session` | **PASSED** |
+| T03 | User prohibited from admin screen and underlying privileged functions | `test_every_privileged_function_refuses_a_user_session_and_audits_the_attempt`<br>`test_every_privileged_function_refuses_an_anonymous_caller`<br>`test_the_sweep_is_a_real_list_not_an_empty_one`<br>`test_a_user_never_sees_the_user_management_section`<br>`test_a_user_calling_an_admin_function_is_denied_and_the_attempt_is_audited`[8 cases] | **PASSED** |
+| T04 | Admin adds/edits a user and the change persists | `test_an_admin_creates_an_account_in_the_ui_and_that_user_then_signs_in`<br>`test_a_display_name_edit_persists_and_is_audited`<br>`test_the_ui_role_change_persists_and_is_audited` | **PASSED** |
+| T05 | Valid 25-column CSV accepted and staged with counts | `test_the_seed_csv_validates_and_stages_with_its_real_counts`<br>`test_the_page_stages_an_upload_and_shows_counts_but_no_row` | **PASSED** |
+| T06 | Missing-column / malformed CSV rejected with a clear reason | `test_a_missing_column_upload_is_rejected_with_the_reason_recorded`<br>`test_a_wrong_target_upload_is_rejected_with_the_reason_recorded`<br>`test_the_page_lists_a_rejection_with_the_reason_it_was_refused`<br>`test_missing_column_is_rejected_for_that_reason` | **PASSED** |
+| T07 | Valid 23-field submission returns a genuine class/probability/advice | `test_the_form_offers_exactly_the_23_contract_features`<br>`test_the_on_screen_result_equals_the_direct_pipeline_output` | **PASSED** |
+| T08 | Invalid age/limit/codes/missing numeric values rejected | `test_invalid_input_blocks_the_model_with_a_readable_message`<br>`test_invalid_input_never_reaches_the_model`<br>`test_feature_validator_rejects_an_out_of_band_value`<br>`test_feature_validator_rejects_a_missing_feature` | **PASSED** |
+| T09 | App class and probability match standalone pipeline output | `test_service_matches_the_direct_pipeline_exactly`[6 cases]<br>`test_the_cli_agrees_with_the_direct_pipeline`<br>`test_the_on_screen_result_equals_the_direct_pipeline_output` | **PASSED** |
+| T10 | Tier mapping and textual recommendation match score boundaries | `test_the_three_documented_cutoffs_belong_to_the_band_above`[3 cases]<br>`test_bands_are_continuous_at_every_documented_edge`[9 cases]<br>`test_no_probability_falls_between_two_bands` | **PASSED** |
+| T11 | Restart retains SQLite, model and protected access | `test_t11_a_restart_keeps_the_database_the_session_and_the_model`<br>`test_the_database_survives_a_restart` | **PASSED** |
+| T12 | Full user login -> prediction -> history -> logout | `test_t12_full_journey_login_predict_history_logout`<br>`test_t12_the_prediction_is_refused_before_sign_in` | **PASSED** |
+
+RESULT: PASS — every cited test id appears in the raw run as PASSED (12 requirements, 285 executed test cases in the run)
+exit=0

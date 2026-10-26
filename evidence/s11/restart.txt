@@ -1,0 +1,104 @@
+$ docker compose ps web
+NAME                IMAGE                   COMMAND                  SERVICE   CREATED          STATUS                    PORTS
+aihubcampus-web-1   aihubcampus-web:local   "streamlit run app.p…"   web       42 minutes ago   Up 42 minutes (healthy)   2026/tcp
+
+$ docker compose exec -T web python -m ml.verify_artifact --models-dir models
+verify_artifact: models
+  [PASS] files_present: model_manifest.json and best_pipeline.joblib are regular files
+  [PASS] manifest_schema: schema_version 1; every required section present
+  [PASS] artifact_checksum: sha256 48ce02563b2aad9f… and 8,187 bytes match the manifest
+  [PASS] artifact_provenance: creation path is ml/train.py → ml/evaluate.py and the file is an uncompressed joblib pickle
+  [PASS] dataset_identity: data/UCI_Credit_Card.csv hashes to the immutable seed sha256 a0f0ab49d6326671…
+  [PASS] feature_contract: ordered features are ml.schema.FEATURES (23), dropped ['ID', 'default.payment.next.month']
+  [PASS] class_semantics: class labels and caveats are the documented wording; threshold 0.5; positive class 1; version aihubcampus-default-risk-1+48ce02563b2a
+  [PASS] pickle_allowlist: 11 class reference(s), all inside the allowlisted stack (builtins, joblib.numpy_pickle, numpy, numpy._core.multiarray, sklearn.compose._column_transformer, sklearn.pipeline, sklearn.preprocessing._function_transformer, sklearn.tree._classes, sklearn.tree._tree)
+  [PASS] pipeline_schema: a fitted Pipeline(transform=ColumnTransformer, model=estimator) selecting the manifest's 23 features, with predict_proba over classes [0, 1]
+  [PASS] deterministic_self_check: probe row scored 0.166092 twice with the same value; class 0 agrees with threshold 0.5
+  [PASS] metrics_consistency: metrics.json names the same artifact, selected model and threshold
+  recorded:
+    artifact_bytes: 8187
+    artifact_sha256: 48ce02563b2aad9fbf9397603c642b0319be617c57fde8e1fd26ec08d518ad7b
+    model_version: aihubcampus-default-risk-1+48ce02563b2a
+    pickle_references: ['builtins.slice', 'joblib.numpy_pickle.NumpyArrayWrapper', 'numpy._core.multiarray._reconstruct', 'numpy._core.multiarray.scalar', 'numpy.dtype', 'numpy.ndarray', 'sklearn.compose._column_transformer.ColumnTransformer', 'sklearn.pipeline.Pipeline', 'sklearn.preprocessing._function_transformer.FunctionTransformer', 'sklearn.tree._classes.DecisionTreeClassifier', 'sklearn.tree._tree.Tree']
+RESULT: PASS — the artifact is the one trusted code produced and it scores a contract frame deterministically
+  exit=0
+
+$ docker compose exec -T web sha256sum models/best_pipeline.joblib
+48ce02563b2aad9fbf9397603c642b0319be617c57fde8e1fd26ec08d518ad7b  models/best_pipeline.joblib
+
+--- BEFORE the restart ---------------------------------------------------------
+$ docker compose exec -T web python -   # row counts from the live database
+  users              2
+  sessions           4
+  prediction_logs    0
+  dataset_versions   1
+  audit_events       14
+  db path            /app/storage/aihubcampus.db
+  container started  2026-10-26T22:36:25.574177696Z
+
+$ docker compose exec -T web python -   # sign in as the demo user, from container env
+  exit=0
+signed in as demo_user role=user token_chars=43
+live sessions now: 2
+  token held on the host: mode 600, 44 bytes (value not printed)
+
+$ docker compose up -d --force-recreate web
+ Container aihubcampus-web-1 Recreate 
+ Container aihubcampus-web-1 Recreated 
+ Container aihubcampus-web-1 Starting 
+ Container aihubcampus-web-1 Started 
+  exit=0
+
+--- waiting for healthy --------------------------------------------------------
+  healthy after 8 poll(s)
+NAME                IMAGE                   COMMAND                  SERVICE   CREATED          STATUS                    PORTS
+aihubcampus-web-1   aihubcampus-web:local   "streamlit run app.p…"   web       29 seconds ago   Up 21 seconds (healthy)   2026/tcp
+  container started  2026-10-26T23:19:25.924087943Z
+  container was recreated: yes
+
+--- AFTER the restart ----------------------------------------------------------
+$ docker compose exec -T web python -   # the same row counts
+  users              2
+  sessions           5
+  prediction_logs    0
+  dataset_versions   1
+  audit_events       16
+  db path            /app/storage/aihubcampus.db
+
+$ docker compose exec -T web python -c '<resolve the pre-restart token from stdin>' < token-file
+session resolved after restart: demo_user role=user
+session ends: 2026-10-27T07:19:15+00:00
+  exit=0
+
+$ docker compose exec -T web python -m ml.verify_artifact --models-dir models
+verify_artifact: models
+  [PASS] files_present: model_manifest.json and best_pipeline.joblib are regular files
+  [PASS] manifest_schema: schema_version 1; every required section present
+  [PASS] artifact_checksum: sha256 48ce02563b2aad9f… and 8,187 bytes match the manifest
+  [PASS] artifact_provenance: creation path is ml/train.py → ml/evaluate.py and the file is an uncompressed joblib pickle
+  [PASS] dataset_identity: data/UCI_Credit_Card.csv hashes to the immutable seed sha256 a0f0ab49d6326671…
+  [PASS] feature_contract: ordered features are ml.schema.FEATURES (23), dropped ['ID', 'default.payment.next.month']
+  [PASS] class_semantics: class labels and caveats are the documented wording; threshold 0.5; positive class 1; version aihubcampus-default-risk-1+48ce02563b2a
+  [PASS] pickle_allowlist: 11 class reference(s), all inside the allowlisted stack (builtins, joblib.numpy_pickle, numpy, numpy._core.multiarray, sklearn.compose._column_transformer, sklearn.pipeline, sklearn.preprocessing._function_transformer, sklearn.tree._classes, sklearn.tree._tree)
+  [PASS] pipeline_schema: a fitted Pipeline(transform=ColumnTransformer, model=estimator) selecting the manifest's 23 features, with predict_proba over classes [0, 1]
+  [PASS] deterministic_self_check: probe row scored 0.166092 twice with the same value; class 0 agrees with threshold 0.5
+  [PASS] metrics_consistency: metrics.json names the same artifact, selected model and threshold
+  recorded:
+    artifact_bytes: 8187
+    artifact_sha256: 48ce02563b2aad9fbf9397603c642b0319be617c57fde8e1fd26ec08d518ad7b
+    model_version: aihubcampus-default-risk-1+48ce02563b2a
+    pickle_references: ['builtins.slice', 'joblib.numpy_pickle.NumpyArrayWrapper', 'numpy._core.multiarray._reconstruct', 'numpy._core.multiarray.scalar', 'numpy.dtype', 'numpy.ndarray', 'sklearn.compose._column_transformer.ColumnTransformer', 'sklearn.pipeline.Pipeline', 'sklearn.preprocessing._function_transformer.FunctionTransformer', 'sklearn.tree._classes.DecisionTreeClassifier', 'sklearn.tree._tree.Tree']
+RESULT: PASS — the artifact is the one trusted code produced and it scores a contract frame deterministically
+  exit=0
+
+$ docker compose exec -T web python -   # health from inside the container
+  health: ok
+
+$ docker compose exec -T web python -c '<revoke the probe session>' < token-file
+probe session revoked
+  exit=0
+
+$ docker inspect --format '{{json .NetworkSettings.Ports}}' aihubcampus-web-1
+{"2026/tcp":null}
+
+done

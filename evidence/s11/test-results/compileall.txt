@@ -1,0 +1,7 @@
+$ docker run --rm -v "$PWD:/app:z" aihubcampus-web:local sh -c 'cp -r /app/app.py /app/src /app/ml /tmp/ && cd /tmp && python -m compileall -q app.py src ml'
+# (compiled from the working tree in a writable copy: the bind-mounted tree is read-only
+#  to the unprivileged app user, and compileall writes .pyc files)
+$ date -Is
+2026-10-27T07:17:58+08:00
+compileall exit=0
+pyc files written: 39

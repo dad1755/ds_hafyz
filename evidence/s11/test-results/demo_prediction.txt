@@ -1,0 +1,5 @@
+class       1 | Predicted default next month
+probability 0.7195348837209302 -> Estimated model probability of next-month default
+tier        high | High
+version     aihubcampus-default-risk-1+48ce02563b2a
+advice      Offer supportive contact and discuss potential payment arrangements.
