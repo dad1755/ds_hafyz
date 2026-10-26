@@ -1,0 +1,8 @@
+$ docker run --rm aihubcampus-web:local python -c "from PIL import Image; ..."  # fresh process, reads the PNGs from disk
+01_target_class_distribution.png     PNG 750x610px RGBA ok
+02_age_by_class.png                  PNG 750x610px RGBA ok
+03_limit_bal_by_class.png            PNG 750x610px RGBA ok
+04_default_rate_by_pay0.png          PNG 750x610px RGBA ok
+05_default_rate_by_education.png     PNG 750x610px RGBA ok
+06_correlation_heatmap.png           PNG 940x820px RGBA ok
+exit=0

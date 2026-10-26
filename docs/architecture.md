@@ -355,3 +355,50 @@ for an already-parsed frame and for one 23-feature request, and owns the upload 
 **Not done in S2, by design.** No SQLite, no `dataset_versions` rows, no activation, no admin
 upload screen (S6/S9), no model, no EDA, no tunnel, no deployment. The stack was started only
 for the health check above and left stopped with `docker compose down` (never `-v`).
+
+## 13. S3 implementation record — EDA generator and the preprocessing contract
+
+**What exists now.** `ml/generate_eda.py` turns the seed CSV into six figures and a
+descriptive-statistics file (`models/eda/01…06_*.png`, `models/eda/summary.json`).
+`docs/preprocessing_contract.md` fixes what S4 must implement. `docs/report_evidence.md` §6
+carries the numbers and one interpretive caption per figure. No estimator is constructed
+anywhere in the sprint; `models/` holds plots and statistics, not a model.
+
+**Design decisions.**
+
+- **Figures are files, not runtime computation.** The six PNGs are written to
+  `models/eda/` and committed. The app (S10) will open saved files; nothing is recomputed on
+  a request, and a restart cannot change or lose a chart.
+- **Sized for the smallest viewport, not for print.** 3.75 in at 200 dpi = 750 px wide
+  (2× the 375 px viewport the UI must support); the heatmap is 4.7 in / 940 px because it has
+  13×13 cells. Font sizes are chosen for that downscale.
+- **Codes on the axis, meanings in a footnote.** Two-line tick labels for 7–11 categories
+  collide at 375 px, so the rate charts show the numeric code and carry a one-line legend
+  plus the source line. The per-code sample sizes stay in the caption, where they can be read.
+- **No cell text on the 13×13 heatmap.** 169 numbers are illegible at this size; the colour
+  pattern shows the block structure and the caption quotes the coefficients that matter
+  (`BILL_AMT1`~`BILL_AMT2` r = +0.952 etc.). Every quoted value is also in `summary.json`.
+- **Reproducible bytes.** PNG metadata is fixed (`Software` only, no timestamp, no host path),
+  so two runs of the same script on the same data are byte-identical — which is what makes
+  "the script regenerates the figures" a checkable claim rather than a description.
+- **One column contract.** The script imports `ml.schema` for the target name, class labels
+  and the 23-feature list; it defines no column of its own. The financial columns of the
+  heatmap are the only local choice, and it is stated in the module docstring.
+- **Contract before model.** `docs/preprocessing_contract.md` is written now so the S4
+  differences that matter — scaler for Logistic Regression, passthrough for the trees, no
+  one-hot on the codes, fit-on-train-only, `random_state=42` — are decisions on record before
+  any metric exists to argue backwards from.
+
+**Facts, each captured in `evidence/s3/`.**
+
+| Fact | Value | Evidence |
+|---|---|---|
+| Figures | 6 PNG + `summary.json`; 750×610 px ×5, 940×820 px ×1 | `eda_run.txt`, `eda_files.txt`, `eda_render_after_restart.txt` |
+| Regeneration | two independent runs, all 7 files byte-for-byte identical (SHA-256) | `eda_determinism.txt` |
+| Charts survive a restart | a fresh container process decoded all six from disk with Pillow | `eda_render_after_restart.txt` |
+| Numbers behind the captions | class counts 23,364 / 6,636; per-feature min/Q1/median/mean/Q3/max; per-code n and default rate; correlation matrix | `eda_run.txt`, `models/eda/summary.json` |
+| Seed unchanged | SHA-256 `a0f0ab49…176ca1`; `git status data/` empty | `eda_files.txt` |
+
+**Not done in S3, by design.** No train/test split executed, no model, no metrics, no
+`joblib`, no SQLite, no UI wiring of the charts (S10), no tunnel, no deployment. Nothing in
+the sprint changes how the running app behaves.

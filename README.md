@@ -6,9 +6,11 @@ probability, a display tier and supportive recommendations. Admin and User roles
 Streamlit + scikit-learn + SQLite in Docker, published through an existing Cloudflare
 Tunnel at **www.aihubcampus.online**.
 
-> **Status: Sprint 2 complete, awaiting independent verification.** The container from S1
+> **Status: Sprint 3 complete, awaiting independent verification.** The container from S1
 > builds and serves; the 25-column data contract, the CSV validator, the upload quarantine
-> and the 23-feature request validator are implemented and tested against the seed file.
+> and the 23-feature request validator are implemented and tested against the seed file; the
+> six EDA figures are generated from the CSV by `ml/generate_eda.py` and the preprocessing
+> contract S4 must implement is fixed in `docs/preprocessing_contract.md`.
 > There is still **no authentication, no database, no model, no dataset activation and no
 > deployment** — nothing on the page authenticates anyone or scores anything, and the app
 > is not reachable from the internet.
@@ -59,6 +61,7 @@ Produced by `python3 ml/inspect_dataset.py` (full output: `evidence/s0/inspect_d
 ├── src/config.py              # typed, non-secret environment settings (S1)
 ├── src/validation.py          # CSV + 23-feature validation, quarantine (S2)
 ├── ml/schema.py               # the 25-column / 23-feature contract, single source (S2)
+├── ml/generate_eda.py         # six EDA figures + descriptive summary from the CSV (S3)
 ├── .streamlit/config.toml     # server address/port 2026, CORS + XSRF on (S1)
 ├── Dockerfile                 # python:3.12-slim, non-root, healthcheck (S1)
 ├── compose.yaml               # project `aihubcampus`: web + cloudflared, no host ports (S1)
@@ -68,11 +71,13 @@ Produced by `python3 ml/inspect_dataset.py` (full output: `evidence/s0/inspect_d
 ├── .env.cloudflared.example   # tunnel-token placeholder only
 ├── .dockerignore
 ├── data/UCI_Credit_Card.csv   # immutable benchmark seed
-├── docs/                      # architecture, data dictionary, source of truth, rubric matrix
-├── evidence/s0/ … evidence/s2/ # captured command output
+├── docs/                      # architecture, data dictionary, source of truth, rubric matrix,
+│                              #   report evidence, preprocessing contract (S3)
+├── evidence/s0/ … evidence/s3/ # captured command output
 ├── ml/                        # schema.py, inspect_dataset.py, verify_draft_claims.py
 ├── tests/                     # pytest: settings, login shell (S1), schema/validation (S2)
-└── models/                    # artifacts + metrics.json (S4–S5)
+└── models/eda/                # six committed EDA PNGs + summary.json (S3);
+                               #   metrics.json and the pipeline arrive in S4–S5
 ```
 
 Modules are added when the sprint that implements them runs — no dead placeholder files.
@@ -151,6 +156,32 @@ python -m pytest tests/test_schema.py -q                      # the S2 gate
 - `data/quarantine/` is git-ignored; uploads are stored under a generated name with their
   SHA-256, and the seed CSV is never a destination.
 
+## Sprint 3 — preprocessing design and EDA evidence
+
+```bash
+# regenerate all six figures and the descriptive summary from the CSV alone
+docker run --rm --user "$(id -u):$(id -g)" -e HOME=/tmp -e MPLCONFIGDIR=/tmp/mpl \
+  -v "$PWD:/app:z" -w /app aihubcampus-web:local \
+  python ml/generate_eda.py --csv data/UCI_Credit_Card.csv --out models/eda
+```
+
+- `ml/generate_eda.py` writes exactly six figures — class distribution, age by class, credit
+  limit by class, default rate by `PAY_0`, default rate by `EDUCATION`, financial correlation
+  heatmap — plus `models/eda/summary.json`. Two runs produce byte-identical files
+  (`evidence/s3/eda_determinism.txt`).
+- The figures are 750 px wide (940 px for the heatmap), i.e. 2× a 375 px viewport, with titled
+  axes, the unit in the axis label (NTD / years / %), a code legend where the axis shows codes,
+  and a source line.
+- `docs/report_evidence.md` §6 carries the class counts, the descriptive-statistics table and
+  one substantive, causally-neutral caption per figure, with the sample size behind each
+  number. Small categories (`EDUCATION` 0/4/5/6, `MARRIAGE` 0, `PAY_0` 4–8) are flagged as
+  unstable rather than interpreted.
+- `docs/preprocessing_contract.md` fixes what S4 implements: stratified 80/20 split with
+  `random_state=42`, `ColumnTransformer` fitted on train only, scaled Logistic Regression,
+  unscaled tree models, no one-hot on the codes (documented limitation), threshold 0.5, one
+  saved pipeline at inference.
+- No model is trained in this sprint, and the seed CSV is byte-unchanged.
+
 ## Documentation index
 
 | Doc | Read it for |
@@ -160,9 +191,12 @@ python -m pytest tests/test_schema.py -q                      # the S2 gate
 | `docs/architecture.md` | Components, topology, tech choices, ingress port decision, threat model |
 | `docs/data_dictionary.md` | Every column, its unit (NTD), month, code meanings, constraints and rejection codes |
 | `docs/report_evidence.md` | What is verified by code today vs still `claimed` from the drafts |
+| `docs/preprocessing_contract.md` | The split, transform and artifact contract S4 must implement (S3) |
 
 ## Next sprint
 
-**S3** — preprocessing and EDA evidence: `ml/generate_eda.py`, six real plots with
-interpretive captions and a descriptive-statistics summary in `docs/report_evidence.md`.
-It builds on the validated contract from S2 (`ml/schema.py`) and the untouched seed file.
+**S4** — three-model training and fair evaluation: `ml/train.py`, `ml/evaluate.py`, three
+metrics/confusion-matrix records and the `claimed` vs `reproduced` comparison table. It
+implements exactly the contract in `docs/preprocessing_contract.md`: stratified 80/20 split
+with `random_state=42`, `ColumnTransformer` fitted on the training rows only, Logistic
+Regression scaled, the tree models unscaled, one final held-out test pass.

@@ -1,0 +1,24 @@
+$ ls -l models/eda/
+total 292
+-rw-r--r--. 1 ec-user ec-user 49050 Oct 26 14:55 01_target_class_distribution.png
+-rw-r--r--. 1 ec-user ec-user 37386 Oct 26 14:55 02_age_by_class.png
+-rw-r--r--. 1 ec-user ec-user 37584 Oct 26 14:55 03_limit_bal_by_class.png
+-rw-r--r--. 1 ec-user ec-user 55088 Oct 26 14:55 04_default_rate_by_pay0.png
+-rw-r--r--. 1 ec-user ec-user 43507 Oct 26 14:55 05_default_rate_by_education.png
+-rw-r--r--. 1 ec-user ec-user 46373 Oct 26 14:55 06_correlation_heatmap.png
+-rw-r--r--. 1 ec-user ec-user 14041 Oct 26 14:55 summary.json
+
+$ sha256sum models/eda/*
+dd5c223d8a6ff479ff104690e81496d79c3ea58bf493da418ea4da1d302e0fcf  models/eda/01_target_class_distribution.png
+c5ba850c00a2f0a9e5a810d52acc35dd21adb0d8a1e3d13c9ff223ae9aab8b69  models/eda/02_age_by_class.png
+4c545232d827506b6d4e7048997088b458093aadfb01ecb43e7142d91b704608  models/eda/03_limit_bal_by_class.png
+46a3801519c54708bcfa6c643f59c7f5a2426ed72f5d59147a4d9f69844bcda4  models/eda/04_default_rate_by_pay0.png
+46a6fb6a72aadc96300b5f0243ce74cc6ad9bac1211966c6ff9feca68bbbdc33  models/eda/05_default_rate_by_education.png
+3c6673b55d3c81e8e70fb3aa879ae6ff37326a45fe3e44ff7f13c07ae505c6ab  models/eda/06_correlation_heatmap.png
+d72443df7d962b56d336d61ba107abdd47884a9abf3b4c2b4deb773030443882  models/eda/summary.json
+
+$ sha256sum data/UCI_Credit_Card.csv   # seed must be unchanged
+a0f0ab49d6326671d6cd83be5c88dcf18007025fe9a53ecd699119c871176ca1  data/UCI_Credit_Card.csv
+
+$ git status --short data/
+(empty = seed file untouched)

@@ -1,0 +1,82 @@
+rows / columns      : 30,000 / 25
+features            : 23
+missing cells       : 0
+class 0 (no default next month): 23,364 (77.88%)
+class 1 (default next month  ):  6,636 (22.12%)
+
+column             min       q25    median        mean       q75       max
+LIMIT_BAL       10,000    50,000   140,000  167,484.32   240,000 1,000,000
+SEX                  1         1         2        1.60         2         2
+EDUCATION            0         1         2        1.85         2         6
+MARRIAGE             0         1         2        1.55         2         3
+AGE                 21        28        34       35.49        41        79
+PAY_0               -2        -1         0       -0.02         0         8
+PAY_2               -2        -1         0       -0.13         0         8
+PAY_3               -2        -1         0       -0.17         0         8
+PAY_4               -2        -1         0       -0.22         0         8
+PAY_5               -2        -1         0       -0.27         0         8
+PAY_6               -2        -1         0       -0.29         0         8
+BILL_AMT1     -165,580     3,559    22,382   51,223.33    67,091   964,511
+BILL_AMT2      -69,777     2,985    21,200   49,179.08    64,006   983,931
+BILL_AMT3     -157,264     2,666    20,088   47,013.15    60,165 1,664,089
+BILL_AMT4     -170,000     2,327    19,052   43,262.95    54,506   891,586
+BILL_AMT5      -81,334     1,763    18,104   40,311.40    50,190   927,171
+BILL_AMT6     -339,603     1,256    17,071   38,871.76    49,198   961,664
+PAY_AMT1             0     1,000     2,100    5,663.58     5,006   873,552
+PAY_AMT2             0       833     2,009    5,921.16     5,000 1,684,259
+PAY_AMT3             0       390     1,800    5,225.68     4,505   896,040
+PAY_AMT4             0       296     1,500    4,826.08     4,013   621,000
+PAY_AMT5             0       252     1,500    4,799.39     4,032   426,529
+PAY_AMT6             0       118     1,500    5,215.50     4,000   528,666
+
+AGE        class 0  n=23,364  min=        21  q25=        28  median=        34  mean=       35.42  q75=        41  max=        79  (years)
+AGE        class 1  n= 6,636  min=        21  q25=        28  median=        34  mean=       35.73  q75=        42  max=        75  (years)
+LIMIT_BAL  class 0  n=23,364  min=    10,000  q25=    70,000  median=   150,000  mean=  178,099.73  q75=   250,000  max= 1,000,000  (NTD)
+LIMIT_BAL  class 1  n= 6,636  min=    10,000  q25=    50,000  median=    90,000  mean=  130,109.66  q75=   200,000  max=   740,000  (NTD)
+
+PAY_0 (Sep 2005) by target
+  code  -2  n= 2,759  share= 9.20%  defaults=  365  rate=13.23%
+  code  -1  n= 5,686  share=18.95%  defaults=  954  rate=16.78%
+  code   0  n=14,737  share=49.12%  defaults=1,888  rate=12.81%
+  code   1  n= 3,688  share=12.29%  defaults=1,252  rate=33.95%
+  code   2  n= 2,667  share= 8.89%  defaults=1,844  rate=69.14%
+  code   3  n=   322  share= 1.07%  defaults=  244  rate=75.78%
+  code   4  n=    76  share= 0.25%  defaults=   52  rate=68.42%
+  code   5  n=    26  share= 0.09%  defaults=   13  rate=50.00%
+  code   6  n=    11  share= 0.04%  defaults=    6  rate=54.55%
+  code   7  n=     9  share= 0.03%  defaults=    7  rate=77.78%
+  code   8  n=    19  share= 0.06%  defaults=   11  rate=57.89%
+
+EDUCATION by target
+  code   0  n=    14  share= 0.05%  defaults=    0  rate= 0.00%
+  code   1  n=10,585  share=35.28%  defaults=2,036  rate=19.23%
+  code   2  n=14,030  share=46.77%  defaults=3,330  rate=23.73%
+  code   3  n= 4,917  share=16.39%  defaults=1,237  rate=25.16%
+  code   4  n=   123  share= 0.41%  defaults=    7  rate= 5.69%
+  code   5  n=   280  share= 0.93%  defaults=   18  rate= 6.43%
+  code   6  n=    51  share= 0.17%  defaults=    8  rate=15.69%
+
+MARRIAGE by target
+  code   0  n=    54  share= 0.18%  defaults=    5  rate= 9.26%
+  code   1  n=13,659  share=45.53%  defaults=3,206  rate=23.47%
+  code   2  n=15,964  share=53.21%  defaults=3,341  rate=20.93%
+  code   3  n=   323  share= 1.08%  defaults=   84  rate=26.01%
+
+strongest Pearson correlations (financial columns)
+  BILL_AMT1  ~ BILL_AMT2  r = +0.952
+  BILL_AMT5  ~ BILL_AMT6  r = +0.946
+  BILL_AMT4  ~ BILL_AMT5  r = +0.940
+  BILL_AMT2  ~ BILL_AMT3  r = +0.928
+  BILL_AMT3  ~ BILL_AMT4  r = +0.924
+  BILL_AMT4  ~ BILL_AMT6  r = +0.901
+  BILL_AMT2  ~ BILL_AMT4  r = +0.892
+  BILL_AMT1  ~ BILL_AMT3  r = +0.892
+
+wrote 6 figures to models/eda/
+  01_target_class_distribution.png      49,050 B
+  02_age_by_class.png                   37,386 B
+  03_limit_bal_by_class.png             37,584 B
+  04_default_rate_by_pay0.png           55,088 B
+  05_default_rate_by_education.png      43,507 B
+  06_correlation_heatmap.png            46,373 B
+  summary.json                          14,041 B
