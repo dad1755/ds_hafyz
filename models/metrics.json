@@ -459,7 +459,7 @@
     "test_rows": 6000,
     "threshold": 0.5
   },
-  "generated_at": "2026-10-26T08:04:18+00:00",
+  "generated_at": "2026-10-26T08:59:51+00:00",
   "schema_version": 1,
   "selection": {
     "decided_by": "cv_f1",

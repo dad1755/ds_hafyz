@@ -30,8 +30,14 @@ COPY .streamlit/config.toml ./.streamlit/config.toml
 COPY app.py ./
 COPY src/ ./src/
 # The data contract lives in ml/schema.py and src/validation.py imports it, so the
-# package must ship with the image. No model artefacts or data are copied.
+# package must ship with the image. No dataset is copied.
 COPY ml/ ./ml/
+
+# The shipped model artifacts (S5), read-only: the artifact, the manifest it is verified
+# against and the evaluation record. They are root-owned and mode 644, and the container runs
+# as `app`, so the runtime can read them and cannot rewrite them. src/inference.py verifies
+# the checksum against the manifest before it unpickles anything.
+COPY models/best_pipeline.joblib models/model_manifest.json models/metrics.json ./models/
 
 # Writable storage for the SQLite database (mounted as a named volume in compose).
 RUN mkdir -p /app/storage && chown -R app:app /app/storage

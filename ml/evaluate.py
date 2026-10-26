@@ -68,6 +68,10 @@ POSITIVE_CLASS = 1
 BASELINE_KEY = "always_class_0"
 FIGSIZE = (3.75, 3.05)
 
+#: Prefix of the model version recorded in the manifest and shown on every prediction
+#: result. The checksum suffix is appended when the manifest is written.
+MODEL_VERSION_PREFIX = "aihubcampus-default-risk-1"
+
 SOURCE_LINE = (
     "Source: models/metrics.json — {n:,} held-out test rows, "
     "stratified 80/20, random_state=42"
@@ -379,6 +383,11 @@ def main(argv: list[str] | None = None) -> int:
             "estimator": selected_candidate.estimator_name,
             "hyperparameters": selected_candidate.hyperparameters,
             "transform": selected_candidate.transform,
+            # A version the application can display on every result. It is derived from the
+            # artifact checksum, so a retrained or replaced artifact cannot keep the old
+            # version string: the two move together by construction.
+            "version": f"{MODEL_VERSION_PREFIX}+{metrics['checks']['artifact']['sha256'][:12]}",
+            "version_basis": "artifact sha256 — a retrained artifact gets a new version",
             "threshold": THRESHOLD,
             "threshold_note": (
                 "fixed at the evaluated value; an alternative threshold needs train/validation-only "
@@ -398,11 +407,27 @@ def main(argv: list[str] | None = None) -> int:
             "unit_source": "ml/schema.py COLUMN_SPECS",
         },
         "classes": {
-            "0": "predicted non-default next month (not a guarantee of payment)",
-            "1": "predicted default next month (not a confirmed delinquency)",
+            "0": "Predicted non-default next month",
+            "1": "Predicted default next month",
+        },
+        "class_caveats": {
+            "0": "This is not a guarantee of payment.",
+            "1": "This is not a confirmed delinquency.",
         },
         "probability_label": "Estimated model probability of next-month default",
         "calibration": "uncalibrated — no calibration test has been run",
+        "evaluation": {
+            "scored_on": f"{len(y_test):,} held-out test rows, scored once",
+            "threshold": THRESHOLD,
+            "test_rows": int(len(y_test)),
+            "test_class_counts": {str(label): int((y_test == label).sum()) for label in (0, 1)},
+            "metrics": evaluated[selected_key]["metrics"],
+            "confusion_matrix": evaluated[selected_key]["confusion_matrix"],
+            "note": (
+                "Copied from models/metrics.json so a result screen can state the model's own "
+                "measured recall without reading the full evaluation record."
+            ),
+        },
         "dataset": {"path": dataset["path"], "sha256": dataset["sha256"]},
         "split": metrics["split"],
         "environment": metrics["environment"],

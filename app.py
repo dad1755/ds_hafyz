@@ -12,7 +12,9 @@ from __future__ import annotations
 
 import streamlit as st
 
+from ml.verify_artifact import ArtifactError
 from src.config import load_settings
+from src.inference import load_service
 
 settings = load_settings()
 
@@ -57,6 +59,14 @@ with st.container(border=True):
         )
 
 # ---------------------------------------------------------------------- build facts
+try:
+    # The first call verifies models/model_manifest.json against the artifact and loads it;
+    # every later call reuses that object. Nothing is trained here.
+    _model = load_service()
+    model_status = f"{_model.model_version} (artifact sha256 {_model.artifact_sha256[:12]}…, verified)"
+except ArtifactError as _error:
+    model_status = f"NOT LOADED — {_error}"
+
 with st.expander("Build information", expanded=False):
     st.write(
         {
@@ -65,6 +75,7 @@ with st.expander("Build information", expanded=False):
             "Service port": settings.port,
             "Database path": settings.db_path,
             "Log retention (days)": settings.retention_days,
+            "Model": model_status,
         }
     )
     st.caption(
