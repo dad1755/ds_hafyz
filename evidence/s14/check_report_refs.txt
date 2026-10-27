@@ -1,0 +1,15 @@
+$ python3 evidence/s14/check_report_refs.py
+==============================================================================
+REPORT / RUBRIC REFERENCE CHECK — Sprint 14
+==============================================================================
+documents scanned      : 29
+paths checked          : 925
+path tokens skipped    : 6 (globs, ellipses, placeholders, prose)
+components 01..26      : ok
+rubric rows (26/9/9/15): ok
+
+No cited path is missing, no unsupported PASS/completed claim, no unconfirmed group fact
+stated as fact, and every mandatory component has a numbered draft.
+
+RESULT: PASS
+EXIT=0

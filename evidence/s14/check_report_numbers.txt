@@ -1,0 +1,12 @@
+$ python3 evidence/s14/check_report_numbers.py
+==============================================================================
+REPORT NUMBER CHECK — every quoted figure against the artefact that records it
+==============================================================================
+figures derived from models/metrics.json and models/eda/summary.json : 47
+found in docs/report/                                                : 47
+
+Every derived figure appears in the drafts exactly as the artefact records it.
+This proves the figures were copied from the artefact, not retyped from memory.
+
+RESULT: PASS
+EXIT=0
