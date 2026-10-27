@@ -19,7 +19,13 @@
 #
 # The backup is taken from the LIVE service without stopping it. Nothing is written to the
 # live volume: the snapshot is built in the container's /tmp (a tmpfs under the hardened
-# compose file) and copied out with `docker cp`.
+# compose file) and streamed out with `docker exec … cat`.
+#
+# Why not `docker cp`: since S12 /tmp is a tmpfs, and Docker cannot copy a path that lives in a
+# container's tmpfs — `docker cp <id>:/tmp/x .` fails with "Could not find the file". Reading
+# the same path with `docker exec … cat` works, so the snapshot is streamed to the host and the
+# container-side sha256 is compared with the host file's sha256. A stream has no size ceiling
+# either, which a copy through the daemon's memory does.
 #
 # Usage:
 #   scripts/backup.sh                      # -> backups/aihubcampus-<UTC stamp>.tar.gz
@@ -162,14 +168,20 @@ PY
 SHA_IN_CONTAINER="$(python3 -c 'import json,sys;print(json.load(open(sys.argv[1]))["sha256"])' "$STAGE/snapshot.json")"
 say "snapshot" "VACUUM INTO ok, integrity_check=ok, sha256=${SHA_IN_CONTAINER:0:16}…"
 
-# --------------------------------------------------------------------------- copy out
-docker cp "$CID:/tmp/aihubcampus-backup.db" "$DEST/aihubcampus.db" >/dev/null
-docker compose -p "$PROJECT" exec -T "$SERVICE" rm -f /tmp/aihubcampus-backup.db
+# --------------------------------------------------------------------------- stream out
+# A failed `docker exec` exits non-zero but the shell has already created the empty host file,
+# so the stream is not trusted on its exit status alone: check the bytes and the sha256 the
+# container computed before the file is allowed into the bundle.
+docker compose -p "$PROJECT" exec -T "$SERVICE" cat /tmp/aihubcampus-backup.db > "$DEST/aihubcampus.db" \
+    || { rm -f "$DEST/aihubcampus.db"; die "could not stream the snapshot out of the container"; }
+docker compose -p "$PROJECT" exec -T "$SERVICE" rm -f /tmp/aihubcampus-backup.db || true
+
+[[ -s "$DEST/aihubcampus.db" ]] || die "the streamed snapshot is empty — the backup is not usable"
 
 SHA_ON_HOST="$(sha256sum "$DEST/aihubcampus.db" | cut -d' ' -f1)"
 [[ "$SHA_IN_CONTAINER" == "$SHA_ON_HOST" ]] \
     || die "checksum changed in transit: container=$SHA_IN_CONTAINER host=$SHA_ON_HOST"
-say "copy" "docker cp verified — host checksum equals the container's"
+say "copy" "streamed docker exec cat, verified — host checksum equals the container's ($SHA_ON_HOST)"
 
 python3 -c 'import json,sys;print(json.dumps(json.load(open(sys.argv[1]))["dataset_versions"], indent=2, sort_keys=True))' \
     "$STAGE/snapshot.json" > "$DEST/dataset_metadata.json"

@@ -8,7 +8,7 @@ Every file here is a verbatim command transcript, captured on `ridergami2` again
 |---|---|---|
 | `build.txt` | the hardened image building from a digest-pinned base | `docker compose build web` |
 | `restart.txt` | before/after of a real `--force-recreate`: same row counts, same artifact sha256, hardening now applied | `bash evidence/s12/restart.sh` |
-| `backup.txt` | a backup of the live stack: snapshot, checksum on both sides of `docker cp`, self-verification of its own tarball | `scripts/backup.sh` |
+| `backup.txt` | a backup of the live **hardened** stack: snapshot, streamed out and checksum-verified, self-verification of its own tarball | `scripts/backup.sh` |
 | `roundtrip.txt` | live DB → volume copy → backup → restore into a disposable volume and a directory; three-way row-count compare; the three refusals of the live volume | see the section headings inside |
 | `smoke_test.txt` | the 15 checks against the running container | `scripts/smoke_test.sh` |
 | `secrets.txt` | the secret-pattern scan over the tree | `python3 scripts/check_no_secrets.py` |

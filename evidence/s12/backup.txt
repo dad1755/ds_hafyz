@@ -1,9 +1,19 @@
-preflight project=aihubcampus service=web container=67cba7411446 health=healthy
-snapshot VACUUM INTO ok, integrity_check=ok, sha256=0cf65ebe37b5c184…
-copy     docker cp verified — host checksum equals the container's
-model    manifest + metrics copied, artifact sha256=48ce02563b2aad9f…
-packed   /home/ec-user/non_prod/hafyz_ds/backups/aihubcampus-20261027T001944Z.tar.gz (12K), checksum written beside it
-PASS — 4 file(s) match the manifest, integrity_check=ok, 8 table count(s) match
-done     /home/ec-user/non_prod/hafyz_ds/backups/aihubcampus-20261027T001944Z.tar.gz
+AI Hub Campus S12 — backup of the hardened stack — 2026-10-27T02:40:29Z
 
-Next: scripts/restore.sh --backup /home/ec-user/non_prod/hafyz_ds/backups/aihubcampus-20261027T001944Z.tar.gz --to-dir /tmp/restore-check
+--- the runtime this ran against ---
+container     : /aihubcampus-web-1 (73c144f9e466) read_only=true
+cap_drop      : ["ALL"]
+tmpfs         : {"/home/app/.cache":"rw,noexec,nosuid,size=64m","/tmp":"rw,noexec,nosuid,size=256m"}
+health        : healthy
+
+--- scripts/backup.sh ---
+preflight project=aihubcampus service=web container=73c144f9e466 health=healthy
+snapshot VACUUM INTO ok, integrity_check=ok, sha256=0cf65ebe37b5c184…
+copy     streamed docker exec cat, verified — host checksum equals the container's (0cf65ebe37b5c18427c45e3d16107eebe8ee32c11c3ae60bc777d152a1a7e757)
+model    manifest + metrics copied, artifact sha256=48ce02563b2aad9f…
+packed   /home/ec-user/non_prod/hafyz_ds/backups/aihubcampus-20261027T024029Z.tar.gz (12K), checksum written beside it
+PASS — 4 file(s) match the manifest, integrity_check=ok, 8 table count(s) match
+done     /home/ec-user/non_prod/hafyz_ds/backups/aihubcampus-20261027T024029Z.tar.gz
+
+Next: scripts/restore.sh --backup /home/ec-user/non_prod/hafyz_ds/backups/aihubcampus-20261027T024029Z.tar.gz --to-dir /tmp/restore-check
+exit          : 0

@@ -552,8 +552,10 @@ bash evidence/s12/restart.sh                     # restart persistence, before/a
   the checkout.
 - **Backup is consistent, not a file copy.** The database runs in WAL mode, so `cp` of the
   `.db` can miss committed pages. `scripts/backup.sh` takes a `VACUUM INTO` snapshot inside the
-  container, checksums it on both sides of `docker cp`, captures the model manifest, metrics and
-  dataset rows, then **unpacks its own tarball and verifies every checksum and row count**.
+  container, streams it out with `docker exec … cat` and compares its SHA-256 with the host
+  file's, captures the model manifest, metrics and dataset rows, then **unpacks its own tarball
+  and verifies every checksum and row count**. (Not `docker cp`: the snapshot stages in `/tmp`,
+  which S12 made a tmpfs, and Docker cannot copy a path inside a container tmpfs.)
 - **Restore verifies before it writes.** `scripts/restore.sh` checks the tarball's `.sha256`,
   every file against `manifest.json`, `integrity_check`, and every row count — and refuses the
   live volume unless `--allow-live --yes` is given *and* the service is stopped. Three refusals

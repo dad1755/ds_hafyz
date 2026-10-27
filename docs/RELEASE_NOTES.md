@@ -47,6 +47,17 @@ it names the command. Nothing here is dated by guesswork — the git commit is t
   20-line security checklist.
 - `docs/RELEASE_NOTES.md` — this file.
 
+### Fixed after the independent gate (F-1)
+
+- **`scripts/backup.sh` could not produce a backup on the hardened stack.** It staged the
+  `VACUUM INTO` snapshot in the container's `/tmp` and pulled it out with `docker cp`, but S12
+  makes `/tmp` a tmpfs and Docker cannot copy a path inside a container tmpfs — so the script
+  exited `1` on the very stack this sprint ships. The snapshot is now **streamed out with
+  `docker exec … cat`**, then checked three ways before it is allowed into the bundle: the exec
+  exited zero, the file is non-empty, and the host sha256 equals the one the container computed.
+  `docs/runbook.md` §4 and `README.md` describe the stream, not the copy. Re-captured on the
+  hardened runtime in `evidence/s12/backup.txt` and `evidence/s12/roundtrip.txt`.
+
 ### Unchanged, deliberately
 
 - **Port 2026, not 8501.** The Cloudflare ingress targets `http://web:2026`

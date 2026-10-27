@@ -126,8 +126,9 @@ scripts/backup.sh --out /srv/backups --keep 14
 
 What it does, in order: refuses if the container is not running and healthy → takes a
 **`VACUUM INTO` snapshot inside the container** (not a file copy: the database runs in WAL
-mode, so copying the `.db` alone can miss committed pages still in the `-wal`) → copies the
-snapshot out with `docker cp` and compares the SHA-256 on both sides → captures
+mode, so copying the `.db` alone can miss committed pages still in the `-wal`) → streams the
+snapshot out with `docker exec … cat` and compares the SHA-256 the container computed on the
+snapshot with the host file's → captures
 `model_manifest.json`, `metrics.json` and the `dataset_versions` rows → writes
 `manifest.json`/`MANIFEST.txt` with a checksum per file, the row counts, the git commit and the
 image id → packs a tarball and a `.sha256` beside it → **unpacks its own tarball and verifies
