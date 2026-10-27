@@ -88,7 +88,7 @@ scripts/verify_release.sh --build --with-tests
 ```
 
 ```
-PASS  pytest suite  285 passed in 587.26s (0:09:47)
+PASS  pytest suite  285 passed in 572.74s (0:09:32)
 ```
 
 Same 285 tests, same result as S11 — the pin changed which bytes the image is built from, not
