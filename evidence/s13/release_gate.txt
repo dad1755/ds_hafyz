@@ -1,7 +1,7 @@
-AI Hub Campus release verification — 2026-10-27T05:27:44Z
+AI Hub Campus release verification — 2026-10-27T05:42:37Z
 repo=/home/ec-user/non_prod/hafyz_ds project=aihubcampus image=aihubcampus-web:local
 
-PASS  git tree clean                 s13/cloudflare-tunnel @ 2411ac99cef5
+PASS  git tree clean                 s13/cloudflare-tunnel @ b3d014447133
 PASS  compose validates              docker compose config --quiet
 PASS  no host ports in compose       expose: only
 PASS  compose has read_only: true    present
@@ -22,7 +22,7 @@ PASS  scripts/smoke_test.sh present  executable, --help works
 PASS  scripts/verify_release.sh present executable, --help works
 PASS  docs name real files           every scripts/ and evidence/ path in runbook, deployment, README exists
 PASS  docs/runbook.md present        252 lines
-PASS  docs/deployment.md present     271 lines
+PASS  docs/deployment.md present     281 lines
 PASS  docs/RELEASE_NOTES.md present  172 lines
 PASS  docs/test_matrix.md present    99 lines
 PASS  smoke test                     RESULT: 15 passed, 0 failed, 1 skipped
@@ -30,6 +30,6 @@ SKIP  pytest suite                   pass --with-tests
 
 ----------------------------------------------------------------
 RESULT: 25 passed, 0 failed
-VERDICT: PASS (mechanical checks) — commit 2411ac99cef5
+VERDICT: PASS (mechanical checks) — commit b3d014447133
 This is the author/operator gate. Sprint certification still requires the independent
 verification agent (blueprint §0: a sprint is VERIFIED only by its own gate).
