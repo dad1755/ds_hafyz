@@ -1,0 +1,28 @@
+$ grep -rn "four decimals" docs/ --include=*.md | grep -v docs/acceptance/S14.md
+docs/report/13_comparison.md:40:0.4620. Those figures reproduce from the shipped artifact and metrics — LR and RF to four decimals,
+docs/report_evidence.md:171:| LR / DT / RF accuracy, precision, recall, F1 (Table 9) | v3 §4.2–4.3 | **Settled in S4**: reproduced from `models/best_pipeline.joblib` and `models/metrics.json`; LR and RF match to four decimals, DT to ~1e-3 — see §7.3 | S4 |
+docs/report_evidence.md:661:| 4 | Table 9 model metrics (LR 0.8077, DT 0.8172, RF 0.8122 accuracy; DT F1 0.4620) | **confirmed** — LR and RF to four decimals, DT to ~1e-3 | `docs/report_evidence.md` §7.3 |
+
+$ sed -n "39,44p" docs/report/13_comparison.md
+The draft this project replaced reported LR 0.8077 / DT 0.8172 / RF 0.8122 accuracy and DT F1
+0.4620. Those figures reproduce from the shipped artifact and metrics — LR and RF to four decimals,
+DT to ~1e-3; the reproduction is recorded in `docs/report_evidence.md` §7.3, and it is a check
+that the delivered pipeline is the pipeline the draft described. What the draft did *not* report is
+the recall figure that matters (0.3557) or the baseline that makes accuracy meaningless. The
+correction is not to the arithmetic but to the framing.
+
+$ sed -n "661p;726p" docs/report_evidence.md
+| 4 | Table 9 model metrics (LR 0.8077, DT 0.8172, RF 0.8122 accuracy; DT F1 0.4620) | **confirmed** — LR and RF to four decimals, DT to ~1e-3 | `docs/report_evidence.md` §7.3 |
+| `evidence/s13/check_no_secrets.txt` | `scripts/check_no_secrets.py` | 292 files scanned, zero operator secrets |
+
+$ head -1 evidence/s13/check_no_secrets.txt
+scanned 292 file(s); 4 secret value(s) loaded from operator env
+
+$ grep -rn "\bPASS\b" docs/report/ | wc -l
+14
+$ grep -rni "completed" docs/report/ | wc -l
+0
+
+$ git show --name-only --format= 91d424d
+docs/report/13_comparison.md
+docs/report_evidence.md
