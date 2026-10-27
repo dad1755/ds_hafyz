@@ -1,0 +1,116 @@
+# S16 final live smoke — HTTPS, both roles, and the probability against the artifact
+# run (UTC): 2026-10-27T17:18:47Z
+# target:    https://www.aihubcampus.online
+# host:      ridergami2 · 7.2.11-200.fc44.x86_64
+# HEAD:      08365e8 · branch s16/release-audit-handover
+# tag:       v1.0.0
+
+=== 1. the public HTTPS surface ===
+$ docker compose ps
+SERVICE       NAME                        STATUS                    PORTS
+cloudflared   aihubcampus-cloudflared-1   Up 16 minutes             
+web           aihubcampus-web-1           Up 18 minutes (healthy)   2026/tcp
+
+$ docker port aihubcampus-web-1   (must be empty: no host port, Gate E)
+  (empty output above = nothing published)
+
+$ curl -sS -A 'aihubcampus-s16-smoke/1.0' -D - -o /dev/null https://www.aihubcampus.online/
+status=200 content_type=text/html; charset=utf-8 time=0.341795s
+  content-type: text/html; charset=utf-8
+  server: cloudflare
+  cf-ray: a5135cb91c0d0a9d-SIN
+
+$ curl -sS -A 'aihubcampus-s16-smoke/1.0' https://www.aihubcampus.online/_stcore/health
+ok
+  status=200 time=0.322516s
+
+=== 2. the artifact's own answer for the 23 demonstrator values ===
+request written: 23 features
+
+# (a) the application's own CLI — verified pipeline, no Streamlit in the path
+$ docker compose exec -T web python -m src.inference --input - < request.json
+{
+  "artifact_sha256": "48ce02563b2aad9fbf9397603c642b0319be617c57fde8e1fd26ec08d518ad7b",
+  "calibration_note": "The probability is uncalibrated \u2014 no calibration test has been run \u2014 so read it as the model's own score, not as a real-world risk percentage.",
+  "class_caveat": "This is not a confirmed delinquency.",
+  "class_label": "Predicted default next month",
+  "disclaimer": "Academic decision-support demonstration built on the public 2005 Taiwanese credit-card dataset. It is not financial advice, not a credit decision and not an automated sanction: no limit is frozen, no application is rejected and nothing is reported about a person without a human decision. Do not enter real customer data.",
+  "false_negative_note": "False negatives are real: on the 6,000 held-out test accounts the model missed 64.4% of the 1,327 that actually defaulted (recall 0.36 at threshold 0.50). A non-default prediction therefore does not rule out default.",
+  "model_version": "aihubcampus-default-risk-1+48ce02563b2a",
+  "predicted_class": 1,
+  "probability": 0.7195348837209302,
+  "probability_label": "Estimated model probability of next-month default",
+  "risk_tier": "high",
+  "threshold": 0.5,
+  "tier_advice": "Offer supportive contact and discuss potential payment arrangements.",
+  "tier_label": "High",
+  "tier_note": "Risk bands are illustrative UI cutoffs on the model's estimated probability. They are not validated banking thresholds and not regulatory credit grades. The band never triggers an automated decision: no limit is frozen, no application is rejected and no customer is sanctioned without a human review."
+}
+
+# (b) a bare scikit-learn predict_proba on the same artifact, feature order from the manifest
+$ { python body with the request inlined } | docker compose exec -T web python -
+feature order  : LIMIT_BAL SEX EDUCATION MARRIAGE AGE PAY_0 PAY_2 PAY_3 PAY_4 PAY_5 PAY_6 BILL_AMT1 BILL_AMT2 BILL_AMT3 BILL_AMT4 BILL_AMT5 BILL_AMT6 PAY_AMT1 PAY_AMT2 PAY_AMT3 PAY_AMT4 PAY_AMT5 PAY_AMT6
+columns match  : True
+predict_proba  : [0.280465116279, 0.719534883721]
+P(class 1)     : 0.7195348837209302
+argmax         : 1
+
+expected (from the artifact): probability=0.7195348837209302 class=1 model=aihubcampus-default-risk-1+48ce02563b2a
+
+=== 3. a synthetic administrator for the run ===
+$ docker compose exec -T -e SYNTH_ADMIN_USER=<synthetic> -e SYNTH_ADMIN_PASSWORD=<synthetic> web python - < evidence/s15/make_demo_admin.py
+synthetic admin re-armed: id=7 username=s16_release_check role=admin active=1 must_change_password=0 hash_prefix=$argon2id$
+
+=== 4. the CSV that must be refused ===
+$ python3 - (drop one feature column from the 25-column contract, keep 3 rows)
+wrote /tmp/multica-task-1727635916/s16-smoke.e3hQqNRg/invalid_missing_column.csv: 24 columns (PAY_AMT6 removed), 3 rows
+
+=== 5. both roles, end to end, through the live URL ===
+$ NODE_PATH=/home/ec-user/qa759-v2/node_modules BASE_URL=https://www.aihubcampus.online CRED_FILE=<scratch> node evidence/s16/ui_release_smoke.js
+PASS  HTTPS root answers 200 — status=200
+PASS  the response is served by the Cloudflare edge — server=cloudflare cf-ray=a5135e0f09119d1d-SIN
+PASS  the sign-in form renders on the public URL — body contains "Sign in"
+PASS  administrator signs in through the tunnel — s16_release_check
+PASS  administrator sees the six admin sections — Home | Predict default risk | My prediction history | User management | Dataset manager | Model evaluation
+PASS  user management lists the operator admin and the demo user — ds_hafyz, demo_user
+PASS  the four account controls are present — create / role / temporary password / deactivate
+PASS  no password hash is rendered on the page — no hash text in the body
+PASS  a CSV that breaks the 25-column contract is refused — rejection #8 — missing required column(s): PAY_AMT6; the file must contain all 25 documented columns (see docs/data_dictionary.md)
+PASS  the refusal names stable error codes — missing_column
+PASS  the refusal states nothing was repaired or partially loaded — stated on the page
+PASS  model evaluation renders the shipped metrics, matrices, importances and metadata — Model comparison | Confusion matrices | Feature importance | Model metadata
+PASS  administrator signs out — sign-in form returned
+PASS  user signs in through the tunnel — demo_user
+PASS  user sees three sections only — Home | Predict default risk | My prediction history
+PASS  the user is offered no administrator section — Home | Predict default risk | My prediction history
+PASS  the form is the four documented groups covering 23 inputs — keyboard_arrow_down
+
+1 · Credit profile — 5 inputs | keyboard_arrow_right
+
+2 · Repayment history — 6 inputs | keyboard_arrow_right
+
+3 · Billing amounts — 6 inputs | keyboard_arrow_right
+
+4 · Previous paid amounts — 6 inputs
+PASS  all 23 inputs are loaded, the 14 numeric ones reading back as typed — LIMIT_BAL=120000, AGE=34, BILL_AMT1..6, PAY_AMT1..6 as documented
+PASS  the model returns a probability, a band and advice — probability=71.95% band=High
+PASS  the result states the decision threshold and the model version — threshold=0.50 model=aihubcampus-default-risk-1+48ce02563b2a
+PASS  the displayed probability equals the artifact's own probability — displayed 71.95% vs direct 71.9535% (delta 0.0035 pp, display is rounded to 2 dp)
+PASS  the displayed class equals the artifact's own class — displayed "Predicted default next month" vs direct class 1 ("Predicted default next month")
+PASS  the displayed model version is the artifact the pipeline loaded — displayed aihubcampus-default-risk-1+48ce02563b2a vs aihubcampus-default-risk-1+48ce02563b2a
+PASS  the scored request is in the user's own history — 12 row(s) for this account
+PASS  an incomplete submission is refused with a named feature — feature 'LIMIT_BAL' has no value
+PASS  the refusal says nothing was scored and nothing recorded — caption rendered
+PASS  user signs out — sign-in form returned
+
+RESULT: 27 passed, 0 failed
+RELEASE SMOKE PASSED — both roles complete end to end on the live URL and the
+displayed probability is the artifact's own probability.
+node exit=0
+
+=== 6. the synthetic administrator is deactivated ===
+$ docker compose exec -T -e SYNTH_ADMIN_USER=<synthetic> web python - < evidence/s15/deactivate_demo_admin.py
+synthetic admin deactivated: id=7 username=s16_release_check role=admin active=0
+
+RESULT: HTTPS probe, artifact parity (two independent computations) and the browser journeys
+        above. node exit=0 (0 = every browser check passed).

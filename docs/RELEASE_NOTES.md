@@ -1,9 +1,8 @@
 # Release notes — AI Hub Campus
 
-The project does not tag a release yet: it is a single-instance academic deployment on
-`www.aihubcampus.online`, built sprint by sprint from `blueprint.md`. This file records what
-each sprint changed in a form an operator can act on, and carries the template the release
-candidate (S16) will fill in.
+`v1.0.0` is tagged and is what `www.aihubcampus.online` serves. It is a single-instance academic
+deployment built sprint by sprint from `blueprint.md`; this file records what each sprint changed
+in a form an operator can act on, and the first section is the release record itself.
 
 Format: one section per sprint, newest first. Each entry states **what an operator can observe**
 (behaviour, file, command), not what the author intended. A claim that needs a command to check
@@ -11,7 +10,116 @@ it names the command. Nothing here is dated by guesswork — the git commit is t
 
 ---
 
-## Unreleased — Sprint 13: live on www.aihubcampus.online through the Cloudflare tunnel
+## v1.0.0 — the release candidate (Sprint 16)
+
+```text
+VERSION:            v1.0.0
+DATE (UTC):         2026-10-27T16:54:11Z      (the tag's commit date)
+GIT COMMIT:         tag v1.0.0 — `git rev-parse v1.0.0^{commit}`; the exact sha is printed at the
+                    top of evidence/s16/release_gate.txt, which ran on a clone of this tag
+IMAGE ID:           sha256:d8e4cfa00e730734f8160a65afab017a00c78722167622a69d6aed5b0d400cd7
+                    (aihubcampus-web:local) — byte-identical to this tree, 30/30 .py files
+DATABASE SCHEMA:    0003_dataset_staging
+MODEL ARTIFACT:     sha256:48ce02563b2aad9fbf9397603c642b0319be617c57fde8e1fd26ec08d518ad7b
+                    (models/best_pipeline.joblib, 8,187 bytes)
+MODEL VERSION:      aihubcampus-default-risk-1+48ce02563b2a
+DATASET VERSION:    id=1 sha256=a0f0ab49d6326671d6cd83be5c88dcf18007025fe9a53ecd699119c871176ca1
+                    rows=30000 columns=25
+DEPLOYED AT:        https://www.aihubcampus.online (and https://aihubcampus.online)
+```
+
+### What ships
+
+- **One Compose project, one service, no host port.** `aihubcampus` runs `web` (Streamlit, `expose
+  2026`) and `cloudflared` (outbound only, started after `web` is healthy). `docker port
+  aihubcampus-web-1` prints nothing.
+- **The whole application**, S1–S15: the 23-feature prediction form with probability, risk band,
+  advice and disclosures; per-account prediction history; administrator user management, dataset
+  manager with validation-before-activation, and model evaluation that renders the shipped metrics
+  rather than redrawing them; Argon2id credentials, server-side sessions, RBAC and an audit trail.
+- **The pinned model artifact** and its manifest, verified at startup by `ml/verify_artifact.py`
+  (dataset identity, feature order, class semantics, pickle allowlist, pipeline schema,
+  determinism, metrics consistency). The app refuses to serve if verification fails.
+- **A hardened runtime**: digest-pinned base image, non-root `app` user, read-only root filesystem,
+  `cap_drop: ALL`, `no-new-privileges`, bounded logs, `/tmp` and the cache as bounded `noexec` tmpfs.
+- **Four operator scripts**: `verify_release.sh`, `smoke_test.sh`, `backup.sh`, `restore.sh`, each
+  with `--help`, each exiting `1` on a failed check and `2` on bad usage.
+- **The documents the release is judged on**: `docs/runbook.md` (§10 is the handover),
+  `docs/deployment.md`, `docs/model_card.md`, `docs/test_matrix.md`, `docs/RELEASE_NOTES.md`, and
+  the evidence in `evidence/s16/`.
+
+### Verified — command → result
+
+| Command | Result |
+|---|---|
+| `bash evidence/s16/preflight.sh` | running image is byte-identical to the tree: **30/30 .py files, 0 differ**; artifact and manifest hashes match inside and outside the image; no host port |
+| `bash evidence/s16/release_gate.sh` (tag `v1.0.0`, clean clone) | `scripts/verify_release.sh`: **PASS**, 0 failed — transcript in `evidence/s16/release_gate.txt` |
+| `scripts/smoke_test.sh --url …` | the running stack's hardening checks and the public HTTPS surface — transcript in `evidence/s16/smoke_test.txt` |
+| `bash evidence/s16/backup_restore_drill.sh` | bundle written outside the live volume (`27e9a81c…`), second copy taken, restored into a disposable volume: `integrity_check=ok`, **every table count matched**, then the drill volume removed |
+| `bash evidence/s16/rollback_drill.sh` | `docker compose down` (no `-v`) → volume survives → `up -d` → healthy on a **new container id**, **same database sha256 `7c815092…`**, public HTTPS `200` |
+| `bash evidence/s16/run_release_smoke.sh` | **27 checks, 0 failed**: both roles end to end on the live URL; displayed probability **71.95%** vs the artifact's **71.9535%**; displayed class and model version equal the pipeline's; a 24-column CSV refused as `missing_column`; an empty `LIMIT_BAL` refused before the model ran |
+
+Timestamps, command output and screenshots for each row are in `evidence/s16/` — the transcripts
+are the evidence, this table is the index.
+
+**The pytest suite was not re-run in this sprint, deliberately.** No application `.py` file,
+dependency, `Dockerfile` or `compose.yaml` has changed since `49540a6`, the commit whose S13 gate
+ran the suite — `git diff --stat 49540a6..HEAD -- '*.py' requirements.txt Dockerfile compose.yaml`
+lists only `evidence/` helper scripts. Two S16 attempts were killed by host memory pressure from a
+concurrent build on this host, not by a test failure, and no completed transcript is claimed.
+`evidence/s16/preflight.txt` is what makes the omission safe: the running image's application code
+is byte-identical to this tree, so the earlier result applies to what ships. The command, for the
+next release or for the gate:
+
+```bash
+docker run --rm --network none -v "$PWD:/app:z" -w /app aihubcampus-web:local \
+    python -m pytest tests -q -p no:cacheprovider
+```
+
+### Known limitations
+
+- **Model recall is 0.3557** at the 0.5 threshold: 855 of the 1,327 held-out defaulters are missed.
+  The UI prints that sentence with every result; `docs/model_card.md` §5–§6 is the full record.
+- **The probability is uncalibrated** — no calibration test has been run — so it is the model's own
+  score, not a risk percentage.
+- **A hard refresh signs the user out** (session token lives in Streamlit `session_state`, no
+  session cookie) — F-1 in `docs/deployment.md` §10.5.
+- **The `_streamlit_xsrf` cookie is not marked `Secure`**, and `http://` answers `200` instead of
+  redirecting — F-2 and F-3, both consequences of TLS terminating at the Cloudflare edge, both
+  needing an operator zone action rather than a code change.
+- **No fairness audit, no drift monitoring, no external validation.** `SEX`, `EDUCATION`,
+  `MARRIAGE` and `AGE` are inputs and group error rates were never measured.
+- **The live database carries demo residue**: 21 predictions, 8 dataset rejections, 7 staged dataset
+  versions and five deactivated synthetic administrator accounts (`s13_tunnel_check`, `s13_probe`,
+  `s15_demo_check`, `s15_diag`, `s16_release_check`) left by the S13/S15/S16 rehearsals. None of it
+  is user data; the activated dataset is still version 1, the seed CSV, and the only two active
+  accounts are the operator's `ds_hafyz` and the demo `demo_user`.
+- **The tunnel token, `APP_SESSION_SECRET` and both initial passwords are operator-held** and are
+  not in the repository. `docs/runbook.md` §10.3 lists the names; nothing here can verify a value
+  it must not read.
+
+### Rollback plan
+
+```text
+application:  git checkout <previous tag or commit> && docker compose build web && docker compose up -d web
+              the volume is untouched; migrations only ever add
+database:     scripts/backup.sh                                   # before anything
+              docker compose stop web
+              scripts/restore.sh --backup <bundle> --to-volume aihubcampus_app_storage --allow-live --yes
+              docker compose start web && scripts/smoke_test.sh
+```
+
+The rollback path was exercised end to end for this release: `evidence/s16/rollback_drill.txt`
+takes the stack down with `docker compose down` (never `-v`), proves the volume survived, brings it
+back on the same volume, and shows the database byte-identical afterwards.
+
+A release is marked COMPLETE only with the evidence attached, never on the strength of this file
+alone (blueprint §9 SPRINT 16). The independent acceptance record for this sprint is
+`docs/acceptance/S16.md`, written by the verification agent — not by the implementer.
+
+---
+
+## Sprint 13 — live on www.aihubcampus.online through the Cloudflare tunnel
 
 **Commit:** `b3d014447133` — the tree `scripts/verify_release.sh` ran against, recorded in `evidence/s13/release_gate.txt` (25 checks, 0 failed) · **Branch:** `s13/cloudflare-tunnel`
 
@@ -41,7 +149,7 @@ it names the command. Nothing here is dated by guesswork — the git commit is t
 
 ---
 
-## Unreleased — Sprint 12: production-like Docker hardening and recovery
+## Sprint 12 — production-like Docker hardening and recovery
 
 **Commit:** the sha is printed by `evidence/s12/release_gate.txt` (the gate records the tree it ran against) · **Branch:** `s12/docker-hardening-recovery`
 
@@ -140,33 +248,9 @@ See `docs/architecture.md` §11 and `docs/test_matrix.md` for the evidence of ea
 
 ---
 
-## Release candidate template (S16)
+## Release record template
 
-```text
-VERSION:            vX.Y.Z
-DATE (UTC):         YYYY-MM-DDTHH:MM:SSZ
-GIT COMMIT:         <sha>  (branch <name>)
-IMAGE ID:           sha256:<digest>  (aihubcampus-web:<tag>)
-DATABASE SCHEMA:    <highest applied schema_migrations version>
-MODEL ARTIFACT:     sha256:<digest>  (models/best_pipeline.joblib)
-DATASET VERSION:    id=<n> sha256=<digest> rows=<n>
-
-CHANGED:
-  -
-
-VERIFIED (command → result):
-  - scripts/verify_release.sh --build --with-tests →
-  - scripts/smoke_test.sh →
-  - scripts/backup.sh →  (bundle path, sha256)
-  - scripts/restore.sh → (target, checksum compare)
-
-KNOWN LIMITATIONS:
-  -
-
-ROLLBACK PLAN:
-  application: <previous commit>
-  database:    <backup bundle>
-```
-
-A release is marked COMPLETE only with the evidence attached, never on the strength of this
-file alone (blueprint §9 SPRINT 16).
+The block at the top of this file is the record `v1.0.0` filled in: version, date, commit, image
+id, schema version, model artifact, dataset version, what changed, what was verified with which
+command, the known limitations, and the rollback plan. Keep the same shape for the next release —
+the fields are the ones an operator needs to answer "what is running, and can I put it back?".

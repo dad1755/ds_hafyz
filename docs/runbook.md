@@ -286,7 +286,7 @@ docker compose stop web                # pause; data kept — this is the restor
 docker compose down                    # remove containers + network; data KEPT
 # docker compose down -v               # NEVER — this deletes aihubcampus_app_storage
 
-scripts/smoke_test.sh --url https://www.aihubcampus.online   # 16 checks, the 10-second answer
+scripts/smoke_test.sh --url https://www.aihubcampus.online   # the 10-second answer
 scripts/verify_release.sh --with-tests                        # may this tree be deployed?
 scripts/backup.sh --out /srv/backups --keep 14                # a backup you can restore
 scripts/restore.sh --backup <bundle> --to-dir /tmp/restore-check   # prove the backup

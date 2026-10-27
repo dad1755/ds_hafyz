@@ -1,0 +1,100 @@
+# S16 rollback drill — down without -v, then back up on the same volume
+# run (UTC):   2026-10-27T16:59:03Z
+# host:        ridergami2 · 7.2.11-200.fc44.x86_64
+# tag under test: v1.0.0
+
+=== 1. the tag, the commit and the deployment are the same thing ===
+$ git rev-parse v1.0.0^{commit} · git rev-parse HEAD · git describe --tags --exact-match
+tag  v1.0.0 -> 08365e85ebfe6bfcb5e4b676ee446634bf1b0666
+HEAD        -> 08365e85ebfe6bfcb5e4b676ee446634bf1b0666
+v1.0.0
+$ git status --porcelain
+  ?? DATASCIENCE_UI_POLISH_BLUEPRINT.md
+  ?? evidence/s16/release_gate.txt
+  ?? evidence/s16/rollback_drill.txt
+
+$ docker inspect aihubcampus-web-1 (before)
+container : /aihubcampus-web-1 (292f636c0aef75d6c4d530f0a6fad5b9f7daf5b20044dce941a0b580ea93f65e)
+image     : sha256:d8e4cfa00e730734f8160a65afab017a00c78722167622a69d6aed5b0d400cd7
+started   : 2026-10-27T05:34:17.202518592Z
+health    : healthy
+
+=== 2. the data, before the restart ===
+db sha256   : 7c8150924032ae42a3d81c236f4802270bf4f4b98140202d8dbad664b6e71cdf
+row counts  : {"audit_events": 215, "dataset_rejections": 6, "dataset_versions": 7, "login_attempts": 5, "prediction_logs": 19, "schema_migrations": 3, "sessions": 66, "users": 6}
+integrity   : ok
+
+=== 3. down — WITHOUT -v, which is the whole point ===
+$ docker compose down
+ Container aihubcampus-cloudflared-1 Stopping 
+ Container aihubcampus-cloudflared-1 Stopped 
+ Container aihubcampus-cloudflared-1 Removing 
+ Container aihubcampus-cloudflared-1 Removed 
+ Container aihubcampus-web-1 Stopping 
+ Container aihubcampus-web-1 Stopped 
+ Container aihubcampus-web-1 Removing 
+ Container aihubcampus-web-1 Removed 
+ Network aihubcampus_internal Removing 
+ Network aihubcampus_internal Removed 
+
+$ docker compose ps   (nothing left running)
+NAME      IMAGE     COMMAND   SERVICE   CREATED   STATUS    PORTS
+$ docker volume ls --filter name=aihubcampus_app_storage
+DRIVER    VOLUME NAME
+local     aihubcampus_app_storage
+$ docker volume inspect aihubcampus_app_storage --format '{{.Name}} {{.Mountpoint}}'
+aihubcampus_app_storage /var/lib/docker/volumes/aihubcampus_app_storage/_data
+# the volume is still there; the containers are not. That is what 'down' without -v means.
+
+=== 4. up — the release comes back on the same volume ===
+$ docker compose up -d
+ Network aihubcampus_internal Creating 
+ Network aihubcampus_internal Creating 
+ Network aihubcampus_internal Created 
+ Network aihubcampus_internal Created 
+ Container aihubcampus-web-1 Creating 
+ Container aihubcampus-web-1 Created 
+ Container aihubcampus-cloudflared-1 Creating 
+ Container aihubcampus-cloudflared-1 Created 
+ Container aihubcampus-web-1 Starting 
+ Container aihubcampus-web-1 Started 
+ Container aihubcampus-web-1 Waiting 
+ Container aihubcampus-web-1 Healthy 
+ Container aihubcampus-cloudflared-1 Starting 
+ Container aihubcampus-cloudflared-1 Started 
+
+# waiting for the health probe (the compose healthcheck has a 40 s start period)
+  17:02:06Z health=healthy
+
+$ docker compose ps
+SERVICE       NAME                        STATUS                        PORTS
+cloudflared   aihubcampus-cloudflared-1   Up 3 seconds                  
+web           aihubcampus-web-1           Up About a minute (healthy)   2026/tcp
+
+$ docker inspect aihubcampus-web-1 (after)
+container : /aihubcampus-web-1 (f4aad74d497d1833997c8eadc95568605557c8aa5eb8853d72262a595ad10482)
+image     : sha256:d8e4cfa00e730734f8160a65afab017a00c78722167622a69d6aed5b0d400cd7
+started   : 2026-10-27T17:00:46.453163869Z
+health    : healthy
+read_only : true
+cap_drop  : [ALL]
+ports     : map[]
+
+=== 5. the data, after the restart — the same bytes ===
+db sha256   : 7c8150924032ae42a3d81c236f4802270bf4f4b98140202d8dbad664b6e71cdf
+row counts  : {"audit_events": 215, "dataset_rejections": 6, "dataset_versions": 7, "login_attempts": 5, "prediction_logs": 19, "schema_migrations": 3, "sessions": 66, "users": 6}
+integrity   : ok
+
+PASS  identical before and after: the restart did not touch a row
+
+=== 6. the public surface answers again ===
+$ curl -sS -A 'aihubcampus-s16-rollback/1.0' -o /dev/null -w '<status> <time>' https://www.aihubcampus.online/_stcore/health
+health  -> status=200 time=1.815361s body=2B
+body    -> ok
+$ curl -sS -A 'aihubcampus-s16-rollback/1.0' -o /dev/null -w '<status>' https://www.aihubcampus.online/
+root    -> status=200 content_type=text/html; charset=utf-8
+
+RESULT: the release was taken down with 'docker compose down' (no -v), the data volume
+        survived, 'docker compose up -d' brought the same image back to healthy on the same
+        volume, the database was byte-identical afterwards, and the public HTTPS surface
+        answered again. The rollback path in docs/runbook.md §5 is exercised, not asserted.

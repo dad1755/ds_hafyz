@@ -1,0 +1,31 @@
+# S16 — scripts/smoke_test.sh against the running stack and the public URL
+# run (UTC): 2026-10-27T18:48:24Z
+# host:      ridergami2 · 7.2.11-200.fc44.x86_64
+# HEAD:      08365e8 · v1.0.0
+
+$ env -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u NO_PROXY scripts/smoke_test.sh --url https://www.aihubcampus.online
+AI Hub Campus smoke test — 2026-10-27T18:48:25Z
+project=aihubcampus service=web container=f4aad74d497d
+
+PASS  container running                  state=running
+PASS  container health                   healthy
+PASS  health endpoint                    127.0.0.1:2026/_stcore/health -> ok
+PASS  root page                          200 html 6467
+PASS  runs non-root                      uid=1001 (app)
+PASS  read-only root filesystem          ReadonlyRootfs=true
+PASS  no published host ports            docker port empty, PortBindings={}
+PASS  capabilities dropped               CapDrop=["ALL"]
+PASS  no-new-privileges                  ["no-new-privileges:true"]
+PASS  restart policy                     unless-stopped
+PASS  tmpfs for /tmp                     /tmp is a tmpfs (the rootfs is read-only)
+PASS  single writable mount              /app/storage
+PASS  database readable                  integrity_check=ok, 9 tables at /app/storage/aihubcampus.db
+PASS  model artifact verifies            11 checks PASS, artifact_checksum: sha256 48ce02563b2aad9f… and 8,187 byte
+PASS  secret-pattern scan                scanned 387 file(s); 4 secret value(s) loaded from operator env
+PASS  public HTTPS surface               https://www.aihubcampus.online (2 probe(s) -> 200)
+
+----------------------------------------------------------------
+RESULT: 16 passed, 0 failed, 0 skipped
+SMOKE TEST PASSED — the running stack is the hardened stack and it serves.
+
+smoke_test exit=0

@@ -148,7 +148,16 @@ async function signOut(page) {
 async function stageUpload(page, csv, needles, timeout = 150000) {
   const list = Array.isArray(needles) ? needles : [needles];
   await page.locator('input[type="file"]').first().setInputFiles(csv);
-  await waitText(page, 'KB', 60000);
+  // Wait for the chip to appear. Neither the file name nor a "KB" badge is usable as the needle:
+  // Streamlit ellipsizes a long name in innerText ("invalid...column.csv") and a three-row CSV is
+  // under 1 KB, so the badge reads "453.0B". The one stable signal is the chip ending in ".csv".
+  const uploader = page.locator('[data-testid="stFileUploader"]').first();
+  const chipDeadline = Date.now() + 60000;
+  while (Date.now() < chipDeadline) {
+    const chip = await uploader.innerText().catch(() => '');
+    if (/\.csv/i.test(chip)) break;
+    await page.waitForTimeout(1000);
+  }
   const deadline = Date.now() + timeout;
   let text = '';
   while (Date.now() < deadline) {
@@ -210,7 +219,7 @@ async function stageUpload(page, csv, needles, timeout = 150000) {
   const rejectBody = await stageUpload(page, INVALID_CSV, 'Rejection #');
   const reason = (rejectBody.match(/The upload was rejected and recorded: ([^\n]+)/) || [])[1];
   const rejectId = (rejectBody.match(/Rejection #(\d+)/) || [])[1];
-  const codes = (rejectBody.match(/stable error codes? ([a-z_, ]+)/) || [])[1];
+  const codes = (rejectBody.match(/stable error codes ([^.]+)\./) || [])[1];
   check('a CSV that breaks the 25-column contract is refused', Boolean(reason) && Boolean(rejectId),
         `rejection #${rejectId || '?'} — ${(reason || 'no message').trim()}`);
   check('the refusal names stable error codes', Boolean(codes), (codes || '?').trim());
@@ -219,6 +228,9 @@ async function stageUpload(page, csv, needles, timeout = 150000) {
   await page.screenshot({ path: path.join(OUT, 's16_04_invalid_csv_rejected.png'), fullPage: true });
 
   await nav(page, 'Model evaluation', 'Confusion matrices');
+  // The page is long and Streamlit paints it in sections; wait for the last heading it must
+  // render rather than reading whatever happened to be there after the settle delay.
+  await waitText(page, 'Model metadata', 120000).catch(() => {});
   const evalBody = await body(page);
   const panels = ['Model comparison', 'Confusion matrices', 'Feature importance', 'Model metadata']
     .filter((p) => evalBody.includes(p));
@@ -270,8 +282,10 @@ async function stageUpload(page, csv, needles, timeout = 150000) {
   const band = ((result.match(/Risk band: \**([^*\n]+)/i) || [])[1] || '').trim();
   const advice = ((result.match(/What this suggests: \**([^\n]+)/i) || [])[1] || '').trim();
   const threshold = (result.match(/Decision threshold ([\d.]+)/) || [])[1];
-  const modelVersion = (result.match(/model version (\S+)/) || [])[1];
-  const classLabel = (result.match(/(No default next month|Default next month)/) || [])[1] || '';
+  // "model version" appears twice on the page — once in the history caption ("… band, model
+  // version and time.") and once in the result caption — so the version is taken by shape.
+  const modelVersion = (result.match(/model version (aihubcampus-[\w.+-]+)/) || [])[1];
+  const classLabel = (result.match(/(Predicted default next month|No default next month)/i) || [])[1] || '';
   check('the model returns a probability, a band and advice',
         Boolean(probText) && Boolean(band) && Boolean(advice),
         `probability=${probText || '?'} band=${band || '?'}`);
@@ -287,7 +301,7 @@ async function stageUpload(page, csv, needles, timeout = 150000) {
   check('the displayed probability equals the artifact\'s own probability',
         Number.isFinite(shownPct) && deltaPct <= 0.01,
         `displayed ${probText} vs direct ${expectPct.toFixed(4)}% (delta ${Number.isFinite(deltaPct) ? deltaPct.toFixed(4) : '?'} pp, display is rounded to 2 dp)`);
-  const expectLabel = EXPECT_CLASS === '1' ? 'Default next month' : 'No default next month';
+  const expectLabel = EXPECT_CLASS === '1' ? 'Predicted default next month' : 'No default next month';
   check('the displayed class equals the artifact\'s own class', classLabel === expectLabel,
         `displayed "${classLabel}" vs direct class ${EXPECT_CLASS} ("${expectLabel}")`);
   check('the displayed model version is the artifact the pipeline loaded',
