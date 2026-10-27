@@ -1,0 +1,135 @@
+# S15 — the demo script, rehearsed end to end against the live URL
+# run (UTC): 2026-10-27T12:36:11Z
+# target:     https://www.aihubcampus.online
+# host:       ridergami2 · 7.2.11-200.fc44.x86_64
+# HEAD:       3860aef · branch s15/presentation-demo-qa
+
+$ docker compose ps
+SERVICE       NAME                        STATUS                 PORTS
+cloudflared   aihubcampus-cloudflared-1   Up 8 hours             
+web           aihubcampus-web-1           Up 7 hours (healthy)   2026/tcp
+
+$ curl -sS -o /dev/null -w '<status>' https://www.aihubcampus.online/_stcore/health
+health -> status=200 time=0.309846s
+
+$ docker compose exec -T -e SYNTH_ADMIN_USER=<synthetic> -e SYNTH_ADMIN_PASSWORD=<synthetic> web python - < evidence/s15/make_demo_admin.py
+synthetic admin re-armed: id=5 username=s15_demo_check role=admin active=1 must_change_password=0 hash_prefix=$argon2id$
+
+$ python3 evidence/s15/make_demo_uploads.py <scratch> 550
+wrote rehearsal_valid_subset.csv: 550 data rows + 25-column header, 52177 bytes
+wrote rehearsal_invalid_missing_column.csv: 550 data rows + 24-column header (PAY_AMT6 removed), 49868 bytes
+
+$ NODE_PATH=/home/ec-user/qa759-v2/node_modules BASE_URL=https://www.aihubcampus.online CRED_FILE=<scratch>/s15_creds.json node evidence/s15/ui_demo_rehearsal.js
+PASS  live URL answers through the Cloudflare edge — server=cloudflare
+PASS  sign-in form rendered — first paint 3.6s after navigation
+PASS  administrator signs in — s15_demo_check
+PASS  administrator navigation offers six sections — Home | Predict default risk | My prediction history | User management | Dataset manager | Model evaluation
+PASS  user management lists the operator admin and the demo user — ds_hafyz, demo_user
+PASS  user management offers create / role / temporary password / deactivate — all four controls present in the page
+PASS  no password hash is rendered anywhere on the page — no hash or hash-column text in the page body
+PASS  the audit panel is present — audit panel rendered; its event rows sit inside a collapsed expander
+PASS  the deployed dataset and the active pointer are shown side by side — both panels rendered
+PASS  a CSV that breaks the column contract is refused, with a named reason — missing required column(s): PAY_AMT6; the file must contain all 25 documented columns (see docs/data_dictionary.md)
+PASS  the refusal names stable error codes and a rejection id — rejection #6 codes=missing_column
+PASS  nothing was repaired or partially loaded — the page states it explicitly
+PASS  a valid CSV is validated and staged as a dataset version — Staged as dataset version #7. It is validated and quarantined under a generated filename; it is not active and the deployed model has not changed. — the per-upload fact table below it is a painted grid
+PASS  staging does not activate the version or retrain the model — the page states the deployed model is unchanged
+PASS  administrator signs out and the sign-in form returns
+PASS  user signs in — demo_user
+PASS  user navigation offers three sections only — Home | Predict default risk | My prediction history
+PASS  the user is not offered the administrator sections — Home | Predict default risk | My prediction history
+PASS  the form is the four documented groups covering 23 inputs — keyboard_arrow_down
+
+1 · Credit profile — 5 inputs | keyboard_arrow_right
+
+2 · Repayment history — 6 inputs | keyboard_arrow_right
+
+3 · Billing amounts — 6 inputs | keyboard_arrow_right
+
+4 · Previous paid amounts — 6 inputs
+PASS  the demonstrator loads all 23 values, and the 14 numeric ones read back as typed — LIMIT_BAL=120000, AGE=34, BILL_AMT1..6=35000/33500/30000/28000/26500/25000, PAY_AMT1..6=2000/2500/3000/3000/3500/4000
+PASS  the nine coded inputs show their documented labels — 2 — female | 2 — university | 2 — single | 2 — two months of delay | 2 — two months of delay | 0 — revolving credit (minimum payment) | 0 — revolving credit (minimum payment) | -1 — paid in full that month | -1 — paid in full that month
+PASS  the model returns a probability, a band and advice — probability=71.95% band=High
+PASS  the result states the threshold and the model version — threshold=0.50 model=aihubcampus-default-risk-1+48ce02563b2a
+PASS  the scored request appears in the user's own history — 10 row(s) for this account
+PASS  an incomplete submission is refused with a named feature — feature 'LIMIT_BAL' has no value
+PASS  the refusal states that nothing was scored and nothing was recorded — caption rendered
+PASS  the refused submission added no history row — before=10 after=10
+PASS  the user cannot reach the evaluation page from their navigation — Home | Predict default risk | My prediction history
+PASS  user signs out and the sign-in form returns
+PASS  the evaluation page renders all six sections — 6/6
+PASS  the page states the deployed model's held-out numbers in words — accuracy 0.817167=true recall 0.356=true missed 855=true 1,327 actual defaults=true constant-answer 77.88%=true threshold 0.5=true
+PASS  the figures and the data grids paint — 11 figure image(s), 26 canvas grid(s)
+PASS  administrator signs out and the sign-in form returns
+
+{
+  "base": "https://www.aihubcampus.online",
+  "checks": 33,
+  "failed": [],
+  "observations": [
+    {
+      "item": "scored result on the demonstrator row",
+      "measured": "probability 71.95%, band High, threshold 0.50, model aihubcampus-default-risk-1+48ce02563b2a",
+      "advice": "Offer supportive contact and discuss potential payment arrangements.",
+      "classLabel": "",
+      "recorded": "recorded as a new prediction"
+    },
+    {
+      "item": "model evaluation page",
+      "measured": "6/6 sections, 11 figure images, 26 canvas grids",
+      "note": "the comparison table and confusion matrices are st.dataframe grids, so their cell values are painted rather than present as DOM text; the numbers quoted in the slides are checked against models/metrics.json by evidence/s15/check_script_numbers.py"
+    }
+  ],
+  "timings": [
+    {
+      "step": "open the live URL",
+      "seconds": 5.5
+    },
+    {
+      "step": "administrator signs in",
+      "seconds": 3.9
+    },
+    {
+      "step": "user management",
+      "seconds": 2.8
+    },
+    {
+      "step": "dataset validation",
+      "seconds": 26.5
+    },
+    {
+      "step": "administrator signs out",
+      "seconds": 4.9
+    },
+    {
+      "step": "user signs in",
+      "seconds": 2.8
+    },
+    {
+      "step": "preset 23 values and the scored result",
+      "seconds": 10
+    },
+    {
+      "step": "invalid input is refused",
+      "seconds": 19.7
+    },
+    {
+      "step": "user signs out",
+      "seconds": 3.9
+    },
+    {
+      "step": "model evaluation",
+      "seconds": 12.9
+    },
+    {
+      "step": "administrator signs out (end)",
+      "seconds": 3.8
+    }
+  ],
+  "measured_total_seconds": 96.7,
+  "verdict": "PASS"
+}
+node exit=0
+
+$ docker compose exec -T -e SYNTH_ADMIN_USER=<synthetic> web python - < evidence/s15/deactivate_demo_admin.py
+synthetic admin deactivated: id=5 username=s15_demo_check role=admin active=0
