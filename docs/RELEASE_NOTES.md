@@ -13,7 +13,7 @@ it names the command. Nothing here is dated by guesswork — the git commit is t
 
 ## Unreleased — Sprint 13: live on www.aihubcampus.online through the Cloudflare tunnel
 
-**Commit:** the sha is printed by `evidence/s13/browser_check.txt` (the run records the tree it ran against) · **Branch:** `s13/cloudflare-tunnel`
+**Commit:** `2411ac99cef5` — the tree `scripts/verify_release.sh` ran against, recorded in `evidence/s13/release_gate.txt` (25 checks, 0 failed) · **Branch:** `s13/cloudflare-tunnel`
 
 ### Live
 
