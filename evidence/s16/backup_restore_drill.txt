@@ -1,0 +1,89 @@
+# S16 backup + restore drill
+# run (UTC): 2026-10-27T16:28:30Z
+# host:      ridergami2 · 7.2.11-200.fc44.x86_64
+# HEAD:      95cf174 · branch s16/release-audit-handover
+# bundle to: /home/ec-user/non_prod/aihubcampus_release_backups/s16
+# drill vol: aihubcampus_restore_s16
+
+=== 1. the live service is healthy before we snapshot it ===
+$ docker compose ps
+SERVICE       STATUS                  PORTS
+cloudflared   Up 12 hours             
+web           Up 11 hours (healthy)   2026/tcp
+health = healthy
+
+=== 2. the snapshot, taken OUTSIDE the live volume ===
+$ install -d -m 700 /home/ec-user/non_prod/aihubcampus_release_backups/s16
+$ scripts/backup.sh --out /home/ec-user/non_prod/aihubcampus_release_backups/s16
+preflight project=aihubcampus service=web container=292f636c0aef health=healthy
+snapshot VACUUM INTO ok, integrity_check=ok, sha256=3dc2102c06a0eac8…
+copy     streamed docker exec cat, verified — host checksum equals the container's (3dc2102c06a0eac8b8992ed596c56e68bb55dd317f9a463ff4d141662adf9b8d)
+model    manifest + metrics copied, artifact sha256=48ce02563b2aad9f…
+packed   /home/ec-user/non_prod/aihubcampus_release_backups/s16/aihubcampus-20261027T162831Z.tar.gz (24K), checksum written beside it
+PASS — 4 file(s) match the manifest, integrity_check=ok, 8 table count(s) match
+done     /home/ec-user/non_prod/aihubcampus_release_backups/s16/aihubcampus-20261027T162831Z.tar.gz
+
+Next: scripts/restore.sh --backup /home/ec-user/non_prod/aihubcampus_release_backups/s16/aihubcampus-20261027T162831Z.tar.gz --to-dir /tmp/restore-check
+
+bundle     : /home/ec-user/non_prod/aihubcampus_release_backups/s16/aihubcampus-20261027T162831Z.tar.gz
+bytes      : 22281
+sha256     : 99445d0fe78eb90e561e1bac415a6f466f297df8aa7bb1161bc52cb3c68df3b2
+
+# the bundle is on the host, not inside the app volume:
+$ docker run --rm -v aihubcampus_app_storage:/v aihubcampus-web:local sh -c 'ls -A /v'
+aihubcampus.db
+quarantine
+# (no tarball above — the live volume holds the database and the quarantine, nothing else)
+
+=== 3. a second copy, so the release holds two ===
+$ cp -p <bundle> <bundle>-offsite.tar.gz
+second copy: /home/ec-user/non_prod/aihubcampus_release_backups/s16/aihubcampus-20261027T162831Z-offsite.tar.gz
+sha256     : 99445d0fe78eb90e561e1bac415a6f466f297df8aa7bb1161bc52cb3c68df3b2
+
+# what the bundle holds:
+$ tar -tzf <bundle>
+  aihubcampus-20261027T162831Z/
+  aihubcampus-20261027T162831Z/MANIFEST.txt
+  aihubcampus-20261027T162831Z/manifest.json
+  aihubcampus-20261027T162831Z/metrics.json
+  aihubcampus-20261027T162831Z/model_manifest.json
+  aihubcampus-20261027T162831Z/dataset_metadata.json
+  aihubcampus-20261027T162831Z/aihubcampus.db
+
+=== 4. the restore drill — into a DISPOSABLE volume, never the live one ===
+$ scripts/restore.sh --backup /home/ec-user/non_prod/aihubcampus_release_backups/s16/aihubcampus-20261027T162831Z.tar.gz --to-volume aihubcampus_restore_s16
+source     tarball /home/ec-user/non_prod/aihubcampus_release_backups/s16/aihubcampus-20261027T162831Z.tar.gz (sha256 matches its .sha256)
+verified — 4 file(s) match the manifest, integrity_check=ok, 8 table count(s) match
+database sha256 3dc2102c06a0eac8b8992ed596c56e68bb55dd317f9a463ff4d141662adf9b8d
+verify     checksums, integrity_check and row counts all match the manifest
+restored   volume aihubcampus_restore_s16:/aihubcampus.db
+prove      the restored database opens, passes integrity_check and re-counts
+
+Restored and verified.
+  database checksum : 3dc2102c06a0eac8b8992ed596c56e68bb55dd317f9a463ff4d141662adf9b8d
+  target            : volume aihubcampus_restore_s16:/aihubcampus.db
+
+The bundle's model_manifest.json / metrics.json are the *record* of what produced this data;
+the model itself ships inside the image and is verified at startup by src/inference.py.
+To bring a restored database into service, see docs/runbook.md §5 (rollback).
+
+=== 5. the restored copy, opened the way the app opens it ===
+$ docker run --rm -v aihubcampus_restore_s16:/target aihubcampus-web:local python - <<'PY'
+integrity_check : ok
+row counts      : {"audit_events": 213, "dataset_rejections": 6, "dataset_versions": 7, "login_attempts": 9, "prediction_logs": 19, "schema_migrations": 3, "sessions": 65, "users": 6}
+schema version  : 0003_dataset_staging
+active dataset  : [(1, 'UCI_Credit_Card.csv', 30000)]
+users (role)    : [('admin', 5), ('user', 1)]
+newest prediction: (19, '2026-10-27T12:37:11', 1, 0.719535, 'high')
+
+# and the same numbers read from the LIVE database, for comparison:
+live row counts : {"audit_events": 213, "dataset_rejections": 6, "dataset_versions": 7, "login_attempts": 9, "prediction_logs": 19, "schema_migrations": 3, "sessions": 65, "users": 6}
+
+=== 6. the drill leaves nothing behind ===
+$ docker volume rm aihubcampus_restore_s16
+aihubcampus_restore_s16
+removed
+
+RESULT: backup written and self-verified outside the live volume; the bundle restored into a
+        disposable copy, integrity_check=ok, every table count matched, and the copy was
+        opened read-write. The live volume was never touched.

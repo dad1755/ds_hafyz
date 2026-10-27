@@ -1,0 +1,69 @@
+# S16 pre-flight — the deployed state, and whether it is this tree
+# run (UTC):   2026-10-27T16:17:27Z
+# host:        ridergami2 · 7.2.11-200.fc44.x86_64
+# repo:        /home/ec-user/non_prod/hafyz_ds
+# compose:     project=aihubcampus service=web
+
+=== 1. the tree under test ===
+$ git rev-parse --short HEAD · branch · status
+HEAD      : 95cf174a3684243beffcdbc871dfa90b59553c55
+short     : 95cf174
+branch    : s16/release-audit-handover
+tags      : none
+status    :
+            ?? DATASCIENCE_UI_POLISH_BLUEPRINT.md
+            ?? evidence/s16/
+
+=== 2. what is serving ===
+$ docker compose ps
+SERVICE       NAME                        STATUS                  PORTS
+cloudflared   aihubcampus-cloudflared-1   Up 12 hours             
+web           aihubcampus-web-1           Up 11 hours (healthy)   2026/tcp
+
+$ docker inspect 292f636c0aef75d6c4d530f0a6fad5b9f7daf5b20044dce941a0b580ea93f65e
+container   : /aihubcampus-web-1 (292f636c0aef75d6c4d530f0a6fad5b9f7daf5b20044dce941a0b580ea93f65e)
+image       : sha256:d8e4cfa00e730734f8160a65afab017a00c78722167622a69d6aed5b0d400cd7
+started     : 2026-10-27T05:34:17.202518592Z
+health      : healthy
+restart     : unless-stopped
+read_only   : true
+cap_drop    : [ALL]
+ports       : map[]
+
+$ docker port 292f636c0aef75d6c4d530f0a6fad5b9f7daf5b20044dce941a0b580ea93f65e   (empty means nothing is published on the host)
+
+$ docker image inspect aihubcampus-web:local
+image id    : sha256:d8e4cfa00e730734f8160a65afab017a00c78722167622a69d6aed5b0d400cd7
+created     : 2026-10-27T13:32:38.971988858+08:00
+repo tags   : [aihubcampus-web:local]
+
+=== 3. is the running image built from this tree? ===
+# sha256 of every application .py file, inside the image vs on disk
+PASS  the image's application code is byte-identical to the working tree
+      30 .py files compared, 0 differ
+
+# the model artifact and its manifest, as the image ships them
+image best_pipeline.joblib sha256: 48ce02563b2aad9fbf9397603c642b0319be617c57fde8e1fd26ec08d518ad7b
+image model_manifest.json  sha256: 5f76cffb68c87f5f4b224999d523b290039a0f4679db44b8d4ce2737e969f2a7
+tree  best_pipeline.joblib sha256: 48ce02563b2aad9fbf9397603c642b0319be617c57fde8e1fd26ec08d518ad7b
+tree  model_manifest.json  sha256: 5f76cffb68c87f5f4b224999d523b290039a0f4679db44b8d4ce2737e969f2a7
+
+=== 4. the live database, as it stands ===
+$ docker compose exec -T web python - <<'PY'  (read-only: file sha256 + row counts)
+live db sha256 : 8095a1419905c3e605c5acd699dd231273130bda79c13ef1e4290726f8158591
+live db bytes  : 147456
+live row counts: {"audit_events": 213, "dataset_rejections": 6, "dataset_versions": 7, "login_attempts": 9, "prediction_logs": 19, "schema_migrations": 3, "sessions": 65, "sqlite_sequence": 6, "users": 6}
+schema version : 0003_dataset_staging
+dataset version: (1, 'UCI_Credit_Card.csv', 30000, 25, 'a0f0ab49d6326671d6cd83be5c88dcf18007025fe9a53ecd699119c871176ca1', 1, 'activated')
+dataset version: (2, 's13_upload_subset.csv', 500, 25, '6bc04bee235691c698ec6042daa42586a26e064bc70dcf431e8a97a08bdd4708', 0, 'validated')
+dataset version: (3, 'rehearsal_valid_subset.csv', 300, 25, 'bef1c1ea33597658526ab60bec5b6356db7a9357b299e400444ed1f1015248d7', 0, 'validated')
+dataset version: (4, 'rehearsal_valid_subset.csv', 350, 25, '4f2c8fcc54916e50795b8f6edabe0acdeae5825d322b327a4891413af61af834', 0, 'validated')
+dataset version: (5, 'rehearsal_valid_subset.csv', 400, 25, 'bf0241304c9d6fefae4faaf9ea23e3a47b9aacdfa48ad6a62b4d0c63e4b89fa4', 0, 'validated')
+dataset version: (6, 'rehearsal_valid_subset.csv', 450, 25, 'c01010449849b23e0c0f7e3e9770137bac06f04863cf0261c90418d45a5ad1af', 0, 'validated')
+dataset version: (7, 'rehearsal_valid_subset.csv', 550, 25, 'd446087b7147b54968f2ca537706d4f3e7605ba8265d8d9e3084aa9f14178f6c', 0, 'validated')
+
+=== 5. the release gate script is present and executable ===
+PASS  scripts/verify_release.sh executable
+PASS  scripts/smoke_test.sh executable
+PASS  scripts/backup.sh executable
+PASS  scripts/restore.sh executable
