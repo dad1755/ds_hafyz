@@ -1,0 +1,194 @@
+# S16 independent gate re-run — transcript
+# run (UTC):   2026-10-27T23:53:08Z
+# host:        ridergami2 · 7.2.12-200.fc44.x86_64
+# tag:         v1.0.0 -> 74657e76d0ff27ab27b2db05e6ef31cab1c3fa7f
+# branch:      s16/release-audit-handover (unmerged, unpushed)
+# verifier:    7899db8c-d8b0-42cd-b300-dd5d0f0ae46e (independent of the implementer a83f3cb1)
+
+=== 1. host and daemon state at the start of the run ===
+$ uptime
+ 07:53:08 up 56 min,  0 users,  load average: 20.17, 13.44, 10.96
+$ systemctl is-active docker
+active
+$ cat /proc/pressure/io
+some avg10=80.62 avg60=79.55 avg300=65.64 total=2305144869
+full avg10=59.20 avg60=55.53 avg300=43.92 total=1755302914
+$ docker info --format "{{.Containers}} total / {{.ContainersRunning}} running"
+123 total / 64 running
+
+=== 2. the release tag, and what the running image actually contains ===
+$ git describe --tags --exact-match
+fatal: no tag exactly matches 'b51972b7d8f55276517ca1bb6be98c66db3288a2'
+$ git status --porcelain
+?? DATASCIENCE_UI_POLISH_BLUEPRINT.md
+?? evidence/s16/qa_gate_rerun.sh
+?? evidence/s16/qa_gate_rerun.txt
+?? evidence/s16/qa_parity.py
+?? evidence/s16/qa_s16_smoke.js
+$ git diff --stat 49540a6 v1.0.0 | tail -3
+ evidence/s16/smoke_test.txt                   |  31 ++
+ evidence/s16/ui_release_smoke.js              | 358 +++++++++++++++++
+ 92 files changed, 8380 insertions(+), 120 deletions(-)
+$ git diff --name-only 49540a6 v1.0.0 | grep -E "\.py$" | grep -v "^evidence/" | wc -l
+0
+  (0 = no application code changed between the S13 test run and this tag)
+$ compare every tagged .py against the file inside the serving image
+  30 identical, 0 differing
+
+=== 3. gates A and B — data and model, re-derived from the tag ===
+$ sha256sum data/UCI_Credit_Card.csv (from the tag)
+a0f0ab49d6326671d6cd83be5c88dcf18007025fe9a53ecd699119c871176ca1  -
+$ python3 - (held-out block of models/metrics.json)
+  test rows: 6000 | threshold: 0.5 | scored: True
+  decision_tree metrics: {"accuracy": 0.817167, "f1": 0.462518, "precision": 0.661064, "recall": 0.35569, "roc_auc": 0.742324}
+  confusion matrix    : {"fn": 855, "fp": 242, "labels": ["0 = no default next month", "1 = default next month"], "tn": 4431, "total": 6000, "tp": 472}
+  arithmetic check    : metrics consistent with TN/FP/FN/TP | max_abs_delta 0.0
+  baseline (constant) : {"accuracy": 0.778833, "f1": 0.0, "precision": 0.0, "recall": 0.0, "roc_auc": null}
+  selection           : cv_f1
+
+=== 4. gate D — the container checks, on the serving container (docker exec, not docker run) ===
+$ docker exec aihubcampus-web-1 sh -c "test ! -e /app/.env && echo ENV_ABSENT"
+  ENV_ABSENT
+$ docker exec aihubcampus-web-1 sh -c "test -f /app/models/best_pipeline.joblib && test ! -w ... && echo MODEL_NOT_WRITABLE"
+  MODEL_NOT_WRITABLE
+$ docker exec aihubcampus-web-1 id
+  uid=1001(app) gid=1001(app) groups=1001(app)
+$ docker image inspect aihubcampus-web:local --format "{{range .Config.Env}}{{println .}}{{end}}" | grep -cE "^(INITIAL_ADMIN_PASSWORD|INITIAL_USER_PASSWORD|APP_SESSION_SECRET|TUNNEL_TOKEN)="
+  credential-shaped variables in the image: 0
+$ docker port aihubcampus-web-1   (empty = nothing published on the host)
+$ docker inspect aihubcampus-web-1 --format user/readonly/restart
+  user=app readonly_rootfs=true restart=unless-stopped
+
+=== 5. the model artifact inside the image, against the manifest ===
+$ docker exec ... python - (artifact sha256, feature order, parity with the CLI)
+  artifact             : models/best_pipeline.joblib | sha256 48ce02563b2aad9f… | matches manifest: True
+  features             : 23 | order == 23 names: True
+  CLI   P(class1)      : 0.7195348837209302 | class 1 | tier high
+  bare  P(class1)      : 0.7195348837209302
+  abs delta            : 0.0
+  PARITY               : PASS
+
+=== 6. the release gate script at the tag — how far it got before the daemon stalled ===
+$ TAG=v1.0.0 bash evidence/s16/release_gate.sh --with-tests
+  (full output: the release_gate section of this file, from the run at 23:19:27Z)
+  # S16 release gate — scripts/verify_release.sh on the release tag, in a clean clone
+  # run (UTC): 2026-10-27T23:19:27Z
+  # host:      ridergami2 · 7.2.12-200.fc44.x86_64
+  # tag:       v1.0.0 -> 74657e76d0ff27ab27b2db05e6ef31cab1c3fa7f
+  # clone:     /tmp/multica-task-1928178778/s16-gate.WtEsUnRP/release (deleted at the end of this run)
+  
+  === the release tree, as the tag defines it ===
+  $ git clone --quiet --branch v1.0.0 /home/ec-user/non_prod/hafyz_ds /tmp/multica-task-1928178778/s16-gate.WtEsUnRP/release
+  warning: refs/tags/v1.0.0 43161f135b31dd17d68522f3ea177452ffd59f8a is not a commit!
+  Note: switching to '74657e76d0ff27ab27b2db05e6ef31cab1c3fa7f'.
+  
+  You are in 'detached HEAD' state. You can look around, make experimental
+  changes and commit them, and you can discard any commits you make in this
+  state without impacting any branches by switching back to a branch.
+  
+  If you want to create a new branch to retain commits you create, you may
+  do so (now or later) by using -c with the switch command. Example:
+  
+    git switch -c <new-branch-name>
+  
+  Or undo this operation with:
+  
+    git switch -
+  
+  Turn off this advice by setting config variable advice.detachedHead to false
+  
+  74657e7 S16: the release record — gates, backup, rollback and both roles on the live URL
+  $ git -C clone describe --tags --exact-match
+  v1.0.0
+  
+  $ cp .env data/UCI_Credit_Card.csv   (the two operator-supplied, git-ignored inputs)
+    .env                     : 290 bytes (not printed, not hashed)
+    data/UCI_Credit_Card.csv : 2862995 bytes, sha256 a0f0ab49d6326671d6cd83be5c88dcf18007025fe9a53ecd699119c871176ca1
+  
+  $ git -C clone status --porcelain   (the only untracked entries are those two inputs)
+  
+  # for contrast, the working checkout this run was launched from:
+  $ git -C /home/ec-user/non_prod/hafyz_ds status --porcelain
+    ?? DATASCIENCE_UI_POLISH_BLUEPRINT.md
+    (DATASCIENCE_UI_POLISH_BLUEPRINT.md is another project's untracked file in this shared
+     checkout; it is not in the tag and therefore not in the release tree above)
+  
+  === scripts/verify_release.sh --with-tests ===
+  AI Hub Campus release verification — 2026-10-27T23:20:17Z
+  repo=/tmp/multica-task-1928178778/s16-gate.WtEsUnRP/release project=aihubcampus image=aihubcampus-web:local
+  
+  PASS  git tree clean                 HEAD @ 74657e76d0ff
+  PASS  compose validates              docker compose config --quiet
+  PASS  no host ports in compose       expose: only
+  PASS  compose has read_only: true    present
+  PASS  compose has no-new-privileges:true present
+  PASS  compose has cap_drop           present
+  PASS  compose has restart: unless-stopped present
+  PASS  compose has healthcheck:       present
+  PASS  base image digest-pinned       FROM python:3.12-slim@sha256:2f17fc044b579bab302c2e8054d3a686e2cb9a83de48e70534b94cd8ebbe06a9
+  PASS  Dockerfile drops to non-root   USER app
+  PASS  image user is non-root         Config.User=app
+  PASS  no .env inside the image       /app/.env absent
+  PASS  no credential in image env     no credential-shaped variable in Config.Env
+
+$ docker run --rm --network none aihubcampus-web:local test -r /app/models/best_pipeline.joblib   (control probe)
+  exit=124  (124 = still cannot start a container: the host-wide stall, not a release defect)
+$ docker ps -a --format "{{.Names}} {{.Status}}" | grep Created | wc -l
+26
+  (containers other agents created and the daemon never started — the stall is host-wide)
+
+=== 7. gate E — the backup bundle, and the live data after the reboot ===
+$ sha256sum -c aihubcampus-20261027T162831Z.tar.gz.sha256
+  aihubcampus-20261027T162831Z.tar.gz: OK
+$ tar -tzf ... (what a restore gets)
+  aihubcampus-20261027T162831Z/
+  aihubcampus-20261027T162831Z/MANIFEST.txt
+  aihubcampus-20261027T162831Z/manifest.json
+  aihubcampus-20261027T162831Z/metrics.json
+  aihubcampus-20261027T162831Z/model_manifest.json
+  aihubcampus-20261027T162831Z/dataset_metadata.json
+  aihubcampus-20261027T162831Z/aihubcampus.db
+$ the host rebooted at 22:56Z; the volume came back with the container
+    db sha256   : dee09248a1506bb74101872c9a92ecac905ff363b1863ec3bcd297c6c644b141
+    integrity   : ok
+    audit_events       272
+    dataset_rejections 8
+    dataset_versions   7
+    login_attempts     7
+    prediction_logs    24
+    schema_migrations  3
+    sessions           87
+    users              10
+
+=== 8. gate E — the public URL, and both roles through a real browser ===
+$ curl -sS -o /dev/null -w "%{http_code} %{time_total}s" https://www.aihubcampus.online/
+  200 0.282428s
+$ curl -sS https://www.aihubcampus.online/_stcore/health
+  ok
+$ node evidence/s16/qa_s16_smoke.js   (this verifier's own smoke, not the implementer's)
+  PASS  live HTTPS 200 — status=200 url=https://www.aihubcampus.online/ t=4242ms
+  PASS  served by cloudflare — server=cloudflare
+  PASS  admin signed in — nav=["Home","Predict default risk","My prediction history","User management","Dataset manager","Model evaluation"]
+  PASS  admin sees user management
+  PASS  admin sees dataset manager
+  PASS  admin sees model evaluation
+  PASS  user management renders accounts — qa_s16_gate_user
+  PASS  model evaluation shows held-out metrics
+  PASS  admin sign out returns to sign-in — button=true login_form=true
+  PASS  user signed in — nav=["Home","Predict default risk","My prediction history"]
+  PASS  user has no admin pages — ["Home","Predict default risk","My prediction history"]
+  PASS  23-input form present — form rendered
+  PASS  live prediction shown — displayed=71.95%
+  PASS  prediction matches pipeline output — displayed=71.95% expected=71.9535% delta=0.0035pp
+  PASS  result states class and model version — aihubcampus-default-risk-1+48ce02563b2a
+  PASS  own history lists the account's submissions — rows=3 for qa_s16_gate_user
+  
+  checks: 16  passed: 16  failed: 0
+
+=== 9. the secret scan, on the tag tree ===
+$ python3 scripts/check_no_secrets.py --all-files   (in a clean clone of the tag)
+  scanned 400 file(s); 0 secret value(s) loaded from operator env
+  
+  PASS — no operator secret and no credential pattern in any tracked file.
+
+# end of transcript — 2026-10-27T23:56:22Z

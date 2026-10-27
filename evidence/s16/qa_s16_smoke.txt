@@ -1,0 +1,18 @@
+PASS  live HTTPS 200 — status=200 url=https://www.aihubcampus.online/ t=4242ms
+PASS  served by cloudflare — server=cloudflare
+PASS  admin signed in — nav=["Home","Predict default risk","My prediction history","User management","Dataset manager","Model evaluation"]
+PASS  admin sees user management
+PASS  admin sees dataset manager
+PASS  admin sees model evaluation
+PASS  user management renders accounts — qa_s16_gate_user
+PASS  model evaluation shows held-out metrics
+PASS  admin sign out returns to sign-in — button=true login_form=true
+PASS  user signed in — nav=["Home","Predict default risk","My prediction history"]
+PASS  user has no admin pages — ["Home","Predict default risk","My prediction history"]
+PASS  23-input form present — form rendered
+PASS  live prediction shown — displayed=71.95%
+PASS  prediction matches pipeline output — displayed=71.95% expected=71.9535% delta=0.0035pp
+PASS  result states class and model version — aihubcampus-default-risk-1+48ce02563b2a
+PASS  own history lists the account's submissions — rows=3 for qa_s16_gate_user
+
+checks: 16  passed: 16  failed: 0
