@@ -18,8 +18,8 @@ in ten minutes and can be stretched or cut, not a claim about the real slot.
 
 | Block | Planned | Measured in rehearsal |
 |---|---:|---:|
-| Twelve slides | 7 min 0 s | not measured (no rehearsal of the speaking) |
-| Live demo, ten steps | 2 min 30 s | 1 min 37 s of on-screen time (96.7 s total, including tool waits) |
+| Twelve slides | 5 min 30 s | not measured (no rehearsal of the speaking) |
+| Live demo, twelve steps | 4 min 0 s | 1 min 37 s of on-screen time (96.7 s total, including tool waits) |
 | Close | 30 s | not measured |
 
 The measured figure is the browser's own timing of each demo step, not a human at a keyboard: a
@@ -85,7 +85,7 @@ One slide per row. "On screen" is what the slide carries; "say" is the speaker n
   **0.3647** (logistic); ROC-AUC 0.7555 / 0.7765 / 0.7261.
 - **Say:** the rule is written before the results are seen, and the held-out set is scored once.
 
-### Slide 7 — Why not accuracy (the honest comparison)
+### Slide 7 — Why not accuracy: the held-out comparison and the errors it costs
 
 - **On screen:** held-out comparison, threshold 0.50:
 
@@ -96,20 +96,18 @@ One slide per row. "On screen" is what the slide carries; "say" is the speaker n
   | Logistic regression | 0.8077 | 0.6868 | 0.2396 | 0.3553 | 0.7076 |
   | Constant "no default" baseline | 0.7788 | 0.0000 | 0.0000 | 0.0000 | 0.5000 |
 
+  Under it, the same three candidates as confusion matrices over the 6,000 held-out rows —
+  decision tree TN **4,431**, FP **242**, FN **855**, TP **472**; random forest 4,491 / 182 /
+  945 / 382; logistic regression 4,528 / 145 / 1,009 / 318.
 - **Say:** the deployed tree is **+0.0383** accuracy (0.817167 − 0.778833) over a model that
   answers "no default" to everything and finds nothing; the random forest has the best ROC-AUC
   (0.7665) but a worse F1 (0.4040 against 0.4625), and we report that disagreement rather than
-  hiding it.
+  hiding it. The errors are the rest of the story: it catches 472 of the 1,327 accounts that
+  actually defaulted and misses 855 (64.4%), and those 855 false negatives are the number that
+  matters operationally — this system is a screening aid, and a "no default" score is not a
+  promise of payment.
 
-### Slide 8 — Confusion matrices: what the errors cost
-
-- **On screen:** decision tree, 6,000 held-out rows — TN **4,431**, FP **242**, FN **855**,
-  TP **472**. It catches 472 of the 1,327 accounts that actually defaulted and misses 855
-  (64.4%). Random forest: 4,491 / 182 / 945 / 382. Logistic regression: 4,528 / 145 / 1,009 / 318.
-- **Say:** the 855 false negatives are the number that matters operationally; this system is a
-  screening aid, and a "no default" score is not a promise of payment.
-
-### Slide 9 — Architecture: one container, one contract, no host ports
+### Slide 8 — Architecture: one container, one contract, no host ports
 
 - **On screen:** Streamlit app → verified joblib pipeline (artifact SHA-256
   `48ce02563b2aad9fbf9397603c642b0319be617c57fde8e1fd26ec08d518ad7b`, 8,187 bytes) → SQLite
@@ -120,7 +118,7 @@ One slide per row. "On screen" is what the slide carries; "say" is the speaker n
 - **Say:** the model is loaded from a file whose hash is checked at startup; if the hash does not
   match the manifest, the app refuses to predict instead of guessing.
 
-### Slide 10 — Admin module: what an administrator can and cannot do
+### Slide 9 — Admin module: what an administrator can and cannot do
 
 - **On screen:** create accounts, change role, reset a password, deactivate (deactivation keeps
   the audit trail); dataset manager stages a validated upload with an aggregate preview and
@@ -128,6 +126,23 @@ One slide per row. "On screen" is what the slide carries; "say" is the speaker n
   action is audited. No password hash is ever rendered.
 - **Say:** an upload never retrains and never replaces the live model — that is a deliberate
   boundary, and the demo shows it.
+
+### Slide 10 — User prediction demo: one account, scored end to end
+
+- **On screen:** the user's own sidebar — Home, Predict default risk, My prediction history, and
+  nothing else — then the form: all **23** contract features in the four documented groups,
+  *1 · Credit profile* (5: `LIMIT_BAL`, `SEX`, `EDUCATION`, `MARRIAGE`, `AGE`), *2 · Repayment
+  history* (6: `PAY_0`, `PAY_2`–`PAY_6`), *3 · Billing amounts* (6: `BILL_AMT1`–`BILL_AMT6`),
+  *4 · Previous paid amounts* (6: `PAY_AMT1`–`PAY_AMT6`). One button loads the synthetic
+  demonstrator row, one button scores it. The result panel shows estimated probability
+  **71.95%**, band **High**, the advice line, decision threshold **0.50**, model version
+  `aihubcampus-default-risk-1+48ce02563b2a` and the recorded time. The same form submitted with
+  `LIMIT_BAL` left empty is refused before the model is called — feature `LIMIT_BAL` has no
+  value — so nothing is scored and nothing is recorded. My prediction history then lists only
+  this account's own rows.
+- **Say:** this is the whole journey an ordinary user gets: type an account, get a probability
+  and a band with the threshold and model version printed next to it, see the invalid input
+  refused rather than guessed at, and see the run in your own history — and nobody else's.
 
 ### Slide 11 — Ethics, fairness and limitations
 
@@ -146,7 +161,7 @@ One slide per row. "On screen" is what the slide carries; "say" is the speaker n
   before any use beyond coursework.
 - **Say:** the deliverable is the evidence trail as much as the app.
 
-## 15.3 The live demo — ten steps, exact values, expected results
+## 15.3 The live demo — twelve steps, exact values, expected results
 
 Target: `https://www.aihubcampus.online`. Two accounts are needed: an administrator and the demo
 user. **The demo-day administrator credential belongs to the operator**; the rehearsal used a
@@ -172,7 +187,8 @@ starts, and keep it off the slide.
 Two things about this table are worth knowing before the session.
 
 - **The first paint is the slow part.** A cold Streamlit session behind the Cloudflare edge
-  measured 32.4 s once and 5.7 s in the recorded run. Open the URL *before* you start talking
+  measured **32.4 s** on an earlier attempt (§15.4); in the recorded run the first paint was
+  **3.6 s** and step 1 took **5.5 s** (table row 1). Open the URL *before* you start talking
   about the deck, or accept a pause.
 - **The same request twice is not logged twice.** If the demonstrator row has already been scored
   by that account in the same session, the result panel says so and does not write a second row.
@@ -315,9 +331,10 @@ own agreement and delete this paragraph; no agent should invent names or roles h
 |---|---|---|---|
 | Problem, objectives, scope | 1–2 | | no |
 | Dataset, preprocessing, EDA | 3–5 | | no |
-| Methodology and results | 6–8 | | no |
-| Architecture and admin demo | 9–10, steps 2–6 | | no |
-| User prediction demo | steps 7–10 | | no |
+| Methodology and results | 6–7 | | no |
+| Architecture and admin demo | 8–9, steps 2–6 | | no |
+| User prediction demo | 10, steps 7–10 | | no |
+| Model evaluation and sign-out | steps 11–12 | | no |
 | Ethics, limitations, conclusion | 11–12 | | no |
 | Q&A lead per topic (§15.5) | 1–8 | | no |
 
