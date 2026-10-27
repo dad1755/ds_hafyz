@@ -37,8 +37,8 @@ the wrong choice for a system optimised to avoid false alarms.
 ## 13.3 Against the earlier draft's numbers
 
 The draft this project replaced reported LR 0.8077 / DT 0.8172 / RF 0.8122 accuracy and DT F1
-0.4620. Those figures reproduce to four decimals from the shipped artifact and metrics — the
-reproduction is recorded in `docs/report_evidence.md` §7.3, and the reproduction itself is a check
+0.4620. Those figures reproduce from the shipped artifact and metrics — LR and RF to four decimals,
+DT to ~1e-3; the reproduction is recorded in `docs/report_evidence.md` §7.3, and it is a check
 that the delivered pipeline is the pipeline the draft described. What the draft did *not* report is
 the recall figure that matters (0.3557) or the baseline that makes accuracy meaningless. The
 correction is not to the arithmetic but to the framing.

@@ -658,7 +658,7 @@ not the draft.
 | 1 | Dataset is 30,000 × 25, 23 predictors | **confirmed** | `evidence/s0/inspect_dataset.txt` |
 | 2 | Class shares 77.88% / 22.12% | **confirmed** | `models/eda/summary.json` |
 | 3 | Table 8 descriptive statistics (`LIMIT_BAL`, `AGE`, `BILL_AMT1–2`, `PAY_AMT1–2`) | **confirmed** — 68 claims recomputed, 67 confirmed to the draft's rounding, 1 error | `evidence/s0/verify_draft_claims.txt` |
-| 4 | Table 9 model metrics (LR 0.8077, DT 0.8172, RF 0.8122 accuracy; DT F1 0.4620) | **confirmed** to four decimals from the shipped artifact | `docs/report_evidence.md` §7.3 |
+| 4 | Table 9 model metrics (LR 0.8077, DT 0.8172, RF 0.8122 accuracy; DT F1 0.4620) | **confirmed** — LR and RF to four decimals, DT to ~1e-3 | `docs/report_evidence.md` §7.3 |
 | 5 | Feature importance `PAY_0` 68.01%, `PAY_2` 13.77% | **confirmed** exactly | `evidence/s4/feature_importances.txt` |
 | 6 | Six EDA charts exist | **superseded** — six charts were regenerated from the CSV; the draft's embedded images are not reused | `models/eda/`, `evidence/s3/eda_files.txt` |
 | 7 | Passwords hashed with SHA-256 | **corrected** — Argon2id (`m=65536,t=3,p=4`); no SHA-256 password path exists | `src/security.py`, `evidence/s6/security_smoke.txt` |
@@ -723,7 +723,7 @@ marked unconfirmed in the report and in the rubric matrix, and the group can sup
 | `evidence/s13/browser_check.txt` | `evidence/s13/ui_tunnel.js` | 29 checks through the public hostname, all PASS |
 | `evidence/s13/smoke_test.txt` | `scripts/smoke_test.sh --url …` | 16 passed, 0 failed; `PortBindings={}` |
 | `evidence/s13/release_gate.txt` | `scripts/verify_release.sh` | 25 checks passed, 0 failed at the deployed commit |
-| `evidence/s13/check_no_secrets.txt` | `scripts/check_no_secrets.py` | 312 files scanned, zero operator secrets |
+| `evidence/s13/check_no_secrets.txt` | `scripts/check_no_secrets.py` | 292 files scanned, zero operator secrets |
 
 Reproduce all of it:
 
