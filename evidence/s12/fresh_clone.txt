@@ -1,0 +1,86 @@
+AI Hub Campus S12 — fresh clone build and run — 2026-10-27T01:01:24Z
+
+=== git clone (local, branch s12/docker-hardening-recovery) ===
+0f84d5b S12: a pinned, immutable runtime — and a backup you can actually restore
+(the two untracked entries are the CSV and .env the operator supplies — neither is in git)
+
+=== the dataset the operator supplies ===
+rows (incl header): 30001
+bytes: 2862995
+
+=== compose contract validates on the clone ===
+docker compose config --quiet -> exit 0
+
+=== docker build (fresh clone, no compose project created) ===
+#4 DONE 0.3s
+#19 exporting to image
+#19 exporting layers 0.0s done
+#19 exporting manifest sha256:0b2cf501ba3c77320470d964b41dbfeac2992596c774322b880ffe1c9ac34944 0.1s done
+#19 exporting config sha256:cfb9e5ec91028c9af9ac6422aaa88d0bd65abd077ba4c8315466c7231bbb0ffa 0.1s done
+#19 exporting attestation manifest sha256:fd5a399eb62076d5b80105eff52d871e52853089c46c3e6d0367b4882ae2c7d4
+#19 exporting attestation manifest sha256:fd5a399eb62076d5b80105eff52d871e52853089c46c3e6d0367b4882ae2c7d4 0.4s done
+#19 exporting manifest list sha256:ec7d8de396f03e6be326a53a69e8358fbc2979150265c854d69abc911c9ea7f9
+#19 exporting manifest list sha256:ec7d8de396f03e6be326a53a69e8358fbc2979150265c854d69abc911c9ea7f9 0.3s done
+#19 naming to docker.io/library/aihubcampus-web:s12-fresh
+#19 naming to docker.io/library/aihubcampus-web:s12-fresh 0.1s done
+#19 DONE 2.0s
+docker build -> exit 0
+
+=== image ===
+image id  : sha256:ec7d8de396f03e6be326a53a69e8358fbc2979150265c854d69abc911c9ea7f9
+created   : 2026-10-27T08:34:25.708586222+08:00
+user      : app
+size      : 222888453 bytes
+env (no secret expected): ["PATH=/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin","LANG=C.UTF-8","GPG_KEY=7169605F62C751356D054A26A821E680E5FA6305","PYTHON_VERSION=3.12.14","PYTHON_SHA256=5c8462af5790baf43a321a1559dbe0db06d1be4300fb85fb53c40060668e548a","PYTHONDONTWRITEBYTECODE=1","PYTHONUNBUFFERED=1","PIP_NO_CACHE_DIR=1","PIP_DISABLE_PIP_VERSION_CHECK=1","HOME=/home/app"]
+
+=== docker run — no network, no published port, read-only rootfs, caps dropped ===
+76dc14e3d6174b0d63928271b18fad0f85341d4136e4e0425994a35c0d6a9e30
+
+=== wait for the health probe (not a fixed sleep) ===
+poll 1: starting
+poll 2: starting
+poll 3: starting
+poll 4: healthy
+
+=== the fresh container serves ===
+GET /_stcore/health -> 200 ok
+GET /               -> 200 html 6467 bytes
+
+=== and it is the hardened runtime ===
+uid            : 1001 (app)
+read_only      : true
+cap_drop       : ["ALL"]
+port bindings  : {}
+docker port    : ''
+
+=== the artifact verifies inside the fresh container ===
+verify_artifact: models
+  [PASS] files_present: model_manifest.json and best_pipeline.joblib are regular files
+  [PASS] manifest_schema: schema_version 1; every required section present
+  [PASS] artifact_checksum: sha256 48ce02563b2aad9f… and 8,187 bytes match the manifest
+  [PASS] artifact_provenance: creation path is ml/train.py → ml/evaluate.py and the file is an uncompressed joblib pickle
+  [PASS] dataset_identity: data/UCI_Credit_Card.csv hashes to the immutable seed sha256 a0f0ab49d6326671…
+  [PASS] feature_contract: ordered features are ml.schema.FEATURES (23), dropped ['ID', 'default.payment.next.month']
+  [PASS] class_semantics: class labels and caveats are the documented wording; threshold 0.5; positive class 1; version aihubcampus-default-risk-1+48ce02563b2a
+  [PASS] pickle_allowlist: 11 class reference(s), all inside the allowlisted stack (builtins, joblib.numpy_pickle, numpy, numpy._core.multiarray, sklearn.compose._column_transformer, sklearn.pipeline, sklearn.preprocessing._function_transformer, sklearn.tree._classes, sklearn.tree._tree)
+  [PASS] pipeline_schema: a fitted Pipeline(transform=ColumnTransformer, model=estimator) selecting the manifest's 23 features, with predict_proba over classes [0, 1]
+  [PASS] deterministic_self_check: probe row scored 0.166092 twice with the same value; class 0 agrees with threshold 0.5
+  [PASS] metrics_consistency: metrics.json names the same artifact, selected model and threshold
+  recorded:
+    artifact_bytes: 8187
+    artifact_sha256: 48ce02563b2aad9fbf9397603c642b0319be617c57fde8e1fd26ec08d518ad7b
+    model_version: aihubcampus-default-risk-1+48ce02563b2a
+    pickle_references: ['builtins.slice', 'joblib.numpy_pickle.NumpyArrayWrapper', 'numpy._core.multiarray._reconstruct', 'numpy._core.multiarray.scalar', 'numpy.dtype', 'numpy.ndarray', 'sklearn.compose._column_transformer.ColumnTransformer', 'sklearn.pipeline.Pipeline', 'sklearn.preprocessing._function_transformer.FunctionTransformer', 'sklearn.tree._classes.DecisionTreeClassifier', 'sklearn.tree._tree.Tree']
+RESULT: PASS — the artifact is the one trusted code produced and it scores a contract frame deterministically
+
+=== logs (startup, no credential) ===
+2026-10-27 01:01:57.058 Uvicorn server started on 0.0.0.0:2026
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://www.aihubcampus.online:443
+
+
+=== the probe container is torn down; the live stack is untouched ===
+done
+EXIT=0

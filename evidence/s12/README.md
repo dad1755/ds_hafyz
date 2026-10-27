@@ -12,9 +12,10 @@ Every file here is a verbatim command transcript, captured on `ridergami2` again
 | `roundtrip.txt` | live DB → volume copy → backup → restore into a disposable volume and a directory; three-way row-count compare; the three refusals of the live volume | see the section headings inside |
 | `smoke_test.txt` | the 15 checks against the running container | `scripts/smoke_test.sh` |
 | `secrets.txt` | the secret-pattern scan over the tree | `python3 scripts/check_no_secrets.py` |
-| `fresh_clone.txt` | a fresh `git clone` of the branch + CSV + `.env` → build → run → health 200 | see the script below |
+| `fresh_clone.txt` | a fresh `git clone` of the branch + CSV + `.env` → build → run → health 200 | `bash evidence/s12/fresh_clone.sh` |
 | `release_gate.txt` | `scripts/verify_release.sh` verdict table | `scripts/verify_release.sh --build` |
 | `restart.sh` | the script that produced `restart.txt` | — |
+| `fresh_clone.sh` | the script that produced `fresh_clone.txt` | — |
 
 ## What each acceptance item maps to
 
