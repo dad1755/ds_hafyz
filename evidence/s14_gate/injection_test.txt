@@ -1,0 +1,53 @@
+======================================================================
+S14 GATE — injection tests against the sprint's own checkers
+source tree: /home/ec-user/non_prod/hafyz_ds at 176564e
+work copy  : a git-archive export, discarded on exit
+======================================================================
+
+--- baseline: unmodified export
+stated as fact, and every mandatory component has a numbered draft.
+
+RESULT: PASS
+This proves the figures were copied from the artefact, not retyped from memory.
+
+RESULT: PASS
+
+--- A: fabricated 'done' paragraph appended to 12_evaluation.md
+FAIL — 5 problem(s):
+  - docs/report/12_evaluation.md:83: cited path does not exist: evidence/s14/this_path_does_not_exist.txt
+  - docs/report/12_evaluation.md:81: claim 'all tests pass' without a cited path on the line
+  - docs/report/12_evaluation.md:81: claim 'fully implemented' without a cited path on the line
+  - docs/report/12_evaluation.md:81: group-owned fact 'fourteen-day' stated without 'unconfirmed'
+  - docs/report/12_evaluation.md:81: group-owned fact 'four members' stated without 'unconfirmed'
+
+RESULT: FAIL
+EXIT=1
+
+--- B: a bare whole-word PASS with no cited path
+FAIL — 1 problem(s):
+  - docs/report/12_evaluation.md:79: claim '\bPASS\b' without a cited path on the line
+
+RESULT: FAIL
+
+--- C: PASS followed by a path that exists but says nothing about it
+stated as fact, and every mandatory component has a numbered draft.
+
+RESULT: PASS
+(the tightened rule is line-scoped: any existing path on the line satisfies it)
+
+--- D: 0.7665 replaced by 0.7600 in 12_evaluation.md only
+Every derived figure appears in the drafts exactly as the artefact records it.
+This proves the figures were copied from the artefact, not retyped from memory.
+
+RESULT: PASS
+(the checker asserts presence somewhere in the corpus, not presence at the right site)
+
+--- E: 0.7665 removed from every draft
+FAIL — 1 figure(s) missing from the drafts:
+  - random_forest held-out roc_auc: expected to find '0.7665'
+RESULT: FAIL
+
+======================================================================
+Conclusion: A, B and E are caught; C and D are not. Both holes are
+recorded as findings in docs/acceptance/S14.md, not as product defects.
+======================================================================

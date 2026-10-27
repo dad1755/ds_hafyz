@@ -1,0 +1,48 @@
+$ grep -rn "\bPASS\b" docs/report/ | wc -l
+14
+
+$ grep -rn "\bPASS\b" docs/report/
+docs/report/26_appendices.md:85:| S0 | `docs/acceptance/S00.md` | PASS, no blocking defect |
+docs/report/26_appendices.md:86:| S1 | `docs/acceptance/S01.md` | PASS |
+docs/report/26_appendices.md:87:| S2 | `docs/acceptance/S02.md` | PASS |
+docs/report/26_appendices.md:88:| S3 | `docs/acceptance/S03.md` | PASS |
+docs/report/26_appendices.md:89:| S4 | `docs/acceptance/S04.md` | PASS |
+docs/report/26_appendices.md:90:| S5 | `docs/acceptance/S05.md` | PASS |
+docs/report/26_appendices.md:91:| S6 | `docs/acceptance/S06.md` | PASS |
+docs/report/26_appendices.md:92:| S7 | `docs/acceptance/S07.md` | PASS |
+docs/report/26_appendices.md:93:| S8 | `docs/acceptance/S08.md` | PASS |
+docs/report/26_appendices.md:94:| S9 | `docs/acceptance/S09.md` | PASS, 6 findings none blocking |
+docs/report/26_appendices.md:95:| S10 | `docs/acceptance/S10.md` | PASS, 7 findings none blocking |
+docs/report/26_appendices.md:96:| S11 | `docs/acceptance/S11.md` | PASS, 5 findings none blocking |
+docs/report/26_appendices.md:97:| S12 | `docs/acceptance/S12.md` | PASS after one blocking finding was fixed |
+docs/report/26_appendices.md:98:| S13 | `docs/acceptance/S13.md` | PASS at `49540a6`, 3 findings (F-1, F-2, F-3) recorded and unfixed |
+
+$ grep -rni "completed" docs/report/ | wc -l
+0
+
+$ grep -rni "verified" docs/report/
+docs/report/02_executive_summary.md:37:implemented it. The public deployment is live and was re-verified through the tunnel with a real
+docs/report/03_introduction.md:14:evaluation, a verified model artifact, an authenticated two-role web application, a staged dataset
+docs/report/06_scope.md:49:"reachable at a public hostname and verified there", not "approved for production use".
+docs/report/14_architecture.md:57:The controls that matter, each verified by a test or a live probe rather than by inspection:
+docs/report/14_architecture.md:59:| Control | Implementation | Verified by |
+docs/report/18_system_testing.md:28:| T11 | A restart keeps data, model and protected access | Proven at unit level and by a real `--force-recreate`; row counts kept, artifact re-verified |
+docs/report/19_results_discussion.md:29:| E6 | Cloud hosting listed as future work | The system is deployed at `https://www.aihubcampus.online` through the operator's tunnel and was verified there | §6, §14.1, `docs/deployment.md` §10 |
+docs/report/21_challenges.md:23:- **Independent verification changes the work.** Every sprint from S0 to S13 was verified by a
+docs/report/24_conclusion.md:7:for next-month default risk, backed by a reproducible pipeline, a verified model artifact, a
+
+# every acceptance file the appendix PASS table cites, with its own verdict line
+docs/acceptance/S00.md       ALL CHECKS PASS
+docs/acceptance/S01.md       VERDICT: PASS
+docs/acceptance/S02.md       VERDICT: PASS
+docs/acceptance/S03.md       VERDICT: PASS
+docs/acceptance/S04.md       VERDICT: PASS
+docs/acceptance/S05.md       VERDICT: PASS
+docs/acceptance/S06.md       VERDICT: PASS
+docs/acceptance/S07.md       VERDICT: PASS
+docs/acceptance/S08.md       VERDICT: PASS
+docs/acceptance/S09.md       Verdict: PASS
+docs/acceptance/S10.md       Verdict: PASS
+docs/acceptance/S11.md       Verdict: PASS
+docs/acceptance/S12.md       Verdict: PASS
+docs/acceptance/S13.md       Verdict: PASS

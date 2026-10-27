@@ -1,0 +1,33 @@
+==============================================================================
+S14 GATE — verifier's independent audit (not the sprint's checkers)
+==============================================================================
+[1] cited paths
+    paths checked: 925
+[2] rubric matrix shape
+components 26 / rubric A 9=20 / rubric B 9=20 / topics 15 : ok
+[3] PASS / completed claims
+    PASS occurrences in drafts: 14; 'completed' occurrences: 0
+[4] per-site figure checks
+  ok  docs/report/12_evaluation.md           RF held-out ROC-AUC          0.7665
+  ok  docs/report/12_evaluation.md           DT held-out F1               0.4625
+  ok  docs/report/12_evaluation.md           LR held-out precision        0.6868
+  ok  docs/report/12_evaluation.md           LR confusion TN              4,528
+  ok  docs/report/12_evaluation.md           LR confusion FN              1,009
+  ok  docs/report/11_training.md             train rows                   24,000
+  ok  docs/report/11_training.md             test class 1                 1,327
+  ok  docs/report/13_comparison.md           DT CV F1 mean                0.464273
+  ok  docs/report/09_eda.md                  AGE mean class 0             35.42
+  ok  docs/report/09_eda.md                  PAY_0=2 default rate         69.14
+  ok  docs/report/09_eda.md                  EDUCATION=3 default rate     25.16
+  ok  docs/report/07_dataset_description.md  dataset sha256 prefix        a0f0ab49
+  ok  docs/report/17_model_integration.md    artifact sha256 prefix       48ce0256
+  ok  docs/report/17_model_integration.md    T07 probability              0.7195348837209302
+  ok  docs/report/12_evaluation.md           PAY_0 importance (second site) 68.01
+  ok  docs/report/18_system_testing.md       test-case count              285
+    sites checked: 16
+[5] §17 dispositions
+  §17 row 15: unconfirmed — A fourteen-day schedule was met | **unconfirmed** — no record in this repository; the deadline is no
+  §17 row 16: unconfirmed — Four-member division of work | **unconfirmed** — only the group can confirm it. The report carries p
+§17 dispositions: {'confirmed': 7, 'superseded': 2, 'corrected': 6, 'unconfirmed': 2}
+
+RESULT: PASS — no discrepancy found by this audit
