@@ -1,0 +1,48 @@
+AI Hub Campus S12 — restart persistence — 2026-10-27T00:20:04Z
+
+--- BEFORE ---
+container     : 67cba7411446
+started       : 2026-10-26T23:19:25.924087943Z
+health        : healthy
+uid           : 1001 (app)
+read_only     : false
+cap_drop      : null
+security_opt  : ["no-new-privileges:true"]
+tmpfs         : null
+port bindings : {}
+docker port   : ''
+image         : sha256:22dc5403b32c94cf3f6532a5555ab4117d833c009291ad4ec4c4b767b8e233a8
+artifact      : 48ce02563b2aad9fbf9397603c642b0319be617c57fde8e1fd26ec08d518ad7b
+row counts    : {"audit_events": 17, "dataset_rejections": 0, "dataset_versions": 1, "login_attempts": 0, "prediction_logs": 0, "schema_migrations": 3, "sessions": 5, "users": 2}
+db            : bytes: 94208 mtime: 1793056821
+
+=== docker compose up -d --force-recreate web ===
+ Container aihubcampus-web-1 Recreate 
+ Container aihubcampus-web-1 Recreated 
+ Container aihubcampus-web-1 Starting 
+ Container aihubcampus-web-1 Started 
+
+poll 1: starting
+poll 2: starting
+poll 3: starting
+poll 4: starting
+poll 5: starting
+poll 6: starting
+poll 7: healthy
+
+--- AFTER ---
+container     : f82d5bd6a258
+started       : 2026-10-27T00:21:30.940373369Z
+health        : healthy
+uid           : 1001 (app)
+read_only     : true
+cap_drop      : ["ALL"]
+security_opt  : ["no-new-privileges:true"]
+tmpfs         : {"/home/app/.cache":"rw,noexec,nosuid,size=64m","/tmp":"rw,noexec,nosuid,size=256m"}
+port bindings : {}
+docker port   : ''
+image         : sha256:a35b716ca240b8018e90fa183920c639545d8dd29444763869889700d405fb62
+artifact      : 48ce02563b2aad9fbf9397603c642b0319be617c57fde8e1fd26ec08d518ad7b
+row counts    : {"audit_events": 17, "dataset_rejections": 0, "dataset_versions": 1, "login_attempts": 0, "prediction_logs": 0, "schema_migrations": 3, "sessions": 5, "users": 2}
+db            : bytes: 94208 mtime: 1793056821
+

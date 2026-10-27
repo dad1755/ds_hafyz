@@ -426,6 +426,9 @@ docker run --rm -v "$PWD:/app:z" -w /app aihubcampus-web:s9 python -m pytest tes
 | `docs/report_evidence.md` | What is verified by code today vs still `claimed` from the drafts |
 | `docs/preprocessing_contract.md` | The split, transform and artifact contract S4 implements (S3) |
 | `docs/inference_contract.md` | The artifact gate, the prediction service, the risk bands and the wording every result must carry (S5) |
+| `docs/runbook.md` | Operating it: health, logs, backup, restore, rollback, safe teardown (S12) |
+| `docs/deployment.md` | The exact deploy sequence, the secret input list, the security checklist (S12) |
+| `docs/RELEASE_NOTES.md` | What each sprint changed, and the release-candidate template (S12) |
 
 ## Sprint 10 — admin model evaluation and insight panels
 
@@ -528,10 +531,47 @@ python3 scripts/check_no_secrets.py                      # 0 hits
   `test-results/demo_prediction.txt` (the demonstrator row scored directly by the shipped
   artifact: class `1`, probability `0.7195348837209302`, band `High`).
 
+## Sprint 12 — production-like Docker hardening and recovery
+
+```bash
+scripts/verify_release.sh --build --with-tests   # the pre-deploy gate (verdict table)
+scripts/smoke_test.sh                            # 15 checks against the running container
+scripts/backup.sh                                # VACUUM INTO snapshot + manifest, self-verified
+scripts/restore.sh --backup backups/<stamp>.tar.gz --to-dir /tmp/restore-check
+bash evidence/s12/restart.sh                     # restart persistence, before/after row counts
+```
+
+- **The image is pinned and the runtime is minimal.** `FROM python:3.12-slim@sha256:2f17fc04…`
+  — a digest, not a tag, so a rebuild months later is the same image. `web` now runs with
+  `read_only: true`, `/tmp` and `/home/app/.cache` as bounded `noexec`/`nosuid` tmpfs,
+  `cap_drop: ALL`, `no-new-privileges`, `restart: unless-stopped`, a healthcheck, and
+  `expose: 2026` only. `docker inspect` reports `PortBindings={}` and `docker port` is empty:
+  **no host port has ever been published.**
+- **One writable mount.** `app_storage` at `/app/storage` is the only `RW` mount; the dataset is
+  mounted `ro`. `scripts/smoke_test.sh` asserts both, against the live container rather than
+  the checkout.
+- **Backup is consistent, not a file copy.** The database runs in WAL mode, so `cp` of the
+  `.db` can miss committed pages. `scripts/backup.sh` takes a `VACUUM INTO` snapshot inside the
+  container, checksums it on both sides of `docker cp`, captures the model manifest, metrics and
+  dataset rows, then **unpacks its own tarball and verifies every checksum and row count**.
+- **Restore verifies before it writes.** `scripts/restore.sh` checks the tarball's `.sha256`,
+  every file against `manifest.json`, `integrity_check`, and every row count — and refuses the
+  live volume unless `--allow-live --yes` is given *and* the service is stopped. Three refusals
+  are recorded in `evidence/s12/roundtrip.txt`.
+- **Proven, not asserted** (`evidence/s12/`): a fresh checkout builds and serves (image id +
+  `/_stcore/health → ok`); `docker compose up -d --force-recreate` keeps every row
+  (`audit_events 17, dataset_versions 1, schema_migrations 3, sessions 5, users 2` before and
+  after) and the same artifact `sha256 48ce0256…`; backup → restore into a disposable volume
+  reproduces the manifest's `sha256 0cf65ebe…` with identical counts; `check_no_secrets.py`
+  reports 0 hits over 273 files.
+- Docs: `docs/runbook.md` (never `down -v`), `docs/deployment.md` (operator sequence + 20-point
+  security checklist), `docs/RELEASE_NOTES.md`. `scripts/verify_release.sh` fails if any
+  `scripts/…` or `evidence/…` path those docs name does not exist.
+
 ## Next sprint
 
-**S12** — production-like Docker hardening and recovery: non-root image, minimal runtime
-permissions, locked dependencies, Compose health checks, backup/restore scripts, a security
-checklist and an ops runbook; a clean rebuild and a tested backup restore in a disposable
-environment.
+**S13** — Cloudflare Tunnel and HTTPS staging verification: attach the operator-approved tunnel,
+confirm the ingress maps both hostnames to `http://web:2026`, and run the HTTPS smoke report
+(login, session, upload, prediction, admin, WebSocket refresh, mobile) with no public origin
+port. **Do not start S13 or touch DNS/tunnel without explicit deployment authorisation.**
 

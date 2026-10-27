@@ -42,8 +42,28 @@ services:
       timeout: 5s
       retries: 3
       start_period: 40s
+    # --- hardening (S12) ---------------------------------------------------------------
+    # The container filesystem is immutable. Everything the app writes has one home — the
+    # `app_storage` volume — and /tmp is a bounded tmpfs so a runaway temporary file cannot
+    # fill the host disk and a dropped payload cannot be executed from it (noexec).
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=256m
+      - /home/app/.cache:rw,noexec,nosuid,size=64m
+    # A Streamlit app needs no Linux capability: it binds a port above 1024, reads files and
+    # writes to its volume. Dropping ALL is therefore free, and it removes the kernel surfaces
+    # (CAP_SYS_ADMIN, CAP_NET_RAW, CAP_DAC_OVERRIDE…) a compromise would otherwise inherit.
+    cap_drop:
+      - ALL
     security_opt:
       - no-new-privileges:true
+    # Logs are bounded: an unbounded json-file log is a disk-exhaustion bug waiting for a
+    # chatty day, and the container log is the only place startup errors are visible.
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
 
   # Outbound-only tunnel client. Started only when the operator deploys (S13); it is not
   # required to build or run `web`, and its token file is optional so that

@@ -1,0 +1,9 @@
+preflight project=aihubcampus service=web container=67cba7411446 health=healthy
+snapshot VACUUM INTO ok, integrity_check=ok, sha256=0cf65ebe37b5c184…
+copy     docker cp verified — host checksum equals the container's
+model    manifest + metrics copied, artifact sha256=48ce02563b2aad9f…
+packed   /home/ec-user/non_prod/hafyz_ds/backups/aihubcampus-20261027T001944Z.tar.gz (12K), checksum written beside it
+PASS — 4 file(s) match the manifest, integrity_check=ok, 8 table count(s) match
+done     /home/ec-user/non_prod/hafyz_ds/backups/aihubcampus-20261027T001944Z.tar.gz
+
+Next: scripts/restore.sh --backup /home/ec-user/non_prod/hafyz_ds/backups/aihubcampus-20261027T001944Z.tar.gz --to-dir /tmp/restore-check

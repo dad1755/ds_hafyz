@@ -6,8 +6,14 @@
 #
 # Nothing secret is baked in: .env / .env.cloudflared / SQLite / models are excluded by
 # .dockerignore and only non-secret runtime config is copied.
+#
+# The base image is pinned by digest, not by tag (S12). `python:3.12-slim` is a moving target:
+# the tag can be repointed at a new patch level with a different C library, and a rebuild
+# months later would then produce a different image from the same Dockerfile. The digest
+# `sha256:2f17fc04…` is the index this project built and tested against; to move it, change it
+# deliberately and re-run scripts/verify_release.sh --build --with-tests.
 
-FROM python:3.12-slim
+FROM python:3.12-slim@sha256:2f17fc044b579bab302c2e8054d3a686e2cb9a83de48e70534b94cd8ebbe06a9
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \

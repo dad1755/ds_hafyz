@@ -1,0 +1,25 @@
+#18 DONE 5.8s
+
+#19 [14/14] RUN mkdir -p /app/storage && chown -R app:app /app/storage
+#19 DONE 12.8s
+
+#20 exporting to image
+#20 exporting layers
+#20 exporting layers 16.3s done
+#20 exporting manifest sha256:c63f30948831e8ac363dfe01fe2ad452457370f1fb0b2af2766d8a63c7401ff6
+#20 exporting manifest sha256:c63f30948831e8ac363dfe01fe2ad452457370f1fb0b2af2766d8a63c7401ff6 0.7s done
+#20 exporting config sha256:e207dbef9c4247b78dbb75ae4a437840546ce31c12d1891a35fafc2db129c1e1
+#20 exporting config sha256:e207dbef9c4247b78dbb75ae4a437840546ce31c12d1891a35fafc2db129c1e1 0.5s done
+#20 exporting attestation manifest sha256:f15bcca8e9c29ed967c7d07192153ac63029bc878bc01b5e3866133e81ebff44
+#20 exporting attestation manifest sha256:f15bcca8e9c29ed967c7d07192153ac63029bc878bc01b5e3866133e81ebff44 4.3s done
+#20 exporting manifest list sha256:a35b716ca240b8018e90fa183920c639545d8dd29444763869889700d405fb62
+#20 exporting manifest list sha256:a35b716ca240b8018e90fa183920c639545d8dd29444763869889700d405fb62 1.0s done
+#20 naming to docker.io/library/aihubcampus-web:local
+#20 naming to docker.io/library/aihubcampus-web:local 0.2s done
+#20 unpacking to docker.io/library/aihubcampus-web:local
+#20 unpacking to docker.io/library/aihubcampus-web:local 3.1s done
+#20 DONE 27.0s
+
+#21 resolving provenance for metadata file
+#21 DONE 0.1s
+ Image aihubcampus-web:local Built 

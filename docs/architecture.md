@@ -264,11 +264,24 @@ project other than `aihubcampus`.
   session, revoked on sign-out and on deactivation; no sliding renewal (§14).
 - ~~The weak operator password~~ — resolved in S6 (D13): seeded with
   `must_change_password = 1` rather than accepted silently (§14).
-- Whether the optional `127.0.0.1:2026` troubleshooting bind is enabled (S12, off by default).
+- ~~Whether the optional `127.0.0.1:2026` troubleshooting bind is enabled~~ — resolved in S12:
+  **not enabled.** The container has `read_only: true`, `cap_drop: [ALL]`, `no-new-privileges`
+  and `expose: 2026` with no `ports:` key at all, so there is no host-side listener to
+  troubleshoot through. The probe runs inside the container
+  (`docker compose exec web python -c "…/_stcore/health"`), which needs no bind. Recorded in
+  `evidence/s12/smoke_test.txt`.
 - Model selection if reproduction differs from the draft's Decision Tree (S4) — decided on
   F1 and default-class recall, never accuracy alone.
-- Retention purge for `audit_events` / `prediction_logs` beyond the throttle's own pruning
-  (S12), and the backup/restore drill mechanics (S12).
+- ~~The backup/restore drill mechanics~~ — resolved in S12: `scripts/backup.sh` (a `VACUUM INTO`
+  snapshot taken inside the container, plus the model manifest, metrics and dataset rows, all
+  checksummed in `manifest.json`) and `scripts/restore.sh` (verifies before writing, refuses the
+  live volume by default). Procedure: `docs/runbook.md` §4–§5. Evidence:
+  `evidence/s12/roundtrip.txt`.
+- **Retention purge for `audit_events` / `prediction_logs` beyond the throttle's own pruning —
+  still open.** S12 built the recovery path, not the retention policy: nothing in this sprint
+  deletes old audit or prediction rows, so the database grows with use. Deliberately not
+  invented here; it needs an operator decision on how long history must be kept (the app already
+  reads `APP_RETENTION_DAYS`), and belongs with the release/audit sprint.
 
 ## 11. S1 implementation record — container skeleton
 
