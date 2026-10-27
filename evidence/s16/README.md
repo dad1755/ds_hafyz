@@ -11,7 +11,7 @@ can be re-proved rather than re-read.
 | File | What it is | Reproduce with |
 |---|---|---|
 | `preflight.txt` | what is serving, and whether it is this tree: container id, image id, hardening flags, **30/30 application `.py` files byte-identical between the image and the checkout**, artifact/manifest hashes, live DB row counts | `bash evidence/s16/preflight.sh` |
-| `release_gate.txt` | `scripts/verify_release.sh` on a **clone of the tag** — the release tree, plus the two operator-supplied files, nothing else | `TAG=v1.0.0 bash evidence/s16/release_gate.sh` |
+| `release_gate_attempt.txt` | `scripts/verify_release.sh` on a **clone of the tag** — the release tree, plus the two operator-supplied files, nothing else. **This run did not complete**: 11 checks passed, then `docker run` stalled because the host's Docker daemon had stopped creating containers under load. It is kept as the record of the attempt, with a note at the top; the gate must be re-run | `TAG=v1.0.0 bash evidence/s16/release_gate.sh` |
 | `smoke_test.txt` | `scripts/smoke_test.sh --url …`: the running stack's hardening checks and the public HTTPS surface | `scripts/smoke_test.sh --url https://www.aihubcampus.online` |
 | `backup_restore_drill.txt` | a consistent backup taken **outside the live volume**, a second copy, and a restore into a **disposable** volume: checksum, `integrity_check`, every table count, then the drill volume removed | `BACKUP_OUT=<dir outside the volume> bash evidence/s16/backup_restore_drill.sh` |
 | `rollback_drill.txt` | `docker compose down` **without `-v`** → the volume survives → `up -d` → healthy on a new container id, database sha256 and row counts identical, public HTTPS back | `TAG=v1.0.0 bash evidence/s16/rollback_drill.sh` |
@@ -23,11 +23,12 @@ can be re-proved rather than re-read.
 
 | Gate (blueprint §11) | Where |
 |---|---|
-| **A — academic data** | `preflight.txt` (dataset sha256 `a0f0ab49…`, 30,000 × 25, class counts), `release_gate.txt` (artifact verification), `docs/model_card.md` §4 |
+| **A — academic data** | `preflight.txt` (dataset sha256 `a0f0ab49…`, 30,000 × 25, class counts), `release_gate_attempt.txt` (the image and artifact checks that ran before the stall), `docs/model_card.md` §4 |
 | **B — ML** | `live_smoke.txt` (both computations of P(class 1) = `0.7195348837209302`), `docs/model_card.md` §5 (three algorithms, held-out metrics, confusion matrix, the 0.3557 recall) |
 | **C — app** | `live_smoke.txt`: 23 inputs, probability, band, advice, CSV manager, and the result coming from the artifact rather than a table |
 | **D — quality** | `live_smoke.txt` (invalid CSV, empty field, no hash on screen), `smoke_test.txt` (hardening checks on the running container), `rollback_drill.txt` (restart persistence), and the suite evidence named below |
 | **E — public release** | `live_smoke.txt` (HTTPS, `server: cloudflare`, no host port), `backup_restore_drill.txt`, `rollback_drill.txt` |
+| **the gate script itself** | `release_gate_attempt.txt` — incomplete at S16 (host Docker stall); the complete run in this sprint was at `08365e8`, 24 passed / 1 failed on the two evidence files that did not exist yet |
 | **F — submission** | `docs/RELEASE_NOTES.md`, `docs/model_card.md`, `docs/runbook.md` §10, `docs/acceptance/` (S00–S15), `docs/test_matrix.md` |
 
 ## The test suite — where its evidence is, and why it is not re-run here

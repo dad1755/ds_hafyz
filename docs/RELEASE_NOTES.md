@@ -16,7 +16,7 @@ it names the command. Nothing here is dated by guesswork — the git commit is t
 VERSION:            v1.0.0
 DATE (UTC):         2026-10-27T16:54:11Z      (the tag's commit date)
 GIT COMMIT:         tag v1.0.0 — `git rev-parse v1.0.0^{commit}`; the exact sha is printed at the
-                    top of evidence/s16/release_gate.txt, which ran on a clone of this tag
+                    top of evidence/s16/release_gate_attempt.txt, which ran on a clone of this tag
 IMAGE ID:           sha256:d8e4cfa00e730734f8160a65afab017a00c78722167622a69d6aed5b0d400cd7
                     (aihubcampus-web:local) — byte-identical to this tree, 30/30 .py files
 DATABASE SCHEMA:    0003_dataset_staging
@@ -53,7 +53,7 @@ DEPLOYED AT:        https://www.aihubcampus.online (and https://aihubcampus.onli
 | Command | Result |
 |---|---|
 | `bash evidence/s16/preflight.sh` | running image is byte-identical to the tree: **30/30 .py files, 0 differ**; artifact and manifest hashes match inside and outside the image; no host port |
-| `bash evidence/s16/release_gate.sh` (tag `v1.0.0`, clean clone) | `scripts/verify_release.sh`: **PASS**, 0 failed — transcript in `evidence/s16/release_gate.txt` |
+| `bash evidence/s16/release_gate.sh` (clean clone) | `scripts/verify_release.sh` ran to completion once in this sprint, at `08365e8`: **24 passed, 1 failed** — the single failure was `docs name real files` for `evidence/s16/rollback_drill.txt` and `evidence/s16/live_smoke.txt`, which did not exist yet and are committed in this tag. The confirming run at the tag **did not complete**: the host's Docker daemon stopped creating containers (load average 25–36, 67 containers from other projects), so it stalled at check 12 — `evidence/s16/release_gate_attempt.txt` is the record. **The gate must be re-run by the verifier.** |
 | `scripts/smoke_test.sh --url …` | the running stack's hardening checks and the public HTTPS surface — transcript in `evidence/s16/smoke_test.txt` |
 | `bash evidence/s16/backup_restore_drill.sh` | bundle written outside the live volume (`27e9a81c…`), second copy taken, restored into a disposable volume: `integrity_check=ok`, **every table count matched**, then the drill volume removed |
 | `bash evidence/s16/rollback_drill.sh` | `docker compose down` (no `-v`) → volume survives → `up -d` → healthy on a **new container id**, **same database sha256 `7c815092…`**, public HTTPS `200` |

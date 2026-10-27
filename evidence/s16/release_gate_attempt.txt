@@ -1,0 +1,70 @@
+# NOTE (added after the run, not part of the transcript):
+# This run of scripts/verify_release.sh DID NOT COMPLETE. It reached 11 checks — all PASS — and
+# then stalled in `docker run --rm --network none aihubcampus-web:local test ! -e /app/.env`.
+# The Docker daemon had stopped creating containers on this host: a control probe
+# (`docker run --rm --network none postgres:16-alpine true`) also timed out, at load average
+# 25-36 with 67 containers from other projects running. The process was killed after ~35 minutes.
+# It is kept as the record of the attempt. The gate must be re-run by the verifier; a complete
+# run of the same script was made during this sprint at commit 08365e8 and reported 24 passed,
+# 1 failed — the single failure being 'docs name real files' for
+# evidence/s16/rollback_drill.txt and evidence/s16/live_smoke.txt, neither of which existed yet.
+# Both are committed in the tag this attempt ran against.
+#
+# S16 release gate — scripts/verify_release.sh on the release tag, in a clean clone
+# run (UTC): 2026-10-27T18:56:53Z
+# host:      ridergami2 · 7.2.11-200.fc44.x86_64
+# tag:       v1.0.0 -> 74657e76d0ff27ab27b2db05e6ef31cab1c3fa7f
+# clone:     /tmp/multica-task-1727635916/s16-gate.38H0Irxj/release (deleted at the end of this run)
+
+=== the release tree, as the tag defines it ===
+$ git clone --quiet --branch v1.0.0 /home/ec-user/non_prod/hafyz_ds /tmp/multica-task-1727635916/s16-gate.38H0Irxj/release
+warning: refs/tags/v1.0.0 43161f135b31dd17d68522f3ea177452ffd59f8a is not a commit!
+Note: switching to '74657e76d0ff27ab27b2db05e6ef31cab1c3fa7f'.
+
+You are in 'detached HEAD' state. You can look around, make experimental
+changes and commit them, and you can discard any commits you make in this
+state without impacting any branches by switching back to a branch.
+
+If you want to create a new branch to retain commits you create, you may
+do so (now or later) by using -c with the switch command. Example:
+
+  git switch -c <new-branch-name>
+
+Or undo this operation with:
+
+  git switch -
+
+Turn off this advice by setting config variable advice.detachedHead to false
+
+74657e7 S16: the release record — gates, backup, rollback and both roles on the live URL
+$ git -C clone describe --tags --exact-match
+v1.0.0
+
+$ cp .env data/UCI_Credit_Card.csv   (the two operator-supplied, git-ignored inputs)
+  .env                     : 290 bytes (not printed, not hashed)
+  data/UCI_Credit_Card.csv : 2862995 bytes, sha256 a0f0ab49d6326671d6cd83be5c88dcf18007025fe9a53ecd699119c871176ca1
+
+$ git -C clone status --porcelain   (the only untracked entries are those two inputs)
+
+# for contrast, the working checkout this run was launched from:
+$ git -C /home/ec-user/non_prod/hafyz_ds status --porcelain
+  ?? DATASCIENCE_UI_POLISH_BLUEPRINT.md
+  ?? evidence/s16/release_gate.txt
+  (DATASCIENCE_UI_POLISH_BLUEPRINT.md is another project's untracked file in this shared
+   checkout; it is not in the tag and therefore not in the release tree above)
+
+=== scripts/verify_release.sh  ===
+AI Hub Campus release verification — 2026-10-27T18:56:53Z
+repo=/tmp/multica-task-1727635916/s16-gate.38H0Irxj/release project=aihubcampus image=aihubcampus-web:local
+
+PASS  git tree clean                 HEAD @ 74657e76d0ff
+PASS  compose validates              docker compose config --quiet
+PASS  no host ports in compose       expose: only
+PASS  compose has read_only: true    present
+PASS  compose has no-new-privileges:true present
+PASS  compose has cap_drop           present
+PASS  compose has restart: unless-stopped present
+PASS  compose has healthcheck:       present
+PASS  base image digest-pinned       FROM python:3.12-slim@sha256:2f17fc044b579bab302c2e8054d3a686e2cb9a83de48e70534b94cd8ebbe06a9
+PASS  Dockerfile drops to non-root   USER app
+PASS  image user is non-root         Config.User=app
