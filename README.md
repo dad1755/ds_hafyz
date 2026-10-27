@@ -570,10 +570,44 @@ bash evidence/s12/restart.sh                     # restart persistence, before/a
   security checklist), `docs/RELEASE_NOTES.md`. `scripts/verify_release.sh` fails if any
   `scripts/…` or `evidence/…` path those docs name does not exist.
 
+## Sprint 13 — live on www.aihubcampus.online through the Cloudflare tunnel
+
+```bash
+docker compose create cloudflared && docker compose start cloudflared   # after web is healthy
+docker compose logs cloudflared                    # 4 x "Registered tunnel connection", precheck PASS
+scripts/smoke_test.sh --url https://www.aihubcampus.online
+python3 evidence/s11/probe_http.py https://www.aihubcampus.online
+bash evidence/s13/run_ui_tunnel.sh                 # real Chromium, three journeys, public URL
+```
+
+- **Public over HTTPS, still no host port.** `https://www.aihubcampus.online` and
+  `https://aihubcampus.online` serve the app through the operator's existing tunnel
+  (`aeab965f-…` → `http://web:2026`); `docker port aihubcampus-web-1` is empty and both containers
+  report `PortBindings={}`. `cloudflared` reads `TUNNEL_TOKEN` from `.env.cloudflared`
+  (`required: false`, so a build or `up web` needs no credential) and waits for
+  `condition: service_healthy`.
+- **Both roles complete their journeys through the tunnel** (`evidence/s13/browser_check.txt`,
+  29 checks, verdict `PASS`): operator admin → forced password-change screen (D13, password left
+  untouched); synthetic admin → prediction `71.95%` band `High`, history, user management, a
+  500-row CSV staged as dataset version #2 and explicitly not activated, model evaluation
+  6/6 sections; demo user → three navigation sections, no admin entries, prediction + history.
+- **Protocol checks through the edge** (`evidence/s13/probe_http.txt`): XSRF cookie
+  `SameSite=Lax` `path=/`, CORS refuses `https://evil.example`, WebSocket `101` from the real
+  origin and `403` from a foreign one, the SQLite database and the model artifact are not
+  downloadable.
+- **The smoke test's public probe was fixed, not worked around.** Cloudflare answers `403` to the
+  default `Python-urllib/3.x` User-Agent; the probe now sends `aihubcampus-smoke-test/1.0` and
+  `scripts/smoke_test.sh --url …` reports `16 passed, 0 failed`.
+- **Recorded, not hidden** (`docs/deployment.md` §10.5): F-1 a hard refresh signs the user out
+  (session token lives only in `session_state`); F-2 the XSRF cookie is not `Secure` because TLS
+  ends at the edge; F-3 `http://` answers `200` instead of redirecting. F-2/F-3 close with the
+  zone's "Always Use HTTPS" setting, which is the operator's to enable.
+- Cold start is slow and that is expected: the first script run rebuilds the Matplotlib font
+  cache under the read-only rootfs (measured 4 m 15 s to first paint); later sessions paint in
+  ~3 s.
+
 ## Next sprint
 
-**S13** — Cloudflare Tunnel and HTTPS staging verification: attach the operator-approved tunnel,
-confirm the ingress maps both hostnames to `http://web:2026`, and run the HTTPS smoke report
-(login, session, upload, prediction, admin, WebSocket refresh, mobile) with no public origin
-port. **Do not start S13 or touch DNS/tunnel without explicit deployment authorisation.**
+**S14** — report and presentation assembly from the evidence this build produced. S13 is deployed
+and its implementer record is in `evidence/s13/`; it is not yet independently verified.
 

@@ -1,0 +1,80 @@
+# S13 — the public HTTPS surface, driven end to end by a real browser
+# run (UTC): 2026-10-27T05:06:25Z
+# target:     https://www.aihubcampus.online
+# host:       ridergami2 · 7.2.11-200.fc44.x86_64
+
+$ docker compose exec -T -e SYNTH_ADMIN_USER=<synthetic> -e SYNTH_ADMIN_PASSWORD=<synthetic> web python - < evidence/s13/make_synth_admin.py
+synthetic admin re-armed: id=3 username=s13_tunnel_check role=admin active=1 must_change_password=0 hash_prefix=$argon2id$
+
+$ python3 evidence/s13/make_upload_subset.py <scratch>/s13_upload_subset.csv 500
+wrote s13_upload_subset.csv: 500 data rows + header, 47495 bytes
+
+$ docker compose ps
+SERVICE       NAME                        STATUS                       PORTS
+cloudflared   aihubcampus-cloudflared-1   Up 34 minutes                
+web           aihubcampus-web-1           Up About an hour (healthy)   2026/tcp
+
+$ docker inspect --format '{{.Image}}' aihubcampus-web-1 aihubcampus-cloudflared-1
+/aihubcampus-web-1 image=sha256:f23a5cee028a7a38933c4ab926cb136f157249776bd4e9820ee84588261985a6
+/aihubcampus-cloudflared-1 image=sha256:0aa26e284f05e6c77ae375b8c9c11d9eb6a448fb7bcd8d40f31cb6176189eb38
+
+$ curl -sS -o /dev/null -w '<status> <content-type> <server>' https://www.aihubcampus.online/
+https://www.aihubcampus.online/ -> status=200 type=text/html; charset=utf-8 redirect=
+https://aihubcampus.online/ -> status=200 type=text/html; charset=utf-8 redirect=
+https://www.aihubcampus.online/_stcore/health -> status=200 type=text/plain; charset=utf-8 redirect=
+http://www.aihubcampus.online/ -> status=200 type=text/html; charset=utf-8 redirect=
+
+$ NODE_PATH=/home/ec-user/qa759-v2/node_modules BASE_URL=https://www.aihubcampus.online CRED_FILE=<scratch>/s13_creds.json UPLOAD_CSV=<scratch>/s13_upload_subset.csv node evidence/s13/ui_tunnel.js
+PASS  public HTTPS served by the Cloudflare edge — server=cloudflare cf-ray=a50f2c14ba32ab56…
+PASS  response is the Streamlit shell — text/html; charset=utf-8
+PASS  sign-in form rendered over the tunnel
+PASS  XSRF cookie issued to the browser — domain=www.aihubcampus.online path=/
+PASS  XSRF cookie is SameSite=Lax with path=/ — sameSite=Lax path=/
+PASS  no application session cookie is exposed to the page — cookies=_streamlit_xsrf
+PASS  WebSocket upgrade through the tunnel — 1 socket(s)
+PASS  operator admin signs in through the tunnel — lands on the forced password-change screen (must_change_password=1, D13)
+PASS  operator credential left untouched — no password was submitted
+PASS  operator admin signs out
+PASS  synthetic admin signs in — s13_tunnel_check
+PASS  admin navigation offers six sections — Home | Predict default risk | My prediction history | User management | Dataset manager | Model evaluation
+PASS  prediction scored through the tunnel — probability=71.95% band=High
+PASS  result states the model version and threshold
+PASS  prediction history lists the request just made — 4 row(s) for this account
+PASS  user management page renders — accounts + create + audit panels
+PASS  user management lists the operator admin
+PASS  CSV upload validated and staged through the tunnel — dataset version #2
+PASS  staged upload is not activated silently
+PASS  model evaluation page renders every section — 6/6 sections
+PASS  hard refresh is served by the tunnel — session ended, sign-in form served
+PASS  admin sign-out returns to the sign-in form
+PASS  user navigation offers three sections — Home | Predict default risk | My prediction history
+PASS  user is not offered the administrator sections
+PASS  user home does not advertise administrator features
+PASS  user prediction scored through the tunnel — probability=71.95%
+PASS  user prediction history renders
+PASS  user hard refresh is served by the tunnel — session ended, sign-in form served (F-1, same as admin)
+PASS  user sign-out returns to the sign-in form
+
+{
+  "base": "https://www.aihubcampus.online",
+  "sockets": 3,
+  "checks": 29,
+  "failed": [],
+  "observations": [
+    {
+      "item": "XSRF cookie Secure flag",
+      "measured": "secure=false",
+      "because": "TLS terminates at the Cloudflare edge, so the app sees http:// from cloudflared; Streamlit marks the cookie Secure only with server.sslCertFile or SameSite=None."
+    },
+    {
+      "item": "session after a hard refresh (F-1)",
+      "measured": "signed out — the sign-in form is served again",
+      "because": "the session token lives only in Streamlit session_state and there is no session cookie, so a reload starts a new server session. Reported as a finding; changing the session model is outside S13."
+    }
+  ],
+  "verdict": "PASS"
+}
+node exit=0
+
+$ docker compose exec -T -e SYNTH_ADMIN_USER=<synthetic> web python - < evidence/s13/deactivate_synth_admin.py
+synthetic admin deactivated: id=3 username=s13_tunnel_check role=admin active=0

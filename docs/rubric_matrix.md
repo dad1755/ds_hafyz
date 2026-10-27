@@ -73,7 +73,7 @@ grouping under chapters **only if** all 26 stay findable via headings or this cr
 | B3 | ML methodology & results | 3 | Metrics/confusion matrices explained, selection justified | S4, S10, S15 | pending |
 | B4 | Admin module demonstration | 2 | Live user + dataset management, no hard-coded data | S8–S9, S15 | pending |
 | B5 | User module & prediction demonstration | 3 | Live 23-field form → class + probability + advice | S5, S7, S15 | pending |
-| B6 | Overall system integration & functionality | 3 | Public HTTPS stack, working end-to-end | S11–S13 | pending |
+| B6 | Overall system integration & functionality | 3 | Public HTTPS stack, working end-to-end | S11–S13 | **live** (S13: `evidence/s13/browser_check.txt`), gate pending |
 | B7 | Presentation quality & communication | 2 | Rehearsed, timed, consistent visuals | S15 | pending |
 | B8 | Team participation & individual understanding | 1 | Real, confirmed member contributions (not invented) | S15 | blocked (needs group confirmation) |
 | B9 | Q&A / technical understanding | 2 | Question bank + drill on accuracy-vs-recall, leakage, imbalance, RBAC | S15 | pending |

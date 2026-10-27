@@ -188,3 +188,84 @@ Application rollback and database rollback are different operations with differe
   `--allow-live --yes`, start, smoke.
 
 Both are rehearsed in `docs/runbook.md` §5 and `docs/runbook.md` §6.
+
+## 10. Deploy log — S13 go-live on www.aihubcampus.online
+
+Operator-authorised. Every value below was read back from the running host, not remembered.
+Full transcripts: `evidence/s13/`. Nothing here quotes a secret.
+
+### 10.1 What was deployed
+
+| Item | Value |
+|---|---|
+| Compose project | `aihubcampus` (network `aihubcampus_internal`, `10.202.0.0/24`) |
+| `web` image | `aihubcampus-web:local` = `sha256:f23a5cee028a7a38933c4ab926cb136f157249776bd4e9820ee84588261985a6`, built `2026-10-27T11:23:05+08:00` |
+| `web` container | `3f76a6f15303`, started `2026-10-27T03:39:58Z`, `health=healthy`, `PortBindings={}` |
+| `cloudflared` image | `cloudflare/cloudflared:2026.8.2` = `sha256:0aa26e284f05e6c77ae375b8c9c11d9eb6a448fb7bcd8d40f31cb6176189eb38` |
+| `cloudflared` container | `df0d11dba86d`, started `2026-10-27T04:32:04Z`, `restart=unless-stopped`, `PortBindings={}` |
+| Tunnel | `aeab965f-89df-411b-8dab-1e83846cf91e`, 4 QUIC connections registered (sin20, sin15, sin22, sin16) |
+| Ingress (read back from the tunnel, not configured here) | `www.aihubcampus.online` → `http://web:2026`, `aihubcampus.online` → `http://web:2026`, fallback `http_status:404`, version 4 |
+
+No host port is published by either service: `docker port` is empty and both containers report
+`PortBindings={}`. The only way in is the outbound tunnel.
+
+### 10.2 The sequence, as executed
+
+```bash
+docker compose config --quiet            # valid, without expanding .env to the terminal
+docker compose up -d web                 # (already running, healthy)
+docker compose exec web python scripts/init_admin.py   # already seeded: ds_hafyz (admin), demo_user (user)
+docker compose create cloudflared && docker compose start cloudflared
+docker compose logs cloudflared          # 4 × "Registered tunnel connection", precheck all PASS
+scripts/smoke_test.sh --url https://www.aihubcampus.online
+python3 evidence/s11/probe_http.py https://www.aihubcampus.online
+bash evidence/s13/run_ui_tunnel.sh       # real Chromium, three journeys, through the public URL
+```
+
+`cloudflared` is started after `web` is healthy (`depends_on: condition: service_healthy`), so the
+first request the tunnel forwards cannot land on a container that has not finished booting.
+
+An ad-hoc `cloudflared` container from an earlier session was attached to the same network with
+the same token and was removed once the Compose-managed service had registered four connections
+and the public URL answered 200. One tunnel client, managed by the project, is the state now.
+
+### 10.3 Verification results (real output)
+
+| Probe | Result |
+|---|---|
+| `https://www.aihubcampus.online/` | `200`, `text/html`, `server: cloudflare` |
+| `https://aihubcampus.online/` | `200`, `text/html` (apex) |
+| `https://www.aihubcampus.online/_stcore/health` | `200 ok` |
+| `evidence/s11/probe_http.py` (23 checks: XSRF cookie, CORS, WS 101/403, SQLite not served) | `RESULT: PASS — every live check passed` |
+| `scripts/smoke_test.sh --url …` | `16 passed, 0 failed, 0 skipped` |
+| `evidence/s13/run_ui_tunnel.sh` (29 browser checks, 3 journeys) | `verdict: PASS`, `failed: []` |
+| Prediction through the tunnel | `71.95% (estimated, uncalibrated)`, band `High`, threshold and model version printed on the result |
+| CSV upload through the tunnel | staged as dataset version `#2` (500-row prefix), **not** activated |
+| Admin panels through the tunnel | user management, dataset manager, model evaluation (6/6 sections) all render |
+| User role | 3 navigation sections, no admin entries, prediction + history work |
+
+Screenshots, all taken through the public URL: `evidence/s13/tunnel_signin.png`,
+`evidence/s13/tunnel_operator_forced_change.png`, `evidence/s13/tunnel_admin_home.png`,
+`evidence/s13/tunnel_prediction_result.png`, `evidence/s13/tunnel_dataset_staged.png`,
+`evidence/s13/tunnel_evaluation.png`, `evidence/s13/tunnel_user_home.png`,
+`evidence/s13/tunnel_user_prediction.png`.
+
+### 10.4 Two operational facts worth knowing
+
+1. **The first request after a cold container start takes minutes, not seconds.** The first script
+   run imports Matplotlib, which finds `/home/app/.config` read-only (S12 hardening), falls back to
+   `/tmp/matplotlib-*` and rebuilds the font cache — measured 4 m 15 s from request to first paint
+   on this host. Every session afterwards paints in ~3 s. If a deploy looks hung, wait for
+   `docker compose logs web` to stop saying "Matplotlib is building the font cache".
+2. **Cloudflare answers `403` to the default `Python-urllib/3.x` User-Agent.** A bare
+   `urllib.request.urlopen` against the public URL therefore reports `403` on a perfectly healthy
+   deployment. `scripts/smoke_test.sh` now sends an explicit User-Agent
+   (`aihubcampus-smoke-test/1.0`); `curl` was never affected because it sends its own.
+
+### 10.5 Findings recorded, not fixed here
+
+| # | Finding | Evidence | Disposition |
+|---|---|---|---|
+| F-1 | A hard refresh signs the user out: the session token lives only in Streamlit `session_state` and there is no session cookie, so a reload starts a new server session. | `evidence/s13/browser_check.txt` ("session ended, sign-in form served") | Session model is S6/S7/S11 territory. Not changed in S13. Fix would be a signed, `HttpOnly` cookie holding the session token, rotated on login. |
+| F-2 | The `_streamlit_xsrf` cookie is not marked `Secure`, because Streamlit sets that flag only when it terminates TLS itself (`server.sslCertFile`) or when `SameSite=None` forces it — and TLS ends at Cloudflare. | `evidence/s13/browser_check.txt` (observation block) | The value is a CSRF token, not a session credential, and `SameSite=Lax` still applies. Enabling Cloudflare "Always Use HTTPS" on the zone closes the plaintext path that makes the missing flag matter; that is a zone setting the operator owns, not a DNS change this project may make. |
+| F-3 | `http://www.aihubcampus.online/` answers `200` rather than redirecting to HTTPS. | `evidence/s13/browser_check.txt` (edge probe table) | Same remedy as F-2: an edge setting, operator-authorised action. Reported, not changed. |

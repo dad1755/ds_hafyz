@@ -196,9 +196,14 @@ if [[ -n "$PUBLIC_URL" ]]; then
 import sys, urllib.error, urllib.request
 base = sys.argv[1].rstrip("/")
 results = []
+# Cloudflare answers 403 to the default `Python-urllib/3.x` User-Agent (browser-integrity /
+# bot management), which would make a healthy deployment look broken. A real client sends a
+# User-Agent; this one names itself so the request is attributable in the edge logs.
+AGENT = "aihubcampus-smoke-test/1.0"
 for path in ("/_stcore/health", "/"):
+    request = urllib.request.Request(base + path, headers={"User-Agent": AGENT})
     try:
-        with urllib.request.urlopen(base + path, timeout=15) as r:
+        with urllib.request.urlopen(request, timeout=15) as r:
             body = r.read(2048)
             results.append((path, r.status, len(body), body[:6]))
     except urllib.error.HTTPError as exc:

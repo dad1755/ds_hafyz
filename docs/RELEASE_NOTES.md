@@ -11,6 +11,36 @@ it names the command. Nothing here is dated by guesswork — the git commit is t
 
 ---
 
+## Unreleased — Sprint 13: live on www.aihubcampus.online through the Cloudflare tunnel
+
+**Commit:** the sha is printed by `evidence/s13/browser_check.txt` (the run records the tree it ran against) · **Branch:** `s13/cloudflare-tunnel`
+
+### Live
+
+- **The application is public over HTTPS.** `https://www.aihubcampus.online` and
+  `https://aihubcampus.online` both serve the app through the operator's existing tunnel
+  (`aeab965f-…`), which forwards to `http://web:2026` on the project network. Nothing is published
+  on a host port: `docker port aihubcampus-web-1` is empty.
+- **`cloudflared` is a Compose service**, started only after `web` reports healthy, so the tunnel
+  cannot forward into a container that is still booting. Its token is read from
+  `.env.cloudflared` (`env_file`, `required: false`), never from the image or a command line.
+- **Both roles complete their journeys through the tunnel.** Administrator: sign-in, prediction,
+  history, user management, dataset upload (staged, not activated), model evaluation. User:
+  prediction and history only — the three administrator sections are not offered at all.
+- **`scripts/smoke_test.sh --url …` now works against the public URL.** Cloudflare answers `403`
+  to the default `Python-urllib/3.x` User-Agent, which made a healthy deployment look broken; the
+  probe sends `aihubcampus-smoke-test/1.0` instead. 16 checks, 0 failed.
+
+### Known, documented
+
+- A **hard refresh signs the user out** — the session token lives only in Streamlit
+  `session_state` and there is no session cookie. Recorded as F-1 in `docs/deployment.md` §10.5.
+- The `_streamlit_xsrf` cookie is not marked `Secure`, and `http://` answers `200` instead of
+  redirecting. Both follow from TLS terminating at the Cloudflare edge; both are recorded as F-2
+  and F-3 with the operator-side remedy.
+
+---
+
 ## Unreleased — Sprint 12: production-like Docker hardening and recovery
 
 **Commit:** the sha is printed by `evidence/s12/release_gate.txt` (the gate records the tree it ran against) · **Branch:** `s12/docker-hardening-recovery`

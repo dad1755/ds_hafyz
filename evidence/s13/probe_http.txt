@@ -1,0 +1,34 @@
+target: https://www.aihubcampus.online  (www.aihubcampus.online)
+time (UTC): 2026-10-27T04:35:31.105781+00:00
+
+[PASS] health endpoint — HTTP 200 body=b'ok'
+[PASS] sign-in shell served as HTML — HTTP 200 content-type=text/html; charset=utf-8
+[PASS] XSRF cookie issued — _streamlit_xsrf=2|4fcebbff|d08f35eafa9e36927f688…
+[PASS] XSRF cookie SameSite=Lax — _streamlit_xsrf=2|4fcebbff|d08f35eafa9e36927f68849ed320129a|1793075731; path=/; samesite=lax
+[PASS] XSRF cookie path scope — _streamlit_xsrf=2|4fcebbff|d08f35eafa9e36927f68849ed320129a|1793075731; path=/; samesite=lax
+
+[PASS] not served: /storage/aihubcampus.db — HTTP 200 content-type=text/html; charset=utf-8 bytes=4096
+[PASS] not served: /app/storage/aihubcampus.db — HTTP 200 content-type=text/html; charset=utf-8 bytes=4096
+[PASS] not served: /storage/aihubcampus.db-wal — HTTP 200 content-type=text/html; charset=utf-8 bytes=4096
+[PASS] not served: /data/UCI_Credit_Card.csv — HTTP 200 content-type=text/html; charset=utf-8 bytes=4096
+[PASS] not served: /models/best_pipeline.joblib — HTTP 200 content-type=text/html; charset=utf-8 bytes=4096
+[PASS] not served: /.env — HTTP 200 content-type=text/html; charset=utf-8 bytes=4096
+
+[PASS] CORS does not trust https://evil.example — HTTP 200 Access-Control-Allow-Origin=(none)
+[PASS] CORS does not trust null — HTTP 200 Access-Control-Allow-Origin=(none)
+[PASS] CORS does not trust http://127.0.0.1:2026 — HTTP 200 Access-Control-Allow-Origin=(none)
+
+[PASS] WebSocket handshake from the real origin — HTTP/1.1 101 Switching Protocols
+[PASS] WebSocket handshake from a foreign origin refused — HTTP/1.1 403 Forbidden
+[PASS] WebSocket handshake from a foreign origin, no cookie, refused — HTTP/1.1 403 Forbidden
+
+[PASS] apex hostname health endpoint — HTTP 200
+[PASS] apex hostname serves the app — HTTP 200
+[PASS] apex hostname refuses a foreign origin — HTTP/1.1 403 Forbidden
+
+OBSERVATION (not scored): a same-origin WebSocket handshake that carries no XSRF
+cookie is also accepted (101). Streamlit guards the upgrade by Origin, and this
+app's authenticated session is a server-side record bound to the connection that
+created it, so a handshake from another page cannot inherit a signed-in session.
+
+RESULT: PASS — every live check passed
