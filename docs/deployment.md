@@ -199,8 +199,8 @@ Full transcripts: `evidence/s13/`. Nothing here quotes a secret.
 | Item | Value |
 |---|---|
 | Compose project | `aihubcampus` (network `aihubcampus_internal`, `10.202.0.0/24`) |
-| `web` image | `aihubcampus-web:local` = `sha256:f23a5cee028a7a38933c4ab926cb136f157249776bd4e9820ee84588261985a6`, built `2026-10-27T11:23:05+08:00` |
-| `web` container | `3f76a6f15303`, started `2026-10-27T03:39:58Z`, `health=healthy`, `PortBindings={}` |
+| `web` image | `aihubcampus-web:local` = `sha256:d8e4cfa00e730734f8160a65afab017a00c78722167622a69d6aed5b0d400cd7`, built `2026-10-27T13:32:38+08:00` (rebuilt from the S13 tree so the image's `scripts/` matches the checkout) |
+| `web` container | `292f636c0aef`, started `2026-10-27T05:34:17Z`, `health=healthy`, `PortBindings={}` |
 | `cloudflared` image | `cloudflare/cloudflared:2026.8.2` = `sha256:0aa26e284f05e6c77ae375b8c9c11d9eb6a448fb7bcd8d40f31cb6176189eb38` |
 | `cloudflared` container | `df0d11dba86d`, started `2026-10-27T04:32:04Z`, `restart=unless-stopped`, `PortBindings={}` |
 | Tunnel | `aeab965f-89df-411b-8dab-1e83846cf91e`, 4 QUIC connections registered (sin20, sin15, sin22, sin16) |
@@ -224,6 +224,13 @@ bash evidence/s13/run_ui_tunnel.sh       # real Chromium, three journeys, throug
 
 `cloudflared` is started after `web` is healthy (`depends_on: condition: service_healthy`), so the
 first request the tunnel forwards cannot land on a container that has not finished booting.
+
+The `web` image was then rebuilt from the S13 tree (`docker compose build web` →
+`sha256:d8e4cfa0…`) and the container recreated, because the fix to `scripts/smoke_test.sh` ships
+inside the image: leaving the old image running would have meant the deployment and the checkout
+disagreed about a file. The volume was untouched, so the database, its migrations and the model
+artifact verification survived the recreate; every probe in §10.3 was re-run against the new
+container and the transcripts in `evidence/s13/` are from it.
 
 An ad-hoc `cloudflared` container from an earlier session was attached to the same network with
 the same token and was removed once the Compose-managed service had registered four connections
@@ -252,11 +259,14 @@ Screenshots, all taken through the public URL: `evidence/s13/tunnel_signin.png`,
 
 ### 10.4 Two operational facts worth knowing
 
-1. **The first request after a cold container start takes minutes, not seconds.** The first script
-   run imports Matplotlib, which finds `/home/app/.config` read-only (S12 hardening), falls back to
-   `/tmp/matplotlib-*` and rebuilds the font cache — measured 4 m 15 s from request to first paint
-   on this host. Every session afterwards paints in ~3 s. If a deploy looks hung, wait for
-   `docker compose logs web` to stop saying "Matplotlib is building the font cache".
+1. **The first request after a container start takes tens of seconds to minutes, not seconds.**
+   The first script run imports Matplotlib, which finds `/home/app/.config` read-only (S12
+   hardening), falls back to `/tmp/matplotlib-*` and rebuilds the font cache — measured **4 m 15 s**
+   from request to first paint on a container that had been up an hour with no session yet, and
+   **52 s** on a freshly recreated container. Every session afterwards paints in ~3 s. If a deploy
+   looks hung, wait for `docker compose logs web` to stop saying "Matplotlib is building the font
+   cache" before concluding anything. `evidence/s13/browser_check.txt` prints the first-paint time
+   it actually measured.
 2. **Cloudflare answers `403` to the default `Python-urllib/3.x` User-Agent.** A bare
    `urllib.request.urlopen` against the public URL therefore reports `403` on a perfectly healthy
    deployment. `scripts/smoke_test.sh` now sends an explicit User-Agent

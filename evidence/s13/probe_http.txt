@@ -1,11 +1,11 @@
 target: https://www.aihubcampus.online  (www.aihubcampus.online)
-time (UTC): 2026-10-27T04:35:31.105781+00:00
+time (UTC): 2026-10-27T05:36:30.357712+00:00
 
 [PASS] health endpoint — HTTP 200 body=b'ok'
 [PASS] sign-in shell served as HTML — HTTP 200 content-type=text/html; charset=utf-8
-[PASS] XSRF cookie issued — _streamlit_xsrf=2|4fcebbff|d08f35eafa9e36927f688…
-[PASS] XSRF cookie SameSite=Lax — _streamlit_xsrf=2|4fcebbff|d08f35eafa9e36927f68849ed320129a|1793075731; path=/; samesite=lax
-[PASS] XSRF cookie path scope — _streamlit_xsrf=2|4fcebbff|d08f35eafa9e36927f68849ed320129a|1793075731; path=/; samesite=lax
+[PASS] XSRF cookie issued — _streamlit_xsrf=2|349a9754|7a4619e3e1c248a3797a3…
+[PASS] XSRF cookie SameSite=Lax — _streamlit_xsrf=2|349a9754|7a4619e3e1c248a3797a332c65e595e4|1793079390; path=/; samesite=lax
+[PASS] XSRF cookie path scope — _streamlit_xsrf=2|349a9754|7a4619e3e1c248a3797a332c65e595e4|1793079390; path=/; samesite=lax
 
 [PASS] not served: /storage/aihubcampus.db — HTTP 200 content-type=text/html; charset=utf-8 bytes=4096
 [PASS] not served: /app/storage/aihubcampus.db — HTTP 200 content-type=text/html; charset=utf-8 bytes=4096

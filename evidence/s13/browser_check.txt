@@ -1,5 +1,5 @@
 # S13 — the public HTTPS surface, driven end to end by a real browser
-# run (UTC): 2026-10-27T05:06:25Z
+# run (UTC): 2026-10-27T05:37:55Z
 # target:     https://www.aihubcampus.online
 # host:       ridergami2 · 7.2.11-200.fc44.x86_64
 
@@ -10,12 +10,12 @@ $ python3 evidence/s13/make_upload_subset.py <scratch>/s13_upload_subset.csv 500
 wrote s13_upload_subset.csv: 500 data rows + header, 47495 bytes
 
 $ docker compose ps
-SERVICE       NAME                        STATUS                       PORTS
-cloudflared   aihubcampus-cloudflared-1   Up 34 minutes                
-web           aihubcampus-web-1           Up About an hour (healthy)   2026/tcp
+SERVICE       NAME                        STATUS                   PORTS
+cloudflared   aihubcampus-cloudflared-1   Up About an hour         
+web           aihubcampus-web-1           Up 3 minutes (healthy)   2026/tcp
 
 $ docker inspect --format '{{.Image}}' aihubcampus-web-1 aihubcampus-cloudflared-1
-/aihubcampus-web-1 image=sha256:f23a5cee028a7a38933c4ab926cb136f157249776bd4e9820ee84588261985a6
+/aihubcampus-web-1 image=sha256:d8e4cfa00e730734f8160a65afab017a00c78722167622a69d6aed5b0d400cd7
 /aihubcampus-cloudflared-1 image=sha256:0aa26e284f05e6c77ae375b8c9c11d9eb6a448fb7bcd8d40f31cb6176189eb38
 
 $ curl -sS -o /dev/null -w '<status> <content-type> <server>' https://www.aihubcampus.online/
@@ -25,9 +25,9 @@ https://www.aihubcampus.online/_stcore/health -> status=200 type=text/plain; cha
 http://www.aihubcampus.online/ -> status=200 type=text/html; charset=utf-8 redirect=
 
 $ NODE_PATH=/home/ec-user/qa759-v2/node_modules BASE_URL=https://www.aihubcampus.online CRED_FILE=<scratch>/s13_creds.json UPLOAD_CSV=<scratch>/s13_upload_subset.csv node evidence/s13/ui_tunnel.js
-PASS  public HTTPS served by the Cloudflare edge — server=cloudflare cf-ray=a50f2c14ba32ab56…
+PASS  public HTTPS served by the Cloudflare edge — server=cloudflare cf-ray=a50f5a411d9e5cdb…
 PASS  response is the Streamlit shell — text/html; charset=utf-8
-PASS  sign-in form rendered over the tunnel
+PASS  sign-in form rendered over the tunnel — first paint 52.2s after navigation
 PASS  XSRF cookie issued to the browser — domain=www.aihubcampus.online path=/
 PASS  XSRF cookie is SameSite=Lax with path=/ — sameSite=Lax path=/
 PASS  no application session cookie is exposed to the page — cookies=_streamlit_xsrf
@@ -39,7 +39,7 @@ PASS  synthetic admin signs in — s13_tunnel_check
 PASS  admin navigation offers six sections — Home | Predict default risk | My prediction history | User management | Dataset manager | Model evaluation
 PASS  prediction scored through the tunnel — probability=71.95% band=High
 PASS  result states the model version and threshold
-PASS  prediction history lists the request just made — 4 row(s) for this account
+PASS  prediction history lists the request just made — 5 row(s) for this account
 PASS  user management page renders — accounts + create + audit panels
 PASS  user management lists the operator admin
 PASS  CSV upload validated and staged through the tunnel — dataset version #2

@@ -1,5 +1,5 @@
-AI Hub Campus smoke test — 2026-10-27T05:15:55Z
-project=aihubcampus service=web container=3f76a6f15303
+AI Hub Campus smoke test — 2026-10-27T05:35:43Z
+project=aihubcampus service=web container=292f636c0aef
 
 PASS  container running                  state=running
 PASS  container health                   healthy
@@ -15,7 +15,7 @@ PASS  tmpfs for /tmp                     /tmp is a tmpfs (the rootfs is read-onl
 PASS  single writable mount              /app/storage
 PASS  database readable                  integrity_check=ok, 9 tables at /app/storage/aihubcampus.db
 PASS  model artifact verifies            11 checks PASS, artifact_checksum: sha256 48ce02563b2aad9f… and 8,187 byte
-PASS  secret-pattern scan                scanned 292 file(s); 4 secret value(s) loaded from operator env
+PASS  secret-pattern scan                scanned 311 file(s); 4 secret value(s) loaded from operator env
 PASS  public HTTPS surface               https://www.aihubcampus.online (2 probe(s) -> 200)
 
 ----------------------------------------------------------------

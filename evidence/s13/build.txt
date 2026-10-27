@@ -1,0 +1,92 @@
+ Image aihubcampus-web:local Building 
+#1 [internal] load local bake definitions
+#1 reading from stdin 516B done
+#1 DONE 0.0s
+
+#2 [internal] load build definition from Dockerfile
+#2 DONE 0.0s
+
+#2 [internal] load build definition from Dockerfile
+#2 transferring dockerfile:
+#2 transferring dockerfile: 3.48kB 0.0s done
+#2 DONE 0.6s
+
+#3 [internal] load metadata for docker.io/library/python:3.12-slim@sha256:2f17fc044b579bab302c2e8054d3a686e2cb9a83de48e70534b94cd8ebbe06a9
+#3 DONE 1.1s
+
+#4 [internal] load .dockerignore
+#4 transferring context:
+#4 transferring context: 1.09kB done
+#4 DONE 0.5s
+
+#5 [internal] load build context
+#5 DONE 0.0s
+
+#6 [ 1/14] FROM docker.io/library/python:3.12-slim@sha256:2f17fc044b579bab302c2e8054d3a686e2cb9a83de48e70534b94cd8ebbe06a9
+#6 resolve docker.io/library/python:3.12-slim@sha256:2f17fc044b579bab302c2e8054d3a686e2cb9a83de48e70534b94cd8ebbe06a9
+#6 resolve docker.io/library/python:3.12-slim@sha256:2f17fc044b579bab302c2e8054d3a686e2cb9a83de48e70534b94cd8ebbe06a9 0.9s done
+#6 DONE 1.1s
+
+#5 [internal] load build context
+#5 transferring context: 56.33kB 0.1s done
+#5 DONE 0.5s
+
+#7 [ 6/14] COPY .streamlit/config.toml ./.streamlit/config.toml
+#7 CACHED
+
+#8 [ 7/14] COPY app.py ./
+#8 CACHED
+
+#9 [ 2/14] RUN groupadd --system --gid 1001 app     && useradd --system --uid 1001 --gid app --home-dir /home/app --create-home app
+#9 CACHED
+
+#10 [ 3/14] WORKDIR /app
+#10 CACHED
+
+#11 [ 4/14] COPY requirements.txt ./
+#11 CACHED
+
+#12 [ 5/14] RUN pip install --no-cache-dir --no-compile -r requirements.txt
+#12 CACHED
+
+#13 [ 8/14] COPY src/ ./src/
+#13 CACHED
+
+#14 [ 9/14] COPY scripts/ ./scripts/
+#14 DONE 3.5s
+
+#15 [10/14] COPY ml/ ./ml/
+#15 DONE 6.4s
+
+#16 [11/14] COPY models/best_pipeline.joblib models/model_manifest.json models/metrics.json ./models/
+#16 DONE 18.0s
+
+#17 [12/14] COPY models/eda/ ./models/eda/
+#17 DONE 7.0s
+
+#18 [13/14] COPY models/figures/ ./models/figures/
+#18 DONE 11.3s
+
+#19 [14/14] RUN mkdir -p /app/storage && chown -R app:app /app/storage
+#19 DONE 11.1s
+
+#20 exporting to image
+#20 exporting layers
+#20 exporting layers 12.9s done
+#20 exporting manifest sha256:251b595310f18d2be1575273eb8294680a8b9f959ef8c796de0bd5c3ba1bef5c
+#20 exporting manifest sha256:251b595310f18d2be1575273eb8294680a8b9f959ef8c796de0bd5c3ba1bef5c 3.7s done
+#20 exporting config sha256:3a969a83e91dd3a95f4bb895d4b07972a6e5051675448db67b742e4580831b68
+#20 exporting config sha256:3a969a83e91dd3a95f4bb895d4b07972a6e5051675448db67b742e4580831b68 0.7s done
+#20 exporting attestation manifest sha256:5544f0cb34722cb6d7134acb749d38c4431c325644e97a9ff7bcea2e1c2ee741
+#20 exporting attestation manifest sha256:5544f0cb34722cb6d7134acb749d38c4431c325644e97a9ff7bcea2e1c2ee741 0.5s done
+#20 exporting manifest list sha256:d8e4cfa00e730734f8160a65afab017a00c78722167622a69d6aed5b0d400cd7
+#20 exporting manifest list sha256:d8e4cfa00e730734f8160a65afab017a00c78722167622a69d6aed5b0d400cd7 0.4s done
+#20 naming to docker.io/library/aihubcampus-web:local
+#20 naming to docker.io/library/aihubcampus-web:local 0.0s done
+#20 unpacking to docker.io/library/aihubcampus-web:local
+#20 unpacking to docker.io/library/aihubcampus-web:local 2.8s done
+#20 DONE 21.6s
+
+#21 resolving provenance for metadata file
+#21 DONE 0.1s
+ Image aihubcampus-web:local Built 

@@ -603,8 +603,8 @@ bash evidence/s13/run_ui_tunnel.sh                 # real Chromium, three journe
   ends at the edge; F-3 `http://` answers `200` instead of redirecting. F-2/F-3 close with the
   zone's "Always Use HTTPS" setting, which is the operator's to enable.
 - Cold start is slow and that is expected: the first script run rebuilds the Matplotlib font
-  cache under the read-only rootfs (measured 4 m 15 s to first paint); later sessions paint in
-  ~3 s.
+  cache under the read-only rootfs — measured 4 m 15 s to first paint on an idle container and
+  52 s on a freshly recreated one; later sessions paint in ~3 s.
 
 ## Next sprint
 

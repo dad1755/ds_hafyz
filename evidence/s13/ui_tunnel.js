@@ -107,14 +107,16 @@ async function signOut(page) {
   page.on('websocket', (ws) => sockets.push(ws.url()));
 
   // ---------------------------------------------------------------- edge + shell
+  const firstPaint = Date.now();
   const first = await page.goto(BASE + '/', { waitUntil: 'domcontentloaded', timeout: 60000 });
   const headers = first.headers();
   check('public HTTPS served by the Cloudflare edge', /cloudflare/i.test(headers['server'] || ''),
         `server=${headers['server']} cf-ray=${(headers['cf-ray'] || '').split('-')[0]}…`);
   check('response is the Streamlit shell', /text\/html/.test(headers['content-type'] || ''),
         headers['content-type']);
-  await waitText(page, 'Sign in');
-  check('sign-in form rendered over the tunnel', true);
+  await waitText(page, 'Sign in', 300000);
+  check('sign-in form rendered over the tunnel', true,
+        `first paint ${((Date.now() - firstPaint) / 1000).toFixed(1)}s after navigation`);
 
   const cookies = await context.cookies();
   const xsrf = cookies.find((c) => c.name === '_streamlit_xsrf');
