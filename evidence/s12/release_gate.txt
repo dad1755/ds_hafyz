@@ -1,7 +1,7 @@
-AI Hub Campus release verification — 2026-10-27T01:14:07Z
+AI Hub Campus release verification — 2026-10-27T01:26:31Z
 repo=/home/ec-user/non_prod/hafyz_ds project=aihubcampus image=aihubcampus-web:local
 
-FAIL  git tree clean                 2 modified path(s) not committed
+PASS  git tree clean                 s12/docker-hardening-recovery @ f70ab3bbaa75
 PASS  compose validates              docker compose config --quiet
 PASS  no host ports in compose       expose: only
 PASS  compose has read_only: true    present
@@ -24,15 +24,16 @@ PASS  scripts/verify_release.sh present executable, --help works
 PASS  docs name real files           every scripts/ and evidence/ path in runbook, deployment, README exists
 PASS  docs/runbook.md present        251 lines
 PASS  docs/deployment.md present     190 lines
-PASS  docs/RELEASE_NOTES.md present  130 lines
-PASS  docs/test_matrix.md present    78 lines
+PASS  docs/RELEASE_NOTES.md present  131 lines
+PASS  docs/test_matrix.md present    99 lines
 PASS  smoke test                     RESULT: 15 passed, 0 failed, 1 skipped
-PASS  pytest suite                   ........................................................................ [ 75%] .....................................................................    [100%] 285 passed in 587.26s (0:09:47) 
+PASS  pytest suite                   ........................................................................ [ 75%] .....................................................................    [100%] 285 passed in 572.74s (0:09:32) 
 
-  full pytest output: /tmp/multica-task-4253595844/aihubcampus-pytest.4uVjrU
+  full pytest output: /tmp/multica-task-4253595844/aihubcampus-pytest.AprBHt
 
 ----------------------------------------------------------------
-RESULT: 26 passed, 1 failed
-failed: git tree clean
-VERDICT: FAIL — do not deploy this tree.
-EXIT=1
+RESULT: 27 passed, 0 failed
+VERDICT: PASS (mechanical checks) — commit f70ab3bbaa75
+This is the author/operator gate. Sprint certification still requires the independent
+verification agent (blueprint §0: a sprint is VERIFIED only by its own gate).
+EXIT=0
