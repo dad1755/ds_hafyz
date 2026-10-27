@@ -1,0 +1,207 @@
+# S15 gate — re-verification at 26a33a8, reviewer re-run
+# run (UTC): 2026-10-27T15:14:59Z
+# host: ridergami2 · 7.2.11-200.fc44.x86_64
+# reviewer: 7899db8c-d8b0-42cd-b300-dd5d0f0ae46e (implementer: Multica a83f3cb1)
+
+$ git rev-parse HEAD
+26a33a8eb7fcfaf9a97a25434c8fa0c63815f754
+$ git rev-list --count 3860aef..HEAD
+3
+$ git status --porcelain
+ M evidence/s15_gate/audit_s15_gate.py
+?? DATASCIENCE_UI_POLISH_BLUEPRINT.md
+?? evidence/s15_gate/audit_reverify_26a33a8.txt
+?? evidence/s15_gate/reproduce_26a33a8.txt
+?? evidence/s15_gate/reproduce_26a33a8_final.txt
+
+$ python3 evidence/s15_gate/audit_s15_gate.py
+==============================================================================
+A. FIGURES — re-derived from the artefact, then looked for in the deck
+==============================================================================
+PASS  DT held-out accuracy (0.817167) = 0.8172 — found in docs/presentation_script.md
+PASS  DT held-out precision (0.661064) = 0.6611 — found in docs/presentation_script.md
+PASS  DT held-out recall (0.355690) = 0.3557 — found in docs/presentation_script.md
+PASS  DT held-out F1 (0.462518) = 0.4625 — found in docs/presentation_script.md
+PASS  DT held-out ROC-AUC (0.742324) = 0.7423 — found in docs/presentation_script.md
+PASS  RF held-out accuracy = 0.8122 — found in docs/presentation_script.md
+PASS  RF held-out F1 = 0.4040 — found in docs/presentation_script.md
+PASS  LR held-out accuracy = 0.8077 — found in docs/presentation_script.md
+PASS  LR held-out ROC-AUC = 0.7076 — found in docs/presentation_script.md
+PASS  baseline accuracy (0.778833) = 0.7788 — found in docs/presentation_script.md
+PASS  accuracy delta over the constant answer = 0.0383 — found in docs/presentation_script.md
+PASS  DT confusion TN = 4,431 — found in docs/presentation_script.md
+PASS  DT confusion FP = 242 — found in docs/presentation_script.md
+PASS  DT confusion FN = 855 — found in docs/presentation_script.md
+PASS  DT confusion TP = 472 — found in docs/presentation_script.md
+PASS  missed share of the 1,327 defaults = 64.4% — found in docs/presentation_script.md
+PASS  false positives among the flagged (714) = 33.9% — found in docs/presentation_script.md
+PASS  training rows = 24,000 — found in docs/presentation_script.md
+PASS  held-out rows = 6,000 — found in docs/presentation_script.md
+PASS  train_class_counts[0] = 18,691 — found in docs/presentation_script.md
+PASS  train_class_counts[1] = 5,309 — found in docs/presentation_script.md
+PASS  test_class_counts[0] = 4,673 — found in docs/presentation_script.md
+PASS  test_class_counts[1] = 1,327 — found in docs/presentation_script.md
+PASS  DT CV F1 mean = 0.4643 — found in docs/presentation_script.md
+PASS  DT CV F1 std = 0.0138 — found in docs/presentation_script.md
+PASS  RF CV F1 mean = 0.4191 — found in docs/presentation_script.md
+PASS  LR CV F1 mean = 0.3647 — found in docs/presentation_script.md
+PASS  decision_tree CV ROC-AUC mean = 0.7555 — found in docs/presentation_script.md
+PASS  random_forest CV ROC-AUC mean = 0.7765 — found in docs/presentation_script.md
+PASS  logistic_regression CV ROC-AUC mean = 0.7261 — found in docs/presentation_script.md
+PASS  CV-vs-held-out F1 gap = 0.0018 — found in docs/presentation_script.md
+PASS  dataset rows = 30,000 — found in docs/presentation_script.md
+PASS  dataset columns = 25 — found in docs/presentation_script.md
+PASS  dataset sha256 = a0f0ab49d6326671d6cd83be5c88dcf18007025fe9a53ecd699119c871176ca1 — found in docs/presentation_script.md
+PASS  class 0 count = 23,364 — found in docs/presentation_script.md
+PASS  class 1 count = 6,636 — found in docs/presentation_script.md
+PASS  class 0 share = 77.88% — found in docs/presentation_script.md
+PASS  class 1 share = 22.12% — found in docs/presentation_script.md
+PASS  artifact sha256 = 48ce02563b2aad9fbf9397603c642b0319be617c57fde8e1fd26ec08d518ad7b — found in docs/presentation_script.md
+PASS  artifact bytes = 8,187 — found in docs/presentation_script.md
+PASS  PAY_0 code 0 default rate = 12.81% — found in docs/presentation_script.md
+PASS  PAY_0 code 2 default rate = 69.14% — found in docs/presentation_script.md
+PASS  PAY_0 code 3 default rate = 75.78% — found in docs/presentation_script.md
+PASS  mean age class 0 = 35.42 — found in docs/presentation_script.md
+PASS  mean age class 1 = 35.73 — found in docs/presentation_script.md
+PASS  median LIMIT_BAL class 0 = 150,000 — found in docs/presentation_script.md
+PASS  median LIMIT_BAL class 1 = 90,000 — found in docs/presentation_script.md
+PASS  BILL_AMT1/BILL_AMT2 r = 0.9515 — found in docs/presentation_script.md
+PASS  PAY_0 importance share = 68.01% — found in docs/presentation_script.md
+PASS  PAY_2 importance share = 13.77% — found in docs/presentation_script.md
+
+==============================================================================
+B. THE DEMO TABLE — the document against its own rows
+==============================================================================
+PASS  the demo table has rows — 12 numbered rows
+PASS  step numbers are 1..N with no gap — [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+INFO  the 12 rows plan 240 s = 4 min 0 s in total
+PASS  §15.1 declares the demo block's plan
+INFO  §15.1 declares 'twelve steps' at 240 s
+PASS  §15.1's step count matches the table (12 rows) — §15.1 says 'twelve steps', the table numbers 1..12
+PASS  §15.1's planned duration matches the table's planned column (240 s) — §15.1 says 240 s, the rows sum to 240 s
+PASS  §15.3 heading names a step count
+PASS  §15.3's heading step count matches the table — heading says 'twelve steps, exact values, expected results', the table numbers 1..12
+PASS  step reference '11–12' lies inside the table — table ends at 12
+PASS  step reference '2–6' lies inside the table — table ends at 12
+PASS  step reference '7–10' lies inside the table — table ends at 12
+
+==============================================================================
+C. TIMING CLAIMS — every seconds value traced to a recorded artefact
+==============================================================================
+PASS  the transcript's per-step timings sum to its total — 96.7 vs 96.7
+PASS  2.8 s (row 3 rehearsed column) is in the rehearsal transcript
+PASS  2.8 s (row 7 rehearsed column) is in the rehearsal transcript
+PASS  3.6 s (prose) is in the rehearsal transcript
+PASS  3.8 s (row 12 rehearsed column) is in the rehearsal transcript
+PASS  3.9 s (row 2 rehearsed column) is in the rehearsal transcript
+PASS  4.9 s (row 6 rehearsed column) is in the rehearsal transcript
+PASS  5.5 s (prose) is in the rehearsal transcript
+PASS  5.5 s (row 1 rehearsed column) is in the rehearsal transcript
+PASS  10.0 s (row 8 rehearsed column) is in the rehearsal transcript
+PASS  10.0 s (row 9 rehearsed column) is in the rehearsal transcript
+PASS  12.9 s (row 11 rehearsed column) is in the rehearsal transcript
+PASS  19.7 s (row 10 rehearsed column) is in the rehearsal transcript
+PASS  26.5 s (row 4 rehearsed column) is in the rehearsal transcript
+PASS  26.5 s (row 5 rehearsed column) is in the rehearsal transcript
+NOTE  30.0 s (prose) is not in the transcript; evidence/s15/README.md records it as an earlier attempt
+NOTE  32.4 s (prose) is not in the transcript; evidence/s15/README.md records it as an earlier attempt
+PASS  96.7 s (prose) is in the rehearsal transcript
+
+==============================================================================
+C2. CROSS-REFERENCES — every slide/section number the deck points at exists
+==============================================================================
+PASS  §15.6 presenter table found
+PASS  §15.6 has presenter rows — 8 rows
+PASS  §15.6 row 'Problem, objectives, scope' cites slide 1, which exists
+PASS  §15.6 row 'Problem, objectives, scope' cites slide 2, which exists
+PASS  §15.6 row 'Dataset, preprocessing, EDA' cites slide 3, which exists
+PASS  §15.6 row 'Dataset, preprocessing, EDA' cites slide 4, which exists
+PASS  §15.6 row 'Dataset, preprocessing, EDA' cites slide 5, which exists
+PASS  §15.6 row 'Methodology and results' cites slide 6, which exists
+PASS  §15.6 row 'Methodology and results' cites slide 7, which exists
+PASS  §15.6 row 'Architecture and admin demo' cites slide 8, which exists
+PASS  §15.6 row 'Architecture and admin demo' cites slide 9, which exists
+PASS  §15.6 row 'User prediction demo' cites slide 10, which exists
+PASS  §15.6 row 'Ethics, limitations, conclusion' cites slide 11, which exists
+PASS  §15.6 row 'Ethics, limitations, conclusion' cites slide 12, which exists
+PASS  §15.6 row 'Q&A lead per topic (§15.5)' cites slide 1, which exists
+PASS  §15.6 row 'Q&A lead per topic (§15.5)' cites slide 2, which exists
+PASS  §15.6 row 'Q&A lead per topic (§15.5)' cites slide 3, which exists
+PASS  §15.6 row 'Q&A lead per topic (§15.5)' cites slide 4, which exists
+PASS  §15.6 row 'Q&A lead per topic (§15.5)' cites slide 5, which exists
+PASS  §15.6 row 'Q&A lead per topic (§15.5)' cites slide 6, which exists
+PASS  §15.6 row 'Q&A lead per topic (§15.5)' cites slide 7, which exists
+PASS  §15.6 row 'Q&A lead per topic (§15.5)' cites slide 8, which exists
+PASS  every slide has a presenter block in §15.6
+PASS  prose reference 'slide 7' points at an existing slide — deck has 1–12
+PASS  prose reference 'slide 11' points at an existing slide — deck has 1–12
+PASS  cross-reference §15.1 exists — sections found: ['1', '2', '3', '3.1', '4', '5', '6', '7']
+PASS  cross-reference §15.3.1 exists — sections found: ['1', '2', '3', '3.1', '4', '5', '6', '7']
+PASS  cross-reference §15.4 exists — sections found: ['1', '2', '3', '3.1', '4', '5', '6', '7']
+PASS  cross-reference §15.5 exists — sections found: ['1', '2', '3', '3.1', '4', '5', '6', '7']
+PASS  cross-reference §15.6 exists — sections found: ['1', '2', '3', '3.1', '4', '5', '6', '7']
+
+==============================================================================
+D. SLIDE LIST — the blueprint §9 S15 order against the deck's slides
+==============================================================================
+PASS  the deck has twelve slides — 12 slides
+PASS  blueprint slide topic present: problem — matched a slide title
+PASS  blueprint slide topic present: objectives — matched a slide title
+PASS  blueprint slide topic present: dataset — matched a slide title
+PASS  blueprint slide topic present: preprocessing — matched a slide title
+PASS  blueprint slide topic present: EDA — matched a slide title
+PASS  blueprint slide topic present: ML models / split — matched a slide title
+PASS  blueprint slide topic present: comparison / confusion matrix — matched a slide title
+PASS  blueprint slide topic present: architecture — matched a slide title
+PASS  blueprint slide topic present: Admin demo — matched a slide title
+PASS  blueprint slide topic present: User prediction demo — matched a slide title
+PASS  blueprint slide topic present: ethics / limitations — matched a slide title
+PASS  blueprint slide topic present: conclusion / improvements — matched a slide title
+
+==============================================================================
+E. THE HONESTY CLAIMS THAT ARE CHECKABLE IN CODE
+==============================================================================
+PASS  no published host port (expose only)
+PASS  read-only root filesystem
+PASS  all capabilities dropped
+PASS  manifest records the artifact as uncalibrated
+PASS  held-out rows took no part in selection
+PASS  the deck's max_depth=5 / random_state=42 is what trains the tree
+PASS  no class weights anywhere in ml/ or src/
+PASS  passwords are Argon2id
+PASS  history is scoped by user_id in SQL
+
+==============================================================================
+RESULT: PASS — 0 failing audit(s)
+  note: 30.0 s (prose) supported only by evidence/s15/README.md, not the transcript
+  note: 32.4 s (prose) supported only by evidence/s15/README.md, not the transcript
+==============================================================================
+audit exit=0
+
+$ python3 evidence/s15/check_script_numbers.py | tail -3
+PASS  evaluation page states 77.88%: '77.88%'
+
+RESULT: PASS — 82 of 82 figures found, exit 0
+checker exit=0
+$ python3 scripts/check_no_secrets.py
+scanned 377 file(s); 4 secret value(s) loaded from operator env
+
+PASS — no operator secret and no credential pattern in any tracked file.
+secrets exit=0
+
+$ python3 -m py_compile evidence/s15/*.py
+py_compile exit=0
+
+$ curl -sS -o /dev/null -w '%{http_code} %{time_total}s' https://www.aihubcampus.online/_stcore/health
+200 0.279675s
+
+$ grep -c '^PASS ' evidence/s15/demo_rehearsal.txt
+33
+$ grep -c 'check(' evidence/s15/ui_demo_rehearsal.js
+34
+
+$ grep -rn '5\.7 *s' docs/ evidence/s15/ || echo 'none'
+docs/acceptance/S15.md:65:| 1 | Every number in the slides matches `metrics.json` | **FAIL** | 50/50 re-derived figures are present and correct, and the sprint's own checker passes 82/82 — **but** `docs/presentation_script.md:175` states a measured figure (`5.7 s`) that appears in **no** artefact and that the transcript it cites contradicts. See D-1. |
+docs/acceptance/S15.md:170:> "A cold Streamlit session behind the Cloudflare edge measured 32.4 s once and 5.7 s in the recorded
+docs/acceptance/S15.md:183:*Required change:* either delete "and 5.7 s in the recorded run" (keeping 32.4 s attributed to the
+docs/acceptance/S15.md:225:- The speaking was never rehearsed, and §15.7 says so; this gate cannot verify a presentation that

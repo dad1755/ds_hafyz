@@ -224,10 +224,78 @@ def main() -> int:
 
     print()
     print("=" * 78)
-    print("D. SLIDE LIST — the blueprint §9 S15 order against the deck's slides")
+    print("C2. CROSS-REFERENCES — every slide/section number the deck points at exists")
     print("=" * 78)
 
     slides = re.findall(r"^### Slide (\d+) — (.+)$", deck, re.M)
+    slide_numbers = {int(n) for n, _ in slides}
+    max_slide = max(slide_numbers) if slide_numbers else 0
+
+    # §15.6's presenter table must point at slides that exist. This is where the fix commit
+    # 26a33a8 went wrong: it renumbered the slides but left two rows citing the old numbers.
+    presenter = re.search(r"^## 15\.6 .*?(?=^## )", deck, re.M | re.S)
+    ok("§15.6 presenter table found", presenter is not None)
+    row_titles: list[tuple[str, str]] = []
+    if presenter:
+        for line in presenter.group(0).splitlines():
+            if not line.startswith("| ") or line.startswith("| Block") or set(line) <= set("|- "):
+                continue
+            cells = [c.strip() for c in line.strip("|").split("|")]
+            if len(cells) >= 2:
+                row_titles.append((cells[0], cells[1]))
+    ok("§15.6 has presenter rows", len(row_titles) >= 6, f"{len(row_titles)} rows")
+
+    seen_slide_refs: dict[int, str] = {}
+    for block, ref in row_titles:
+        # §15.6 mixes two things in one column: slide ranges ("1–2", "8–9, steps 2–6") and step
+        # ranges ("steps 7–10"). Only the slide ranges may be read as slide numbers — the Q&A row's
+        # "1–8" is topics, not slides, and a "steps N–M" range is demo steps.
+        slide_refs: set[int] = set()
+        for chunk in ref.split(","):
+            chunk = chunk.strip()
+            if chunk.startswith("steps"):
+                continue
+            if "§" in chunk:
+                continue
+            for lo, hi in re.findall(r"(\d+)\s*[–-]\s*(\d+)", chunk):
+                slide_refs.update(range(int(lo), int(hi) + 1))
+            if re.fullmatch(r"\d+", chunk):
+                slide_refs.add(int(chunk))
+            elif re.match(r"^\d+\b", chunk) and not re.search(r"steps", chunk):
+                slide_refs.add(int(re.match(r"^(\d+)", chunk).group(1)))
+        for n in sorted(slide_refs):
+            ok(
+                f"§15.6 row '{block}' cites slide {n}, which exists",
+                n in slide_numbers,
+                f"deck has slides 1–{max_slide}" if n not in slide_numbers else "",
+            )
+        # The Q&A row leads the Q&A bank, not the slides; it must not be cross-checked for overlap.
+        if "Q&A" not in block:
+            for n in sorted(slide_refs & set(seen_slide_refs)):
+                ok(
+                    f"slide {n} is assigned twice in §15.6",
+                    False,
+                    f"'{seen_slide_refs[n]}' and '{block}'",
+                )
+            for n in slide_refs:
+                seen_slide_refs.setdefault(n, block)
+
+    missing = sorted(set(range(1, max_slide + 1)) - set(seen_slide_refs))
+    ok("every slide has a presenter block in §15.6", not missing, f"unassigned: {missing}" if missing else "")
+
+    # Prose references of the form "slide 11" must land on the slide the text is talking about.
+    for ref in sorted({int(n) for n in re.findall(r"slide (\d+)\b", deck)}):
+        ok(f"prose reference 'slide {ref}' points at an existing slide", ref in slide_numbers, f"deck has 1–{max_slide}")
+
+    section_heads = {m.group(1) for m in re.finditer(r"^## 15\.(\d+)", deck, re.M)}
+    section_heads |= {f"3.{m.group(1)}" for m in re.finditer(r"^### 15\.3\.(\d+)", deck, re.M)}
+    for ref in sorted(set(re.findall(r"§15\.(\d+(?:\.\d+)?)", deck))):
+        ok(f"cross-reference §15.{ref} exists", ref in section_heads, f"sections found: {sorted(section_heads)}")
+
+    print()
+    print("=" * 78)
+    print("D. SLIDE LIST — the blueprint §9 S15 order against the deck's slides")
+    print("=" * 78)
     ok("the deck has twelve slides", len(slides) == 12, f"{len(slides)} slides")
     titles = " || ".join(t for _, t in slides).lower()
     required = [
