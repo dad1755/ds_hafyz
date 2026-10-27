@@ -13,7 +13,7 @@ it names the command. Nothing here is dated by guesswork — the git commit is t
 
 ## Unreleased — Sprint 12: production-like Docker hardening and recovery
 
-**Commit:** `<filled at commit time>` · **Branch:** `s12/docker-hardening-recovery`
+**Commit:** the sha is printed by `evidence/s12/release_gate.txt` (the gate records the tree it ran against) · **Branch:** `s12/docker-hardening-recovery`
 
 ### Changed
 
@@ -58,7 +58,8 @@ it names the command. Nothing here is dated by guesswork — the git commit is t
 
 See `evidence/s12/` for the verbatim transcripts: the fresh-checkout build and run, the restart
 that preserved the database, the backup → restore round-trip on a copy of the volume, the secret
-scan, and the release gate output. Certification of this sprint is the independent verification
+scan, and the release gate output — 26 mechanical checks plus the full 285-test suite re-run
+inside the digest-pinned image. Certification of this sprint is the independent verification
 agent's, per blueprint §0.
 
 ---

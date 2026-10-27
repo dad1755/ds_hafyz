@@ -76,3 +76,24 @@ the size boundary, quarantine containment, the secret scan, the log scan, XSRF/C
   recorded secret-scan file counts predate the evidence commit) are corrected in this table;
   F-2, F-4 and F-5 are recorded in the acceptance document and left as they are, because each
   is a strength-of-proof or coverage note rather than an error.
+
+## Sprint 12 — the suite re-run on the digest-pinned base
+
+S12 changed the base image from the moving `python:3.12-slim` tag to a digest. A pinned base is
+only worth having if the suite still passes on it, so the whole suite was re-run inside the
+rebuilt image as part of the release gate:
+
+```bash
+scripts/verify_release.sh --build --with-tests
+```
+
+```
+PASS  pytest suite  285 passed in 587.26s (0:09:47)
+```
+
+Same 285 tests, same result as S11 — the pin changed which bytes the image is built from, not
+the behaviour of the code on top of them. The full transcript is `evidence/s12/release_gate.txt`.
+
+S12's own checks are not unit tests: they are the four scripts under `scripts/` exercised against
+the live stack, and their transcripts live in `evidence/s12/`. `docs/runbook.md` §7 is the table
+of which script answers which question.
