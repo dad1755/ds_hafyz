@@ -161,9 +161,13 @@ else
 fi
 
 # ------------------------------------------------------------------ secret scan
+# The scanner's exit status is the verdict, not a phrase in its output: the wording is the
+# scanner's to change, and matching on it once reported PASS while recording FAIL (S12).
 if [[ -f scripts/check_no_secrets.py ]]; then
-    SCAN="$(python3 scripts/check_no_secrets.py 2>&1 | tail -1)"
-    if echo "$SCAN" | grep -qiE "0 (hits|matches|findings)|clean|no (secret|match)"; then
+    SCAN_OUT="$(python3 scripts/check_no_secrets.py 2>&1)"
+    SCAN_RC=$?
+    SCAN="$(printf '%s\n' "$SCAN_OUT" | tail -1)"
+    if [[ $SCAN_RC -eq 0 ]]; then
         record PASS "secret-pattern scan" "$SCAN"
     else
         record FAIL "secret-pattern scan" "$SCAN"
