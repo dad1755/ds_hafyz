@@ -1,0 +1,35 @@
+# S15 gate — the card's reproduce block, run by the gate itself
+# run (UTC): 2026-10-27T13:29:35Z
+# host: ridergami2 · 7.2.11-200.fc44.x86_64
+
+$ git rev-parse HEAD
+21862a9987473be23454d73c585261c808b2dc16
+$ git log --oneline -2
+21862a9 S15: the deck, the demo script and the Q&A bank, with the demo rehearsed against the live URL
+3860aef S14 gate: re-verify at 91d424d — VERDICT: PASS, D-1 and D-2 closed
+$ git rev-list --count 3860aef..HEAD
+1
+$ git status --porcelain
+?? DATASCIENCE_UI_POLISH_BLUEPRINT.md
+?? evidence/s15_gate/
+
+$ python3 evidence/s15/check_script_numbers.py
+PASS  evaluation page states 1,327: '1,327'
+PASS  evaluation page states 77.88%: '77.88%'
+
+RESULT: PASS — 82 of 82 figures found, exit 0
+checker exit=0
+
+$ python3 scripts/check_no_secrets.py
+scanned 373 file(s); 4 secret value(s) loaded from operator env
+
+PASS — no operator secret and no credential pattern in any tracked file.
+
+$ python3 -m py_compile evidence/s15/*.py
+py_compile exit=0 (no output)
+
+$ curl -sS -o /dev/null -w "%{http_code} %{time_total}s" https://www.aihubcampus.online/_stcore/health
+200 1.421574s
+
+$ grep -c "^PASS " evidence/s15/demo_rehearsal.txt
+33
