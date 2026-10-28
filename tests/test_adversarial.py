@@ -384,7 +384,11 @@ def test_no_password_token_or_hash_reaches_the_process_log(conn, admin_id, user_
 def test_csrf_and_cors_protection_are_enabled_in_the_committed_config():
     config = (REPO / ".streamlit" / "config.toml").read_text(encoding="utf-8")
     assert "enableXsrfProtection = true" in config
-    assert "enableCORS = true" in config
+    # CORS is DISABLED on purpose: the app is served single-origin behind Cloudflare
+    # (www.aihubcampus.online). With enableCORS=true, Streamlit enforces its hardcoded
+    # allowedOrigins list (which omits this domain) against the browser Origin header,
+    # so the UI loads the shell but the session never establishes — blank screen forever.
+    assert "enableCORS = false" in config
     for path in _shipped_files():
         if path.suffix == ".py":
             text = path.read_text(encoding="utf-8")

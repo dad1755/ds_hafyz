@@ -9,7 +9,7 @@
 address = "0.0.0.0"
 port = 2026
 headless = true
-enableCORS = true
+enableCORS = false
 enableXsrfProtection = true
 
 [browser]
